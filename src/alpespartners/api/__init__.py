@@ -8,6 +8,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 def registrar_handlers():
     import alpespartners.modulos.tracking.aplicacion
+    import alpespartners.modulos.marketing.aplicacion
 
 
 def importar_modelos_alchemy():
