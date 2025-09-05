@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  pulsar:
+    image: apachepulsar/pulsar:3.2.0
+    container_name: pulsar-alpespartners
+    restart: unless-stopped
+    ports:
+      - "6650:6650"   
+      - "8080:8080"  
+      - "8082:8081"   
+    command: bin/pulsar standalone
+    environment:
+      - PULSAR_MEM=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=512m
+    volumes:
+      - pulsar_data:/pulsar/data
+    healthcheck:
+      test: ["CMD", "bin/pulsar-admin", "clusters", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  pulsar_data:
+    driver: local

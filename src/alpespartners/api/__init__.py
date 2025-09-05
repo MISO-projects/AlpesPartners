@@ -8,10 +8,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 def registrar_handlers():
     import alpespartners.modulos.tracking.aplicacion
+    import alpespartners.modulos.marketing.aplicacion
 
 
 def importar_modelos_alchemy():
     import alpespartners.modulos.tracking.infraestructura.dto
+    import alpespartners.modulos.marketing.infraestructura.dto
 
 
 def comenzar_consumidor():
@@ -43,8 +45,10 @@ def create_app(configuracion={}):
             comenzar_consumidor()
 
     from . import tracking
+    from . import marketing
 
     app.register_blueprint(tracking.bp)
+    app.register_blueprint(marketing.bp)
 
     @app.route("/spec")
     def spec():
