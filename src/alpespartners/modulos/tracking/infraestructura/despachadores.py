@@ -1,4 +1,4 @@
-# import pulsar
+import pulsar
 from pulsar.schema import *
 from alpespartners.modulos.tracking.infraestructura.schema.v1.eventos import (
     EventoInteraccionRegistrada,
@@ -15,13 +15,19 @@ from alpespartners.seedwork.infraestructura import utils
 
 class Despachador:
     def _publicar_mensaje(self, mensaje, topico, schema):
-        # cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
-        # publicador = cliente.create_producer(
-        #     topico, schema=AvroSchema(EventoInteraccionRegistrada)
-        # )
-        # publicador.send(mensaje)
-        # cliente.close()
-        print(f'publicando mensaje {mensaje.data} en topico {topico}')
+        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+        try:
+            publicador = cliente.create_producer(
+                topico, schema=AvroSchema(schema)
+            )
+            publicador.send(mensaje)
+            print(f' Mensaje Tracking publicado en tópico: {topico}')
+        except Exception as e:
+            print(f' Error publicando mensaje Tracking: {e}')
+            print(f' [FALLBACK] Publicando mensaje {mensaje.data} en tópico {topico}')
+        finally:
+            if cliente:
+                cliente.close()
 
     def publicar_evento(self, evento, topico):
         payload = InteraccionRegistradaPayload(
