@@ -1,12 +1,29 @@
-"""Interfaces para los repositorios del dominio de tracking
+"""Interfaces para los repositorios del dominio de marketing
 
 En este archivo usted encontrará las diferentes interfaces para repositorios
-del dominio de tracking
+del dominio de marketing
 
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
+from uuid import UUID
 from alpespartners.seedwork.dominio.repositorios import Repositorio
+from alpespartners.modulos.marketing.dominio.entidades import Campania
 
 
-class RepositorioInteraccion(Repositorio, ABC): ...
+class RepositorioCampania(Repositorio, ABC):
+    
+    @abstractmethod
+    def obtener_por_nombre(self, nombre: str) -> Campania:
+        """Obtiene una campaña por su nombre"""
+        ...
+
+    @abstractmethod
+    def obtener_activas(self) -> list[Campania]:
+        """Obtiene todas las campañas activas"""
+        ...
+        
+    @abstractmethod
+    def obtener_por_segmento(self, ubicacion: str = None, edad_minima: int = None, edad_maxima: int = None) -> list[Campania]:
+        """Obtiene campañas filtradas por segmento de audiencia"""
+        ...
