@@ -133,5 +133,6 @@ dmypy.json
 
 # Data Volume for Zookeeper
 /data
+/mongo_data
 
 .DS_Store

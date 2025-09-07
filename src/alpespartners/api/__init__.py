@@ -33,14 +33,15 @@ def create_app(configuracion={}):
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['TESTING'] = configuracion.get('TESTING')
 
-    from alpespartners.config.db import init_db, db
+    # Initialize MongoDB
+    from alpespartners.config.mongo import init_mongo
+    with app.app_context():
+        if not app.config.get('TESTING'):
+            init_mongo()
 
-    init_db(app)
-    importar_modelos_alchemy()
     registrar_handlers()
 
     with app.app_context():
-        db.create_all()
         if not app.config.get('TESTING'):
             comenzar_consumidor()
 

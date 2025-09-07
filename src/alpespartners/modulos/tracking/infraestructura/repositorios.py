@@ -3,14 +3,14 @@ from alpespartners.modulos.tracking.dominio.repositorios import RepositorioInter
 from alpespartners.modulos.tracking.dominio.fabricas import FabricaInteraccion
 from alpespartners.modulos.tracking.dominio.entidades import Interaccion
 from alpespartners.modulos.tracking.infraestructura.mapeadores import (
-    MapeadorInteraccion,
+    MapeadorInteraccionSQLite,
+    MapeadorInteraccionMongoDB,
 )
 from alpespartners.modulos.tracking.infraestructura.dto import InteraccionDbDto
 from alpespartners.config.db import db
-from alpespartners.seedwork.dominio.entidades import Entidad
+from alpespartners.config.mongo import mongo_config
 
 
-# TODO: Change to a real database
 class RepositorioInteraccionSQLite(RepositorioInteraccion):
     def __init__(self):
         self._fabrica_interaccion: FabricaInteraccion = FabricaInteraccion()
@@ -22,7 +22,7 @@ class RepositorioInteraccionSQLite(RepositorioInteraccion):
     def obtener_por_id(self, id: UUID) -> Interaccion:
         interaccion_dto = db.session.query(InteraccionDbDto).filter_by(id=str(id)).one()
         return self.fabrica_interaccion.crear_objeto(
-            interaccion_dto, MapeadorInteraccion()
+            interaccion_dto, MapeadorInteraccionSQLite()
         )
 
     def obtener_todos(self) -> list[Interaccion]:
@@ -30,7 +30,7 @@ class RepositorioInteraccionSQLite(RepositorioInteraccion):
 
     def agregar(self, interaccion: Interaccion):
         interaccion_dto = self.fabrica_interaccion.crear_objeto(
-            interaccion, MapeadorInteraccion()
+            interaccion, MapeadorInteraccionSQLite()
         )
         db.session.add(interaccion_dto)
 
@@ -41,3 +41,54 @@ class RepositorioInteraccionSQLite(RepositorioInteraccion):
     def eliminar(self, interaccion_id: UUID):
         # TODO
         raise NotImplementedError
+
+
+class RepositorioInteraccionMongoDB(RepositorioInteraccion):
+    def __init__(self):
+        self._fabrica_interaccion: FabricaInteraccion = FabricaInteraccion()
+
+    @property
+    def fabrica_interaccion(self) -> FabricaInteraccion:
+        return self._fabrica_interaccion
+
+    def _get_collection(self):
+        """Get collection reference when needed - don't store it"""
+        return mongo_config.get_database()['interacciones']
+
+    def obtener_por_id(self, id: UUID) -> Interaccion:
+        collection = self._get_collection()
+        document = collection.find_one({"_id": str(id)})
+        if not document:
+            raise ValueError(f"Interacción con ID {id} no encontrada")
+
+        return self.fabrica_interaccion.crear_objeto(
+            document, MapeadorInteraccionMongoDB()
+        )
+
+    def obtener_todos(self) -> list[Interaccion]:
+        collection = self._get_collection()
+        documents = list(collection.find())
+        return [
+            self.fabrica_interaccion.crear_objeto(doc, MapeadorInteraccionMongoDB())
+            for doc in documents
+        ]
+
+    def agregar(self, interaccion: Interaccion):
+        collection = self._get_collection()
+        document = self.fabrica_interaccion.crear_objeto(
+            interaccion, MapeadorInteraccionMongoDB()
+        )
+        collection.insert_one(document)
+
+    def actualizar(self, interaccion: Interaccion):
+        collection = self._get_collection()
+        document = self.fabrica_interaccion.crear_objeto(
+            interaccion, MapeadorInteraccionMongoDB()
+        )
+        collection.replace_one({"_id": str(interaccion.id)}, document)
+
+    def eliminar(self, interaccion_id: UUID):
+        collection = self._get_collection()
+        result = collection.delete_one({"_id": str(interaccion_id)})
+        if result.deleted_count == 0:
+            raise ValueError(f"Interacción con ID {interaccion_id} no encontrada")

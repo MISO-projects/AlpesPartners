@@ -84,7 +84,6 @@ def is_flask():
 
 
 def registrar_unidad_de_trabajo(serialized_obj):
-    from alpespartners.config.uow import UnidadTrabajoSQLAlchemy
     from flask import session
 
     session['uow'] = serialized_obj
@@ -92,12 +91,13 @@ def registrar_unidad_de_trabajo(serialized_obj):
 
 def flask_uow():
     from flask import session
-    from alpespartners.config.uow import UnidadTrabajoSQLAlchemy
+    from alpespartners.config.uow import get_unit_of_work
 
     if session.get('uow'):
         return session['uow']
     else:
-        uow_serialized = pickle.dumps(UnidadTrabajoSQLAlchemy())
+        uow = get_unit_of_work()
+        uow_serialized = pickle.dumps(uow)
         registrar_unidad_de_trabajo(uow_serialized)
         return uow_serialized
 

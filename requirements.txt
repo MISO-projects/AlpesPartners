@@ -20,6 +20,7 @@ pulsar-client==3.7.0
 py==1.11.0
 PyDispatcher==2.0.6
 Pygments==2.19.2
+pymongo==4.10.1
 pyparsing==3.0.9
 pytest==8.4.0
 PyYAML==6.0.2

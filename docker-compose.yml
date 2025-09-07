@@ -3,6 +3,7 @@ version: '3.8'
 services:
   pulsar:
     image: apachepulsar/pulsar:3.2.0
+    profiles: ["pulsar"]
     container_name: pulsar-alpespartners
     restart: unless-stopped
     ports:
@@ -21,6 +22,28 @@ services:
       retries: 5
       start_period: 30s
 
+  mongodb:
+    image: mongo:7.0
+    profiles: ["monolito"]
+    container_name: alpespartners-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: alpespartners
+    volumes:
+      - ./mongo_data:/data/db
+    networks:
+      - alpespartners-network
+
+networks:
+  alpespartners-network:
+    driver: bridge
+
 volumes:
   pulsar_data:
+    driver: local
+  mongodb_data:
     driver: local
