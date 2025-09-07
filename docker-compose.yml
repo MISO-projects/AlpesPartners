@@ -24,7 +24,7 @@ services:
 
   mongodb:
     image: mongo:7.0
-    profiles: ["monolito"]
+    profiles: ["monolito", "mongodb"]
     container_name: alpespartners-mongodb
     restart: unless-stopped
     ports:
@@ -49,6 +49,7 @@ services:
     environment:
       - DATABASE_TYPE=mongodb
       - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin
+      - PYTHONUNBUFFERED=1
     depends_on:
       - mongodb
     networks:
