@@ -1,0 +1,321 @@
+{
+	"info": {
+		"_postman_id": "a1909fd0-3a2d-424f-a9d4-5d4885efbe4e",
+		"name": "No Monoliticas",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "63464"
+	},
+	"item": [
+		{
+			"name": "1. Marketing - Crear Campania",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombre\": \"Campaña Test Marketing 2\",\n  \"descripcion\": \"Campaña de prueba 2 para validar el sistema\",\n  \"fecha_inicio\": \"2024-12-01T00:00:00Z\",\n  \"fecha_fin\": \"2024-12-31T23:59:59Z\",\n  \"tipo\": \"DIGITAL\",\n  \"edad_minima\": 18,\n  \"edad_maxima\": 65,\n  \"genero\": \"TODOS\",\n  \"ubicacion\": \"Colombia\",\n  \"intereses\": [\"testing\", \"marketing\", \"automation\"],\n  \"presupuesto\": 5000.0,\n  \"canales\": [\"WEB\", \"EMAIL\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/marketing/campanias",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"marketing",
+						"campanias"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Marketing - Listar campanias",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/marketing/campanias",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"marketing",
+						"campanias"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Marketing - Obtener Campania especifica",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/marketing/campanias/e4eb1c9b-04ae-44b0-a07e-a5db6970dc6b",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"marketing",
+						"campanias",
+						"e4eb1c9b-04ae-44b0-a07e-a5db6970dc6b"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Marketing - Estadisticas Campanias",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/marketing/campanias/estadisticas",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"marketing",
+						"campanias",
+						"estadisticas"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Marketing - Activar campania",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/marketing/campanias/983bf95c-ce7f-44cd-8d85-4c23727f45b4/activar",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"marketing",
+						"campanias",
+						"983bf95c-ce7f-44cd-8d85-4c23727f45b4",
+						"activar"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "1. Tracking - interaccion view",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"tipo\": \"VIEW\",\n    \"marca_temporal\": \"2024-12-01T10:00:00Z\",\n    \"identidad_usuario\": {\n        \"id_usuario\": \"test_user_001\",\n        \"id_anonimo\": \"anon_12345\",\n        \"direccion_ip\": \"192.168.1.1\",\n        \"agente_usuario\": \"Mozilla/5.0 (Test Browser)\"\n    },\n    \"parametros_tracking\": {\n        \"fuente\": \"google\",\n        \"medio\": \"cpc\",\n        \"campaña\": \"Campaña Test Marketing\",\n        \"contenido\": \"banner_test\",\n        \"termino\": \"marketing+test\"\n    },\n    \"elemento_objetivo\": {\n        \"url\": \"https://tienda.com/test-page\",\n        \"id_elemento\": \"banner_test\"\n    },\n    \"contexto\": {\n        \"url_pagina\": \"https://tienda.com\",\n        \"url_referente\": \"https://google.com\",\n        \"informacion_dispositivo\": \"desktop;windows;chrome\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/tracking/interaccion",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"tracking",
+						"interaccion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2.Tracking - interaccion Click",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"tipo\": \"CLICK\",\n    \"marca_temporal\": \"2024-12-01T10:05:00Z\",\n    \"identidad_usuario\": {\n        \"id_usuario\": \"test_user_001\",\n        \"id_anonimo\": \"anon_12345\",\n        \"direccion_ip\": \"192.168.1.1\",\n        \"agente_usuario\": \"Mozilla/5.0 (Test Browser)\"\n    },\n    \"parametros_tracking\": {\n        \"fuente\": \"google\",\n        \"medio\": \"cpc\",\n        \"campaña\": \"Campaña Test Marketing\",\n        \"contenido\": \"banner_test\",\n        \"termino\": \"marketing+test\"\n    },\n    \"elemento_objetivo\": {\n        \"url\": \"https://tienda.com/test-page\",\n        \"id_elemento\": \"banner_test\"\n    },\n    \"contexto\": {\n        \"url_pagina\": \"https://tienda.com\",\n        \"url_referente\": \"https://google.com\",\n        \"informacion_dispositivo\": \"desktop;windows;chrome\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/tracking/interaccion",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"tracking",
+						"interaccion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Tracking - Tracking Rápido",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"tipo\": \"CLICK\",\n    \"marca_temporal\": \"2024-12-01T10:00:00Z\",\n    \"identidad_usuario\": {\"id_usuario\": \"quick_test\"},\n    \"parametros_tracking\": {\"campaña\": \"Test Quick\"},\n    \"elemento_objetivo\": {\"url\": \"https://test.com\"},\n    \"contexto\": {\"url_pagina\": \"https://test.com\"}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/tracking/interaccion",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"tracking",
+						"interaccion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "1. Pulsar - Topics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/admin/v2/namespaces/public/default/topics",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"admin",
+						"v2",
+						"namespaces",
+						"public",
+						"default",
+						"topics"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Pulsar - clusters",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/admin/v2/clusters",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"admin",
+						"v2",
+						"clusters"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

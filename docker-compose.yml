@@ -37,6 +37,22 @@ services:
       - ./mongo_data:/data/db
     networks:
       - alpespartners-network
+  alpespartners:
+    build:
+      context: .
+      dockerfile: alpespartners.Dockerfile
+    profiles: ["monolito"]
+    container_name: alpespartners
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_TYPE=mongodb
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin
+    depends_on:
+      - mongodb
+    networks:
+      - alpespartners-network
 
 networks:
   alpespartners-network:

@@ -14,7 +14,7 @@ class MongoConfig:
             # Default connection for development
             mongo_uri = os.getenv(
                 'MONGODB_URI', 
-                'mongodb://admin:admin123@localhost:27017/alpespartners?authSource=admin'
+                'mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin'
             )
             self._client = MongoClient(mongo_uri)
         return self._client
