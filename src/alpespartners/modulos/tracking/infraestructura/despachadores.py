@@ -13,7 +13,7 @@ from alpespartners.modulos.tracking.infraestructura.schema.v1.eventos import (
 from alpespartners.seedwork.infraestructura import utils
 
 
-class Despachador:
+class DespachadorTracking:
     def _publicar_mensaje(self, mensaje, topico, schema):
         cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
         try:

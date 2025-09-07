@@ -2,6 +2,7 @@ from alpespartners.seedwork.aplicacion.comandos import Comando, ComandoHandler
 from alpespartners.modulos.marketing.dominio.repositorios import RepositorioCampania
 from alpespartners.modulos.marketing.infraestructura.fabricas import FabricaRepositorio
 from alpespartners.seedwork.infraestructura.uow import UnidadTrabajoPuerto
+from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando as comando
 from dataclasses import dataclass
 import uuid
 
@@ -17,7 +18,7 @@ class ActivarCampaniaHandler(ComandoHandler):
         
     def handle(self, comando: ActivarCampania):
         try:
-            repositorio = self._fabrica_repositorio.crear_objeto(RepositorioCampania)
+            repositorio = self._fabrica_repositorio.crear_objeto(RepositorioCampania.__class__)
             campania = repositorio.obtener_por_id(uuid.UUID(comando.id_campania))
             
             if not campania:
@@ -36,3 +37,8 @@ class ActivarCampaniaHandler(ComandoHandler):
             UnidadTrabajoPuerto.rollback()
             print(f" Error activando campaña: {e}")
             raise e
+
+@comando.register(ActivarCampania)
+def ejecutar_comando(comando: ActivarCampania):
+    handler = ActivarCampaniaHandler()
+    handler.handle(comando)

@@ -1,8 +1,11 @@
 from pydispatch import dispatcher
-from .handlers import HandlerInteraccionIntegracion
-from alpespartners.modulos.tracking.dominio.eventos import InteraccionRegistrada
+from .handlers import HandlerCampaniaDominio, HandlerInteraccionDominio
 
 dispatcher.connect(
-    HandlerInteraccionIntegracion.handle_interaccion_registrada,
-    signal=f'{InteraccionRegistrada.__name__}Integracion',
+    HandlerCampaniaDominio.handle_campania_activada,
+    signal=f'CampaniaActivadaDominio',
+)
+dispatcher.connect(
+    HandlerInteraccionDominio.handle_interaccion_registrada,
+    signal=f'InteraccionRegistradaDominio',
 )

@@ -1,3 +1,4 @@
+# pyright: reportUnreachable=false
 import alpespartners.seedwork.presentacion.api as api
 from flask import request, Response
 import json

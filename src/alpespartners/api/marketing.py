@@ -1,3 +1,4 @@
+# pyright: reportUnreachable=false
 import alpespartners.seedwork.presentacion.api as api
 from flask import request, Response
 import json
@@ -5,14 +6,18 @@ from datetime import datetime
 from alpespartners.seedwork.dominio.excepciones import ExcepcionDominio
 from alpespartners.modulos.marketing.aplicacion.comandos.crear_campania import (
     CrearCampania,
-    CrearCampaniaHandler
 )
 from alpespartners.modulos.marketing.aplicacion.comandos.activar_campania import (
     ActivarCampania,
-    ActivarCampaniaHandler
 )
 from alpespartners.modulos.marketing.dominio.repositorios import RepositorioCampania
 from alpespartners.modulos.marketing.infraestructura.fabricas import FabricaRepositorio
+from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando
+from alpespartners.seedwork.aplicacion.queries import ejecutar_query
+from alpespartners.modulos.marketing.aplicacion.queries.obtener_campania import ObtenerCampania
+from alpespartners.modulos.marketing.aplicacion.mapeadores import MapeadorCampaniaDTOJson
+from alpespartners.modulos.marketing.aplicacion.queries.listar_campanias import ListarCampanias
+from alpespartners.modulos.marketing.aplicacion.queries.estadisticas_campanias import EstadisticasCampaniasQuery
 
 bp = api.crear_blueprint("marketing", "/marketing")
 
@@ -48,29 +53,10 @@ def crear_campania():
             canales=data.get('canales', ['WEB', 'EMAIL'])
         )
         
-        handler = CrearCampaniaHandler()
-        campania = handler.handle(comando)
-        
-        response_data = {
-            "id": str(campania.id),
-            "nombre": campania.nombre,
-            "descripcion": campania.descripcion,
-            "estado": campania.estado.value,
-            "fecha_inicio": campania.fecha_inicio.isoformat(),
-            "fecha_fin": campania.fecha_fin.isoformat(),
-            "tipo": campania.tipo,
-            "metricas": {
-                "impresiones": campania.metricas.impresiones,
-                "clics": campania.metricas.clics,
-                "conversiones": campania.metricas.conversiones,
-                "costo_total": campania.metricas.costo_total
-            },
-            "message": "Campaña creada exitosamente"
-        }
-        
+        ejecutar_commando(comando)
         return Response(
-            json.dumps(response_data, default=str), 
-            status=201, 
+            json.dumps({}), 
+            status=202, 
             mimetype="application/json"
         )
         
@@ -92,19 +78,10 @@ def crear_campania():
 def activar_campania(campania_id):
     try:
         comando = ActivarCampania(id_campania=campania_id)
-        handler = ActivarCampaniaHandler()
-        campania = handler.handle(comando)
-        
-        response_data = {
-            "id": str(campania.id),
-            "nombre": campania.nombre,
-            "estado": campania.estado.value,
-            "message": "Campaña activada exitosamente"
-        }
-        
-        return Response(
-            json.dumps(response_data), 
-            status=200, 
+        ejecutar_commando(comando)
+        return Response(    
+            json.dumps({}), 
+            status=202, 
             mimetype="application/json"
         )
         
@@ -121,60 +98,19 @@ def activar_campania(campania_id):
             mimetype="application/json"
         )
 
-
 @bp.route("/campanias/<campania_id>", methods=("GET",))
 def obtener_campania(campania_id):
     try:
-        fabrica_repo = FabricaRepositorio()
-        repositorio = fabrica_repo.crear_objeto(RepositorioCampania)
-        
-        import uuid
-        campania = repositorio.obtener_por_id(uuid.UUID(campania_id))
-        
-        if not campania:
-            return Response(
-                json.dumps({"error": "Campaña no encontrada"}),
-                status=404,
-                mimetype="application/json"
-            )
-        
-        response_data = {
-            "id": str(campania.id),
-            "nombre": campania.nombre,
-            "descripcion": campania.descripcion,
-            "estado": campania.estado.value,
-            "fecha_inicio": campania.fecha_inicio.isoformat(),
-            "fecha_fin": campania.fecha_fin.isoformat(),
-            "tipo": campania.tipo,
-            "segmento": {
-                "edad_minima": campania.segmento.edad_minima,
-                "edad_maxima": campania.segmento.edad_maxima,
-                "genero": campania.segmento.genero,
-                "ubicacion": campania.segmento.ubicacion,
-                "intereses": campania.segmento.intereses
-            },
-            "configuracion": {
-                "presupuesto": campania.configuracion.presupuesto,
-                "moneda": campania.configuracion.moneda,
-                "canales": campania.configuracion.canales,
-                "frecuencia_maxima": campania.configuracion.frecuencia_maxima
-            },
-            "metricas": {
-                "impresiones": campania.metricas.impresiones,
-                "clics": campania.metricas.clics,
-                "conversiones": campania.metricas.conversiones,
-                "costo_total": campania.metricas.costo_total,
-                "ctr": campania.metricas.calcular_ctr(),
-                "cpc": campania.metricas.calcular_cpc()
-            }
-        }
-        
+        query = ObtenerCampania(id=campania_id)
+        query_resultado = ejecutar_query(query)
+        campania = query_resultado.resultado
+        map_campania = MapeadorCampaniaDTOJson()
+        response_data = map_campania.dto_a_externo(campania)
         return Response(
-            json.dumps(response_data, default=str),
+            json.dumps(response_data),
             status=200,
             mimetype="application/json"
         )
-        
     except Exception as e:
         return Response(
             json.dumps({"error": f"Error: {str(e)}"}),
@@ -186,45 +122,16 @@ def obtener_campania(campania_id):
 @bp.route("/campanias", methods=("GET",))
 def listar_campanias():
     try:
-        fabrica_repo = FabricaRepositorio()
-        repositorio = fabrica_repo.crear_objeto(RepositorioCampania)
-        
-        estado_filtro = request.args.get('estado') 
-        
-        if estado_filtro == 'ACTIVA':
-            campanias = repositorio.obtener_activas()
-        else:
-            campanias = repositorio.obtener_todos()
-        
-        response_data = {
-            "campanias": [],
-            "total": len(campanias)
-        }
-        
-        for campania in campanias:
-            campania_data = {
-                "id": str(campania.id),
-                "nombre": campania.nombre,
-                "descripcion": campania.descripcion,
-                "estado": campania.estado.value,
-                "fecha_inicio": campania.fecha_inicio.isoformat(),
-                "fecha_fin": campania.fecha_fin.isoformat(),
-                "tipo": campania.tipo,
-                "metricas": {
-                    "impresiones": campania.metricas.impresiones,
-                    "clics": campania.metricas.clics,
-                    "conversiones": campania.metricas.conversiones,
-                    "ctr": campania.metricas.calcular_ctr()
-                }
-            }
-            response_data["campanias"].append(campania_data)
-        
+        query = ListarCampanias(estado=request.args.get('estado'))
+        query_resultado = ejecutar_query(query)
+        campanias = query_resultado.resultado
+        map_campania = MapeadorCampaniaDTOJson()
+        response_data = map_campania.lista_dto_a_externo(campanias)
         return Response(
-            json.dumps(response_data, default=str),
+            json.dumps(response_data),
             status=200,
             mimetype="application/json"
         )
-        
     except Exception as e:
         return Response(
             json.dumps({"error": f"Error: {str(e)}"}),
@@ -232,43 +139,16 @@ def listar_campanias():
             mimetype="application/json"
         )
 
-
 @bp.route("/campanias/estadisticas", methods=("GET",))
 def estadisticas_campanias():
     try:
-        fabrica_repo = FabricaRepositorio()
-        repositorio = fabrica_repo.crear_objeto(RepositorioCampania)
-        
-        todas_campanias = repositorio.obtener_todos()
-        campanias_activas = repositorio.obtener_activas()
-        
-        total_impresiones = sum(c.metricas.impresiones for c in todas_campanias)
-        total_clics = sum(c.metricas.clics for c in todas_campanias)
-        total_conversiones = sum(c.metricas.conversiones for c in todas_campanias)
-        costo_total = sum(c.metricas.costo_total for c in todas_campanias)
-        
-        ctr_promedio = (total_clics / total_impresiones * 100) if total_impresiones > 0 else 0
-        cpc_promedio = (costo_total / total_clics) if total_clics > 0 else 0
-        
-        response_data = {
-            "resumen": {
-                "total_campanias": len(todas_campanias),
-                "campanias_activas": len(campanias_activas),
-                "total_impresiones": total_impresiones,
-                "total_clics": total_clics,
-                "total_conversiones": total_conversiones,
-                "costo_total": costo_total,
-                "ctr_promedio": round(ctr_promedio, 2),
-                "cpc_promedio": round(cpc_promedio, 2)
-            }
-        }
-        
+        query = EstadisticasCampaniasQuery() 
+        query_resultado = ejecutar_query(query)
         return Response(
-            json.dumps(response_data),
+            json.dumps(query_resultado.resultado),
             status=200,
             mimetype="application/json"
         )
-        
     except Exception as e:
         return Response(
             json.dumps({"error": f"Error: {str(e)}"}),

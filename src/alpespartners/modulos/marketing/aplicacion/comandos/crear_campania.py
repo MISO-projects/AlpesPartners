@@ -3,12 +3,13 @@ from alpespartners.modulos.marketing.dominio.entidades import Campania, EstadoCa
 from alpespartners.modulos.marketing.dominio.objetos_valor import (
     SegmentoAudiencia,
     ConfiguracionCampania,
-    MetricasCampania
+    MetricasCampania,
 )
 from alpespartners.modulos.marketing.dominio.repositorios import RepositorioCampania
 from alpespartners.modulos.marketing.infraestructura.fabricas import FabricaRepositorio
 from alpespartners.seedwork.infraestructura.uow import UnidadTrabajoPuerto
 from datetime import datetime
+from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando as comando
 from dataclasses import dataclass
 
 
@@ -31,6 +32,7 @@ class CrearCampania(Comando):
 class CrearCampaniaHandler(ComandoHandler):
     def __init__(self):
         self._fabrica_repositorio = FabricaRepositorio()
+
         
     def handle(self, comando: CrearCampania):
         try:
@@ -39,14 +41,14 @@ class CrearCampaniaHandler(ComandoHandler):
                 edad_maxima=comando.edad_maxima,
                 genero=comando.genero,
                 ubicacion=comando.ubicacion,
-                intereses=comando.intereses or []
+                intereses=comando.intereses or [],
             )
-            
+
             configuracion = ConfiguracionCampania(
                 presupuesto=comando.presupuesto,
-                canales=comando.canales or ["WEB", "EMAIL"]
+                canales=comando.canales or ["WEB", "EMAIL"],
             )
-            
+
             campania = Campania(
                 nombre=comando.nombre,
                 descripcion=comando.descripcion,
@@ -55,20 +57,28 @@ class CrearCampaniaHandler(ComandoHandler):
                 tipo=comando.tipo,
                 segmento=segmento,
                 configuracion=configuracion,
-                metricas=MetricasCampania()
+                metricas=MetricasCampania(),
             )
-            
+
             campania.crear_campania()
-            
-            repositorio = self._fabrica_repositorio.crear_objeto(RepositorioCampania)
+
+            repositorio = self._fabrica_repositorio.crear_objeto(
+                RepositorioCampania.__class__
+            )
             UnidadTrabajoPuerto.registrar_batch(repositorio.agregar, campania)
             UnidadTrabajoPuerto.savepoint()
             UnidadTrabajoPuerto.commit()
-            
+
             print(f" Campaña '{campania.nombre}' creada exitosamente")
             return campania
-            
+
         except Exception as e:
             UnidadTrabajoPuerto.rollback()
             print(f" Error creando campaña: {e}")
             raise e
+
+
+@comando.register(CrearCampania)
+def ejecutar_comando(comando: CrearCampania):
+    handler = CrearCampaniaHandler()
+    handler.handle(comando)

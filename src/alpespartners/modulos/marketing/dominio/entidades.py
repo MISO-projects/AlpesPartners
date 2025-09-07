@@ -14,6 +14,10 @@ from alpespartners.modulos.marketing.dominio.eventos import (
     CampaniaDesactivada,
     InteraccionRecibida
 )
+from alpespartners.modulos.marketing.dominio.excepciones import (
+    EstadoCampaniaNoValidoExcepcion,
+    NombreCampaniaNoValidoExcepcion,
+)
 
 
 class EstadoCampania(Enum):
@@ -38,7 +42,7 @@ class Campania(AgregacionRaiz):
 
     def crear_campania(self):
         if not self.nombre or not self.descripcion:
-            raise ValueError("Nombre y descripción son requeridos")
+            raise NombreCampaniaNoValidoExcepcion("Nombre y descripción son requeridos")
         
         self.agregar_evento(
             CampaniaCreada(
@@ -53,7 +57,7 @@ class Campania(AgregacionRaiz):
 
     def activar_campania(self):
         if self.estado != EstadoCampania.BORRADOR:
-            raise ValueError("Solo se pueden activar campañas en borrador")
+            raise EstadoCampaniaNoValidoExcepcion("Solo se pueden activar campañas en borrador")
         
         self.estado = EstadoCampania.ACTIVA
         self.agregar_evento(
@@ -79,7 +83,7 @@ class Campania(AgregacionRaiz):
 
     def desactivar_campania(self, razon: str = None):
         if self.estado != EstadoCampania.ACTIVA:
-            raise ValueError("Solo se pueden desactivar campañas activas")
+            raise EstadoCampaniaNoValidoExcepcion("Solo se pueden desactivar campañas activas")
         
         self.estado = EstadoCampania.PAUSADA
         self.agregar_evento(
