@@ -13,8 +13,10 @@ pip install -r requirements.txt
 ```sh
 docker-compose --profile monolito up
 ```
+# Arquitectura
+Se utiliza una arquitectura hexagonal con separación de la capa de presentación utilizando flask. Los modulos contienen las capas de aplicacion, dominio e infraestructura.
 
-## Endpoints
+## API
 
 En la carpeta collections se puede encontrar un collection de postman con los endpoints de cada módulo
 
@@ -29,3 +31,15 @@ Endpoints marketing:
 - Activar campania
 
 Para cada endpoint se utiliza el patron de diseño Command Query Responsibility Segregation (CQRS)
+
+## Modulos
+
+- Marketing: Modulo encargado de la gestion de campanias y sus estadisticas
+- Tracking: Modulo encargado de la gestion de interacciones 
+
+![Arquitectura](./docs/Diagrama_POC.svg)
+
+
+# Persistencia
+
+Se utiliza MongoDB como base de datos. Se agregan los repositorios esta base de datos y se actualiza la unidad de trabajo para soportar la persistencia en MongoDB.
