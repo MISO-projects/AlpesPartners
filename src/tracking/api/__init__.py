@@ -14,9 +14,16 @@ def importar_modelos_alchemy():
     import tracking.modulos.interacciones.infraestructura.dto
 
 
-def comenzar_consumidor():
-    ## TODO
-    pass
+def comenzar_consumidor(app):
+    import threading
+    import tracking.modulos.interacciones.infraestructura.consumidores as consumidores_tracking
+
+    threading.Thread(
+        target=consumidores_tracking.suscribirse_a_eventos, args=[app]
+    ).start()
+    threading.Thread(
+        target=consumidores_tracking.suscribirse_a_comandos, args=[app]
+    ).start()
 
 
 def create_app(configuracion={}):
@@ -33,6 +40,7 @@ def create_app(configuracion={}):
 
     # Initialize MongoDB
     from tracking.config.mongo import init_mongo
+
     with app.app_context():
         if not app.config.get('TESTING'):
             init_mongo()
@@ -41,7 +49,7 @@ def create_app(configuracion={}):
 
     with app.app_context():
         if not app.config.get('TESTING'):
-            comenzar_consumidor()
+            comenzar_consumidor(app)
 
     from . import tracking
 
