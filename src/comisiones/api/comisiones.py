@@ -1,5 +1,4 @@
 
-# pyright: reportUnreachable=false
 import comisiones.seedwork.presentacion.api as api
 from flask import request, Response
 import json
@@ -12,12 +11,29 @@ from comisiones.modulos.comisiones.aplicacion.comandos.confirmar_comision import
 from comisiones.modulos.comisiones.aplicacion.comandos.revertir_comision import RevertirComision
 from comisiones.seedwork.aplicacion.comandos import ejecutar_commando
 from comisiones.modulos.comisiones.aplicacion.queries.obtener_comision import ObtenerComision
-from comisiones.modulos.comisiones.aplicacion.queries.listar_comisiones import ListarComisiones
-from comisiones.modulos.comisiones.aplicacion.queries.estadisticas_comisiones import EstadisticasComisionesQuery
+from comisiones.modulos.comisiones.aplicacion.queries.listar_comisiones import ListarComisiones, ListarComisionesPorEstado, ListarComisionesPorCampania, ListarComisionesReservadasParaLote
+from comisiones.modulos.comisiones.aplicacion.queries.estadisticas_comisiones import ObtenerEstadisticasComisionesPorCampania
 from comisiones.seedwork.aplicacion.queries import ejecutar_query
-from comisiones.modulos.comisiones.aplicacion.mapeadores import MapeadorComisionDTOJson
+from comisiones.modulos.comisiones.aplicacion.mapeadores import MapeadorComision
 
 bp = api.crear_blueprint("comisiones", "/")
+
+
+def to_json_safe(obj):
+    if isinstance(obj, UUID):
+        return str(obj)
+    if isinstance(obj, Decimal):
+        return float(obj)
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if hasattr(obj, "__dict__"):
+        return {k: to_json_safe(v) for k, v in obj.__dict__.items() if not k.startswith("_")}
+    if isinstance(obj, list):
+        return [to_json_safe(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: to_json_safe(v) for k, v in obj.items()}
+    return obj
+
 
 @bp.route("/comisiones", methods=("POST",))
 def reservar_comision():
@@ -63,6 +79,7 @@ def reservar_comision():
             mimetype="application/json"
         )
 
+
 @bp.route("/comisiones/<comision_id>/confirmar", methods=("PUT",))
 def confirmar_comision(comision_id):
     try:
@@ -100,6 +117,7 @@ def confirmar_comision(comision_id):
             mimetype="application/json"
         )
 
+
 @bp.route("/comisiones/confirmar-lote", methods=("POST",))
 def confirmar_comisiones_lote():
     try:
@@ -130,47 +148,6 @@ def confirmar_comisiones_lote():
             mimetype="application/json"
         )
 
-@bp.route("/comisiones/<comision_id>/revertir", methods=("PUT",))
-def revertir_comision(comision_id):
-    try:
-        data = request.json
-        
-        if not data or 'motivo' not in data:
-            return Response(
-                json.dumps({"error": "Campo requerido: motivo"}),
-                status=400, mimetype="application/json"
-            )
-        
-        comando = RevertirComision(
-            id_comision=UUID(comision_id),
-            motivo=data['motivo']
-        )
-        
-        ejecutar_commando(comando)
-        return Response(
-            json.dumps({"mensaje": "Comisión revertida exitosamente"}), 
-            status=202, 
-            mimetype="application/json"
-        )
-        
-    except ValueError as e:
-        return Response(
-            json.dumps({"error": str(e)}), 
-            status=404, 
-            mimetype="application/json"
-        )
-    except ExcepcionDominio as e:
-        return Response(
-            json.dumps({"error": str(e)}), 
-            status=400, 
-            mimetype="application/json"
-        )
-    except Exception as e:
-        return Response(
-            json.dumps({"error": f"Error: {str(e)}"}), 
-            status=500, 
-            mimetype="application/json"
-        )
 
 @bp.route("/comisiones/<comision_id>", methods=("GET",))
 def obtener_comision(comision_id):
@@ -178,10 +155,10 @@ def obtener_comision(comision_id):
         query = ObtenerComision(id=UUID(comision_id))
         query_resultado = ejecutar_query(query)
         comision = query_resultado.resultado
-        map_comision = MapeadorComisionDTOJson()
-        response_data = map_comision.dto_a_externo(comision)
+        map_comision = MapeadorComision()
+        comision_dto = map_comision.entidad_a_dto(comision)
         return Response(
-            json.dumps(response_data),
+            json.dumps(to_json_safe(comision_dto)),
             status=200,
             mimetype="application/json"
         )
@@ -191,22 +168,29 @@ def obtener_comision(comision_id):
             status=500,
             mimetype="application/json"
         )
+
 
 @bp.route("/comisiones", methods=("GET",))
 def listar_comisiones():
     try:
-        query = ListarComisiones(
-            estado=request.args.get('estado'),
-            id_campania=request.args.get('id_campania'),
-            para_lote=request.args.get('para_lote', 'false').lower() == 'true',
-            limite=int(request.args.get('limite', 100))
-        )
+        estado = request.args.get('estado')
+        id_campania = request.args.get('id_campania')
+        para_lote = request.args.get('para_lote', 'false').lower() == 'true'
+        limite = int(request.args.get('limite', 100))
+
+        if para_lote:
+            query = ListarComisionesReservadasParaLote(limite=limite)
+        elif estado:
+            query = ListarComisionesPorEstado(estado=estado)
+        elif id_campania:
+            query = ListarComisionesPorCampania(id_campania=UUID(id_campania))
+        else:
+            query = ListarComisiones()
+        
         query_resultado = ejecutar_query(query)
-        comisiones = query_resultado.resultado
-        map_comision = MapeadorComisionDTOJson()
-        response_data = map_comision.lista_dto_a_externo(comisiones)
+        comisiones_dto = query_resultado.resultado
         return Response(
-            json.dumps(response_data),
+            json.dumps(to_json_safe(comisiones_dto)),
             status=200,
             mimetype="application/json"
         )
@@ -217,15 +201,20 @@ def listar_comisiones():
             mimetype="application/json"
         )
 
+
 @bp.route("/comisiones/estadisticas", methods=("GET",))
 def estadisticas_comisiones():
     try:
-        query = EstadisticasComisionesQuery(
-            id_campania=request.args.get('id_campania')
-        ) 
+        id_campania = request.args.get('id_campania')
+        if id_campania:
+            from uuid import UUID
+            query = ObtenerEstadisticasComisionesPorCampania(id_campania=UUID(id_campania))
+        else:
+            from comisiones.modulos.comisiones.aplicacion.queries.estadisticas_comisiones import ObtenerEstadisticasComisiones
+            query = ObtenerEstadisticasComisiones() 
         query_resultado = ejecutar_query(query)
         return Response(
-            json.dumps(query_resultado.resultado),
+            json.dumps(to_json_safe(query_resultado.resultado)),
             status=200,
             mimetype="application/json"
         )

@@ -1,10 +1,10 @@
 
-from alpespartners.seedwork.aplicacion.queries import Query, QueryHandler, QueryResultado
-from alpespartners.modulos.comisiones.dominio.repositorios import RepositorioComision
-from alpespartners.modulos.comisiones.dominio.excepciones import ComisionNoEncontradaExcepcion
-from alpespartners.modulos.comisiones.aplicacion.mapeadores import MapeadorComision
-from alpespartners.modulos.comisiones.aplicacion.dto import ComisionDTO
-from alpespartners.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
+from comisiones.seedwork.aplicacion.queries import Query, QueryHandler, QueryResultado, ejecutar_query
+from comisiones.modulos.comisiones.dominio.repositorios import RepositorioComision
+from comisiones.modulos.comisiones.dominio.excepciones import ComisionNoEncontradaExcepcion
+from comisiones.modulos.comisiones.aplicacion.mapeadores import MapeadorComision
+from comisiones.modulos.comisiones.aplicacion.dto import ComisionDTO
+from comisiones.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
 from dataclasses import dataclass
 import uuid
 
@@ -19,7 +19,7 @@ class ObtenerComisionHandler(QueryHandler):
         self._fabrica_repositorio = FabricaRepositorio()
         self._mapeador = MapeadorComision()
 
-    def handle(self, query: ObtenerComision) -> QueryResultado:
+    def handle(self, query: 'ObtenerComision') -> QueryResultado:
 
         try:
             repositorio = self._fabrica_repositorio.crear_objeto(
@@ -41,3 +41,9 @@ class ObtenerComisionHandler(QueryHandler):
                 exitoso=False,
                 error=str(e)
             )
+
+
+@ejecutar_query.register
+def _(query: ObtenerComision):
+    handler = ObtenerComisionHandler()
+    return handler.handle(query)

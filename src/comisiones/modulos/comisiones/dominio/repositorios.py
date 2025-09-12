@@ -2,8 +2,8 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import List
-from modulos.comisiones.dominio.entidades import Comision
-from modulos.comisiones.dominio.objetos_valor import EstadoComision
+from comisiones.modulos.comisiones.dominio.entidades import Comision
+from comisiones.modulos.comisiones.dominio.objetos_valor import EstadoComision
 from datetime import datetime
 
 class RepositorioComision(ABC):

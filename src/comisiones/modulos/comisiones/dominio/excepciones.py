@@ -1,5 +1,5 @@
 
-from seedwork.dominio.excepciones import ExcepcionDominio
+from comisiones.seedwork.dominio.excepciones import ExcepcionDominio
 
 class ComisionExcepcion(ExcepcionDominio):
 

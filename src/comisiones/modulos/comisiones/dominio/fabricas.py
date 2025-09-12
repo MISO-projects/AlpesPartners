@@ -1,7 +1,7 @@
 
-from alpespartners.seedwork.dominio.fabricas import Fabrica
-from alpespartners.modulos.comisiones.dominio.entidades import Comision
-from alpespartners.modulos.comisiones.dominio.objetos_valor import (
+from comisiones.seedwork.dominio.fabricas import Fabrica
+from comisiones.modulos.comisiones.dominio.entidades import Comision
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     MontoComision,
     ConfiguracionComision,
     PoliticaFraude,

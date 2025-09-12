@@ -1,9 +1,9 @@
 
-from seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
-from modulos.comisiones.dominio.eventos import InteraccionAtribuidaRecibida
-from modulos.comisiones.dominio.objetos_valor import MontoComision
-from seedwork.aplicacion.comandos import ejecutar_commando
+from comisiones.seedwork.infraestructura.uow import UnidadTrabajoPuerto
+from comisiones.modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
+from comisiones.modulos.comisiones.dominio.eventos import InteraccionAtribuidaRecibida
+from comisiones.modulos.comisiones.dominio.objetos_valor import MontoComision
+from comisiones.seedwork.aplicacion.comandos import ejecutar_commando
 from decimal import Decimal
 import uuid
 

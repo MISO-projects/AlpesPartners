@@ -1,17 +1,20 @@
 from functools import singledispatch
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any, Optional
 
 class Query(ABC):
     ...
 
 @dataclass
 class QueryResultado:
-    resultado: None
+    resultado: Any = None
+    exitoso: bool = True
+    error: Optional[str] = None
 
 class QueryHandler(ABC):
     @abstractmethod
-    def handle(self, query: Query) -> QueryResultado:
+    def handle(self, query: 'Query') -> QueryResultado:
         raise NotImplementedError()
 
 @singledispatch

@@ -1,9 +1,9 @@
 
 from fastapi import APIRouter, status
 from datetime import datetime
-from config.settings import get_settings
-from config.db import db
-from config.eventos import get_event_manager
+from comisiones.config.settings import get_settings
+from comisiones.config.db import db
+from comisiones.config.eventos import get_event_manager
 
 router = APIRouter()
 

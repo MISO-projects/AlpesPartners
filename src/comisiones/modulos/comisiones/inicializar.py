@@ -1,14 +1,14 @@
 
-from alpespartners.config.db import db
-from alpespartners.modulos.comisiones.infraestructura.dto import (
+from comisiones.config.db import db
+from comisiones.modulos.comisiones.infraestructura.dto import (
     ComisionDbDto,
     ConfiguracionComisionDbDto,
     PoliticaFraudeDbDto,
     LoteComisionDbDto
 )
-from alpespartners.modulos.comisiones.infraestructura.despachadores import registrar_despachadores
-from alpespartners.modulos.comisiones.aplicacion.handlers import registrar_handlers
-from alpespartners.modulos.comisiones.dominio.objetos_valor import TipoComision, TipoPoliticaFraude
+from comisiones.modulos.comisiones.infraestructura.despachadores import registrar_despachadores
+from comisiones.modulos.comisiones.aplicacion.handlers import registrar_handlers
+from comisiones.modulos.comisiones.dominio.objetos_valor import TipoComision, TipoPoliticaFraude
 from datetime import datetime
 from decimal import Decimal
 import uuid
@@ -130,8 +130,7 @@ def insertar_politicas_fraude_default():
 def registrar_event_handlers():
 
     try:
-        # Usar el UoW local del módulo de comisiones
-        from config.uow import inicializar_uow
+        from comisiones.config.uow import inicializar_uow
         inicializar_uow()
         
         registrar_handlers()

@@ -1,8 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
-from seedwork.dominio.eventos import EventoDominio
-from modulos.comisiones.dominio.objetos_valor import (
+from comisiones.seedwork.dominio.eventos import EventoDominio
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     MontoComision,
     ConfiguracionComision,
     PoliticaFraude
@@ -19,6 +19,19 @@ class ComisionReservada(EventoDominio):
     configuracion: ConfiguracionComision = None
     timestamp: datetime = None
     politica_fraude: PoliticaFraude = None
+
+@dataclass
+class ComisionCalculada(EventoDominio):
+    """Evento que se publica cuando se ha calculado una comisión exitosamente"""
+
+    id_comision: uuid.UUID = None
+    id_interaccion: uuid.UUID = None
+    id_campania: uuid.UUID = None
+    monto: MontoComision = None
+    configuracion: ConfiguracionComision = None
+    timestamp: datetime = None
+    politica_fraude: PoliticaFraude = None
+    tipo_calculo: str = None 
 
 @dataclass
 class ComisionConfirmada(EventoDominio):

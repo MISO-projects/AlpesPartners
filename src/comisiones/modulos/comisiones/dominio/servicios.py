@@ -1,8 +1,8 @@
 
 from typing import List
 from datetime import datetime, timedelta
-from modulos.comisiones.dominio.entidades import Comision
-from modulos.comisiones.dominio.objetos_valor import (
+from comisiones.modulos.comisiones.dominio.entidades import Comision
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     InteraccionAtribuida,
     ConfiguracionComision,
     PoliticaFraude,
@@ -10,20 +10,20 @@ from modulos.comisiones.dominio.objetos_valor import (
     MontoComision,
     TipoPoliticaFraude
 )
-from modulos.comisiones.dominio.repositorios import (
+from comisiones.modulos.comisiones.dominio.repositorios import (
     RepositorioComision,
     RepositorioConfiguracionComision,
     RepositorioPoliticaFraude
 )
-from modulos.comisiones.dominio.excepciones import (
+from comisiones.modulos.comisiones.dominio.excepciones import (
     InteraccionNoValidaParaComisionExcepcion,
     LoteComisionesInvalidoExcepcion
 )
-from seedwork.dominio.servicios import ServicioDominio
+from comisiones.seedwork.dominio.servicios import Servicio
 from decimal import Decimal
 import uuid
 
-class ServicioComision(ServicioDominio):
+class ServicioComision(Servicio):
 
     def __init__(
         self,

@@ -1,5 +1,5 @@
-from seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from seedwork.aplicacion.handlers import Handler
+from comisiones.seedwork.infraestructura.uow import UnidadTrabajoPuerto
+from comisiones.seedwork.aplicacion.handlers import Handler
 from typing import Dict, Type, Any
 import logging
 
@@ -52,40 +52,38 @@ class ComisionesUnitOfWork(UnidadTrabajoPuerto):
             return
         
         try:
-            # Importar y registrar handlers de aplicación
-            from modulos.comisiones.aplicacion.handlers import (
+            from comisiones.modulos.comisiones.aplicacion.handlers import (
                 HandlerInteraccionAtribuidaRecibida,
+                HandlerConversionAtribuida,
                 HandlerComisionReservada,
+                HandlerComisionCalculada,
                 HandlerComisionConfirmada,
                 HandlerComisionRevertida,
                 HandlerComisionCancelada,
                 HandlerLoteComisionesConfirmadas
             )
             
-            # Importar tipos de eventos
-            from modulos.comisiones.dominio.eventos import (
+            from comisiones.modulos.comisiones.dominio.eventos import (
                 InteraccionAtribuidaRecibida,
-                ConversionAtribuida,  # Nuevo evento
+                ConversionAtribuida,
                 ComisionReservada,
+                ComisionCalculada,
                 ComisionConfirmada,
                 ComisionRevertida,
                 ComisionCancelada,
                 LoteComisionesConfirmadas
             )
             
-            # Registrar handlers de aplicación
             self.registrar_handler(InteraccionAtribuidaRecibida, HandlerInteraccionAtribuidaRecibida())
+            self.registrar_handler(ConversionAtribuida, HandlerConversionAtribuida())
             self.registrar_handler(ComisionReservada, HandlerComisionReservada())
+            self.registrar_handler(ComisionCalculada, HandlerComisionCalculada())
             self.registrar_handler(ComisionConfirmada, HandlerComisionConfirmada())
             self.registrar_handler(ComisionRevertida, HandlerComisionRevertida())
             self.registrar_handler(ComisionCancelada, HandlerComisionCancelada())
             self.registrar_handler(LoteComisionesConfirmadas, HandlerLoteComisionesConfirmadas())
             
-            # Registrar handler para el nuevo evento ConversionAtribuida
-            self.registrar_handler(ConversionAtribuida, HandlerConversionAtribuida())
-            
-            # Registrar despachadores de infraestructura
-            from modulos.comisiones.infraestructura.despachadores import registrar_despachadores
+            from comisiones.modulos.comisiones.infraestructura.despachadores import registrar_despachadores
             registrar_despachadores()
             
             self._initialized = True
@@ -102,7 +100,6 @@ class ComisionesUnitOfWork(UnidadTrabajoPuerto):
         logger.info("Handlers limpiados")
 
 
-# Instancia global del UoW para el módulo de comisiones
 _uow_instance = None
 
 

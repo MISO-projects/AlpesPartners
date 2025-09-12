@@ -1,7 +1,7 @@
 
 from sqlalchemy import Column, String, DateTime, Text, Integer, Numeric, Boolean
 from sqlalchemy.dialects.sqlite import JSON
-from config.db import Base
+from comisiones.config.db import Base
 from datetime import datetime
 
 class ComisionDbDto(Base):
@@ -93,7 +93,7 @@ class LoteComisionDbDto(Base):
     fecha_creacion = Column(DateTime, nullable=False, default=datetime.utcnow)
     fecha_confirmacion = Column(DateTime, nullable=True)
     fecha_procesamiento = Column(DateTime, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    datos_adicionales = Column(JSON, nullable=True)
 
     def __repr__(self):
         return f'<LoteComisionDbDto {self.id_lote}>'

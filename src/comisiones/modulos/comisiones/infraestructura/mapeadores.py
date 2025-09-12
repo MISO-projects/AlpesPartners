@@ -1,7 +1,7 @@
 
-from alpespartners.seedwork.dominio.repositorios import Mapeador
-from alpespartners.modulos.comisiones.dominio.entidades import Comision
-from alpespartners.modulos.comisiones.dominio.objetos_valor import (
+from comisiones.seedwork.dominio.repositorios import Mapeador
+from comisiones.modulos.comisiones.dominio.entidades import Comision
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     MontoComision,
     ConfiguracionComision,
     PoliticaFraude,
@@ -11,7 +11,7 @@ from alpespartners.modulos.comisiones.dominio.objetos_valor import (
     TipoComision,
     TipoPoliticaFraude
 )
-from alpespartners.modulos.comisiones.infraestructura.dto import (
+from comisiones.modulos.comisiones.infraestructura.dto import (
     ComisionDbDto,
     ConfiguracionComisionDbDto,
     PoliticaFraudeDbDto

@@ -1,5 +1,5 @@
 
-from alpespartners.seedwork.infraestructura.uow import ExcepcionUoW
+from comisiones.seedwork.infraestructura.uow import ExcepcionUoW
 
 class ExcepcionInfraestructuraComision(ExcepcionUoW):
 

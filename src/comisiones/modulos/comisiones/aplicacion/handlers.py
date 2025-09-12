@@ -1,7 +1,8 @@
 
-from seedwork.aplicacion.handlers import Handler
-from modulos.comisiones.dominio.eventos import (
+from comisiones.seedwork.aplicacion.handlers import Handler
+from comisiones.modulos.comisiones.dominio.eventos import (
     ComisionReservada,
+    ComisionCalculada,
     ComisionConfirmada,
     ComisionRevertida,
     ComisionCancelada,
@@ -9,13 +10,14 @@ from modulos.comisiones.dominio.eventos import (
     InteraccionAtribuidaRecibida,
     ConversionAtribuida
 )
-from modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
-from modulos.comisiones.aplicacion.comandos.confirmar_comision import (
+from comisiones.modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
+from comisiones.modulos.comisiones.aplicacion.comandos.calcular_comision import CalcularComision
+from comisiones.modulos.comisiones.aplicacion.comandos.confirmar_comision import (
     ConfirmarComision,
     ConfirmarComisionesEnLote
 )
-from modulos.comisiones.aplicacion.comandos.revertir_comision import RevertirComision
-from seedwork.aplicacion.comandos import ejecutar_commando
+from comisiones.modulos.comisiones.aplicacion.comandos.revertir_comision import RevertirComision
+from comisiones.seedwork.aplicacion.comandos import ejecutar_commando
 
 class HandlerInteraccionAtribuidaRecibida(Handler):
 
@@ -76,8 +78,7 @@ class HandlerConversionAtribuida(Handler):
         try:
             print(f"Procesando ConversionAtribuida: {evento.id_interaccion} -> Campaña: {evento.id_campania}")
             
-            # Crear comando para reservar comisión basado en la conversión atribuida
-            comando = ReservarComision(
+            comando = CalcularComision(
                 id_interaccion=evento.id_interaccion,
                 id_campania=evento.id_campania,
                 tipo_interaccion=evento.tipo_interaccion,
@@ -96,13 +97,17 @@ class HandlerConversionAtribuida(Handler):
             print(f"Error procesando ConversionAtribuida {evento.id_interaccion}: {e}")
             raise e
 
-def registrar_handlers():
+class HandlerComisionCalculada(Handler):
 
-    from seedwork.infraestructura.uow import UnidadTrabajoPuerto
-    UnidadTrabajoPuerto.registrar_evento_handler(InteraccionAtribuidaRecibida, HandlerInteraccionAtribuidaRecibida())
-    UnidadTrabajoPuerto.registrar_evento_handler(ConversionAtribuida, HandlerConversionAtribuida())
-    UnidadTrabajoPuerto.registrar_evento_handler(ComisionReservada, HandlerComisionReservada())
-    UnidadTrabajoPuerto.registrar_evento_handler(ComisionConfirmada, HandlerComisionConfirmada())
-    UnidadTrabajoPuerto.registrar_evento_handler(ComisionRevertida, HandlerComisionRevertida())
-    UnidadTrabajoPuerto.registrar_evento_handler(ComisionCancelada, HandlerComisionCancelada())
-    UnidadTrabajoPuerto.registrar_evento_handler(LoteComisionesConfirmadas, HandlerLoteComisionesConfirmadas())
+    def handle(self, evento: ComisionCalculada):
+        try:
+            print(f"Comisión calculada exitosamente: {evento.id_comision} para interacción {evento.id_interaccion}")
+            print(f"  Monto: {evento.monto.valor} {evento.monto.moneda}")
+            print(f"  Tipo de cálculo: {evento.tipo_calculo}")
+            print(f"  Campaña: {evento.id_campania}")
+        except Exception as e:
+            print(f"Error procesando ComisionCalculada {evento.id_comision}: {e}")
+            raise e
+
+
+from pydispatch import dispatcher

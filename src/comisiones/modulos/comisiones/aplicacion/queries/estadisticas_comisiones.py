@@ -1,13 +1,13 @@
 
-from alpespartners.seedwork.aplicacion.queries import Query, QueryHandler, QueryResultado
-from alpespartners.modulos.comisiones.dominio.repositorios import (
+from comisiones.seedwork.aplicacion.queries import Query, QueryHandler, QueryResultado, ejecutar_query
+from comisiones.modulos.comisiones.dominio.repositorios import (
     RepositorioComision,
     RepositorioConfiguracionComision,
     RepositorioPoliticaFraude
 )
-from alpespartners.modulos.comisiones.dominio.servicios import ServicioComision
-from alpespartners.modulos.comisiones.aplicacion.dto import EstadisticasComisionDTO
-from alpespartners.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
+from comisiones.modulos.comisiones.dominio.servicios import ServicioComision
+from comisiones.modulos.comisiones.aplicacion.dto import EstadisticasComisionDTO
+from comisiones.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
 from dataclasses import dataclass
 import uuid
 
@@ -96,7 +96,7 @@ class EstadisticasComisionesHandler(QueryHandler):
 
     def _calcular_estadisticas(self, comisiones) -> EstadisticasComisionDTO:
 
-        from alpespartners.modulos.comisiones.dominio.objetos_valor import EstadoComision
+        from comisiones.modulos.comisiones.dominio.objetos_valor import EstadoComision
         from decimal import Decimal
 
         estadisticas = {
@@ -133,3 +133,15 @@ class EstadisticasComisionesHandler(QueryHandler):
             monto_total_confirmado=estadisticas["monto_total_confirmado"],
             monto_total_revertido=estadisticas["monto_total_revertido"]
         )
+
+
+@ejecutar_query.register
+def _(query: ObtenerEstadisticasComisiones):
+    handler = EstadisticasComisionesHandler()
+    return handler.handle(query)
+
+
+@ejecutar_query.register
+def _(query: ObtenerEstadisticasComisionesPorCampania):
+    handler = EstadisticasComisionesHandler()
+    return handler.handle(query)

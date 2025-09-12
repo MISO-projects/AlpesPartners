@@ -1,10 +1,10 @@
 
-from alpespartners.seedwork.aplicacion.queries import Query, QueryHandler, QueryResultado
-from alpespartners.modulos.comisiones.dominio.repositorios import RepositorioComision
-from alpespartners.modulos.comisiones.dominio.objetos_valor import EstadoComision
-from alpespartners.modulos.comisiones.aplicacion.mapeadores import MapeadorComision
-from alpespartners.modulos.comisiones.aplicacion.dto import ComisionDTO
-from alpespartners.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
+from comisiones.seedwork.aplicacion.queries import Query, QueryHandler, QueryResultado, ejecutar_query
+from comisiones.modulos.comisiones.dominio.repositorios import RepositorioComision
+from comisiones.modulos.comisiones.dominio.objetos_valor import EstadoComision
+from comisiones.modulos.comisiones.aplicacion.mapeadores import MapeadorComision
+from comisiones.modulos.comisiones.aplicacion.dto import ComisionDTO
+from comisiones.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
 from dataclasses import dataclass
 from typing import List, Optional
 import uuid
@@ -119,3 +119,27 @@ class ListarComisionesHandler(QueryHandler):
             resultado=comisiones_dto,
             exitoso=True
         )
+
+
+@ejecutar_query.register
+def _(query: ListarComisiones):
+    handler = ListarComisionesHandler()
+    return handler.handle(query)
+
+
+@ejecutar_query.register
+def _(query: ListarComisionesPorEstado):
+    handler = ListarComisionesHandler()
+    return handler.handle(query)
+
+
+@ejecutar_query.register
+def _(query: ListarComisionesPorCampania):
+    handler = ListarComisionesHandler()
+    return handler.handle(query)
+
+
+@ejecutar_query.register
+def _(query: ListarComisionesReservadasParaLote):
+    handler = ListarComisionesHandler()
+    return handler.handle(query)

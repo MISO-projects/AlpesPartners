@@ -2,13 +2,13 @@
 from uuid import UUID
 from typing import List
 from datetime import datetime
-from modulos.comisiones.dominio.repositorios import (
+from comisiones.modulos.comisiones.dominio.repositorios import (
     RepositorioComision,
     RepositorioConfiguracionComision,
     RepositorioPoliticaFraude
 )
-from modulos.comisiones.dominio.entidades import Comision
-from modulos.comisiones.dominio.objetos_valor import (
+from comisiones.modulos.comisiones.dominio.entidades import Comision
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     EstadoComision,
     ConfiguracionComision,
     PoliticaFraude,
@@ -16,22 +16,22 @@ from modulos.comisiones.dominio.objetos_valor import (
     TipoComision,
     TipoPoliticaFraude
 )
-from modulos.comisiones.dominio.fabricas import (
+from comisiones.modulos.comisiones.dominio.fabricas import (
     FabricaComision,
     FabricaConfiguracionComision,
     FabricaPoliticaFraude
 )
-from modulos.comisiones.infraestructura.dto import (
+from comisiones.modulos.comisiones.infraestructura.dto import (
     ComisionDbDto,
     ConfiguracionComisionDbDto,
     PoliticaFraudeDbDto
 )
-from modulos.comisiones.infraestructura.mapeadores import (
+from comisiones.modulos.comisiones.infraestructura.mapeadores import (
     MapeadorComisionSQLite,
     MapeadorComisionMongoDB
 )
-from config.db import db
-from config.mongo import mongo_config
+from comisiones.config.db import db
+from comisiones.config.mongo import mongo_config
 from decimal import Decimal
 
 class RepositorioComisionSQLite(RepositorioComision):

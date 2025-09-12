@@ -38,3 +38,13 @@ class MongoConfig:
         return database[collection_name]
 
 mongo_config = MongoConfig()
+
+def init_mongo():
+    """Initialize MongoDB connection"""
+    try:
+        mongo_config.connect()
+        print("✅ MongoDB connection established for comisiones")
+        
+    except Exception as e:
+        print(f"❌ MongoDB initialization failed for comisiones: {e}")
+        raise

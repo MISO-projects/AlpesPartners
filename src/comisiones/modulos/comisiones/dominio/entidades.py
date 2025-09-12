@@ -1,8 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
-from seedwork.dominio.entidades import AgregacionRaiz
-from modulos.comisiones.dominio.objetos_valor import (
+from comisiones.seedwork.dominio.entidades import AgregacionRaiz
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     EstadoComision,
     MontoComision,
     ConfiguracionComision,
@@ -11,14 +11,14 @@ from modulos.comisiones.dominio.objetos_valor import (
     DetallesConfirmacion,
     PoliticaFraude
 )
-from modulos.comisiones.dominio.eventos import (
+from comisiones.modulos.comisiones.dominio.eventos import (
     ComisionReservada,
     ComisionConfirmada,
     ComisionRevertida,
     ComisionCancelada,
     PoliticaFraudeAplicada
 )
-from modulos.comisiones.dominio.excepciones import (
+from comisiones.modulos.comisiones.dominio.excepciones import (
     ComisionYaConfirmadaExcepcion,
     ComisionYaRevertidaExcepcion,
     EstadoComisionInvalidoExcepcion,

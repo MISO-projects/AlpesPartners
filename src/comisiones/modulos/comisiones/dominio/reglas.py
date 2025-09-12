@@ -1,6 +1,6 @@
 
-from seedwork.dominio.reglas import ReglaNegocio
-from modulos.comisiones.dominio.objetos_valor import (
+from comisiones.seedwork.dominio.reglas import ReglaNegocio
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     EstadoComision,
     MontoComision,
     PoliticaFraude,

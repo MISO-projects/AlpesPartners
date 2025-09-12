@@ -1,14 +1,15 @@
 
-from seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from modulos.comisiones.dominio.eventos import (
+from comisiones.seedwork.infraestructura.uow import UnidadTrabajoPuerto
+from comisiones.modulos.comisiones.dominio.eventos import (
     ComisionReservada,
+    ComisionCalculada,
     ComisionConfirmada,
     ComisionRevertida,
     ComisionCancelada,
     LoteComisionesConfirmadas,
     PoliticaFraudeAplicada
 )
-from modulos.comisiones.infraestructura.consumidores import ConsumidorEventosComision
+from comisiones.modulos.comisiones.infraestructura.consumidores import ConsumidorEventosComision
 from datetime import datetime
 import json
 
@@ -48,6 +49,38 @@ class DespachadorEventosComision:
 
         except Exception as e:
             print(f"Error despachando ComisionReservada: {e}")
+
+    def despachar_comision_calculada(self, evento: ComisionCalculada):
+
+        try:
+            evento_dict = {
+                'tipo': 'ComisionCalculada',
+                'id_comision': str(evento.id_comision),
+                'id_interaccion': str(evento.id_interaccion),
+                'id_campania': str(evento.id_campania),
+                'monto': {
+                    'valor': str(evento.monto.valor),
+                    'moneda': evento.monto.moneda
+                },
+                'configuracion': {
+                    'tipo': evento.configuracion.tipo.value,
+                    'porcentaje': str(evento.configuracion.porcentaje) if evento.configuracion.porcentaje else None
+                },
+                'timestamp': evento.timestamp.isoformat(),
+                'politica_fraude': {
+                    'tipo': evento.politica_fraude.tipo.value,
+                    'threshold_score': evento.politica_fraude.threshold_score
+                },
+                'tipo_calculo': evento.tipo_calculo
+            }
+
+            self._publicar_evento_externo('comisionCalculada', evento_dict)
+
+            print(f"Evento ComisionCalculada despachado exitosamente: {evento.id_comision}")
+            print(f"  -> Publicado evento externo: comisionCalculada")
+
+        except Exception as e:
+            print(f"Error despachando ComisionCalculada: {e}")
 
     def despachar_comision_confirmada(self, evento: ComisionConfirmada):
 
@@ -217,6 +250,11 @@ def registrar_despachadores():
     UnidadTrabajoPuerto.registrar_evento_handler(
         ComisionReservada, 
         despachador.despachar_comision_reservada
+    )
+    
+    UnidadTrabajoPuerto.registrar_evento_handler(
+        ComisionCalculada,
+        despachador.despachar_comision_calculada
     )
     
     UnidadTrabajoPuerto.registrar_evento_handler(

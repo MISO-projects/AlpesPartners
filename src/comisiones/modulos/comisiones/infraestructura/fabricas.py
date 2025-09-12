@@ -1,11 +1,11 @@
 
-from alpespartners.seedwork.dominio.fabricas import Fabrica
-from alpespartners.modulos.comisiones.dominio.repositorios import (
+from comisiones.seedwork.dominio.fabricas import Fabrica
+from comisiones.modulos.comisiones.dominio.repositorios import (
     RepositorioComision,
     RepositorioConfiguracionComision,
     RepositorioPoliticaFraude
 )
-from alpespartners.modulos.comisiones.infraestructura.repositorios import (
+from comisiones.modulos.comisiones.infraestructura.repositorios import (
     RepositorioComisionSQLite,
     RepositorioComisionMongoDB,
     RepositorioConfiguracionComisionSQLite,
@@ -66,7 +66,7 @@ class FabricaConsumidoresEventos(Fabrica):
 
     def crear_consumidor_interaccion_atribuida(self):
 
-        from alpespartners.modulos.comisiones.infraestructura.consumidores import ConsumidorInteraccionAtribuida
+        from comisiones.modulos.comisiones.infraestructura.consumidores import ConsumidorInteraccionAtribuida
         return ConsumidorInteraccionAtribuida()
 
     def crear_objeto(self, obj: any, mapeador: any = None) -> any:
@@ -80,7 +80,7 @@ class FabricaDespachadores(Fabrica):
 
     def crear_despachador_eventos_comision(self):
 
-        from alpespartners.modulos.comisiones.infraestructura.despachadores import DespachadorEventosComision
+        from comisiones.modulos.comisiones.infraestructura.despachadores import DespachadorEventosComision
         return DespachadorEventosComision()
 
     def crear_objeto(self, obj: any, mapeador: any = None) -> any:

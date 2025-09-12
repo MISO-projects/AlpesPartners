@@ -1,8 +1,8 @@
 
-from alpespartners.seedwork.aplicacion.dto import Mapeador as AppMap
-from alpespartners.seedwork.dominio.repositorios import Mapeador
-from alpespartners.modulos.comisiones.dominio.entidades import Comision
-from alpespartners.modulos.comisiones.dominio.objetos_valor import (
+from comisiones.seedwork.aplicacion.dto import Mapeador as AppMap
+from comisiones.seedwork.dominio.repositorios import Mapeador
+from comisiones.modulos.comisiones.dominio.entidades import Comision
+from comisiones.modulos.comisiones.dominio.objetos_valor import (
     MontoComision,
     ConfiguracionComision,
     PoliticaFraude,
@@ -13,7 +13,7 @@ from alpespartners.modulos.comisiones.dominio.objetos_valor import (
     TipoPoliticaFraude,
     EstadoComision
 )
-from alpespartners.modulos.comisiones.aplicacion.dto import (
+from comisiones.modulos.comisiones.aplicacion.dto import (
     ComisionDTO,
     MontoComisionDTO,
     ConfiguracionComisionDTO,
@@ -75,6 +75,13 @@ class MapeadorComision(AppMap):
         )
 
         return comision
+
+    def externo_a_dto(self, externo: any) -> ComisionDTO:
+        return ComisionDTO(**externo)
+
+    def dto_a_externo(self, dto: ComisionDTO) -> any:
+        from dataclasses import asdict
+        return asdict(dto)
 
     def _monto_a_dto(self, monto: MontoComision) -> MontoComisionDTO:
 
