@@ -21,7 +21,7 @@ class EventoInteraccionAtribuidaRecibida(EventoIntegracion):
     data = InteraccionAtribuidaRecibidaPayload()
 
 
-class ParametrosTrackingSchemaConsumo(Record):
+class ParametrosTrackingSchema(Record):
     """Schema local para consumir parámetros de tracking"""
     fuente = String()
     medio = String()
@@ -31,7 +31,7 @@ class ParametrosTrackingSchemaConsumo(Record):
     id_afiliado = String()
 
 
-class IdentidadUsuarioSchemaConsumo(Record):
+class IdentidadUsuarioSchema(Record):
     """Schema local para consumir identidad de usuario"""
     id_usuario = String(required=False)
     id_anonimo = String(required=False)
@@ -39,30 +39,30 @@ class IdentidadUsuarioSchemaConsumo(Record):
     agente_usuario = String(required=False)
 
 
-class ElementoObjetivoSchemaConsumo(Record):
+class ElementoObjetivoSchema(Record):
     """Schema local para consumir elemento objetivo"""
     url = String()
     id_elemento = String(required=False)
 
 
-class ContextoInteraccionSchemaConsumo(Record):
+class ContextoInteraccionSchema(Record):
     """Schema local para consumir contexto de interacción"""
     url_pagina = String()
     url_referente = String(required=False)
     informacion_dispositivo = String(required=False)
 
 
-class InteraccionRegistradaPayloadConsumo(Record):
+class InteraccionRegistradaPayload(Record):
     """Schema local para consumir InteraccionRegistrada desde Tracking"""
     id_interaccion = String()
     tipo = String()
     marca_temporal = Long()
-    identidad_usuario = IdentidadUsuarioSchemaConsumo()
-    parametros_tracking = ParametrosTrackingSchemaConsumo()
-    elemento_objetivo = ElementoObjetivoSchemaConsumo()
-    contexto = ContextoInteraccionSchemaConsumo()
+    identidad_usuario = IdentidadUsuarioSchema()
+    parametros_tracking = ParametrosTrackingSchema()
+    elemento_objetivo = ElementoObjetivoSchema()
+    contexto = ContextoInteraccionSchema()
 
 
 class EventoInteraccionRegistradaConsumo(EventoIntegracion):
     """Evento de integración para consumir InteraccionRegistrada"""
-    data = InteraccionRegistradaPayloadConsumo()
+    data = InteraccionRegistradaPayload()
