@@ -11,11 +11,14 @@ class MongoConfig:
 
     def get_client(self) -> MongoClient:
         if self._client is None:
-            # Default connection for development
-            mongo_uri = os.getenv(
-                'MONGODB_URI', 
-                'mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin'
-            )
+            user = os.getenv('MONGODB_USER', 'admin')
+            password = os.getenv('MONGODB_PASSWORD', 'admin123')
+            host = os.getenv('MONGODB_HOST', 'mongodb')
+            port = os.getenv('MONGODB_PORT', '27017')
+            database = os.getenv('MONGODB_DATABASE', 'alpespartners')
+            
+            mongo_uri = f"mongodb://{user}:{password}@{host}:{port}/{database}?authSource=admin"
+            
             self._client = MongoClient(mongo_uri)
         return self._client
 

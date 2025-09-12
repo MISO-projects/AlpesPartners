@@ -125,7 +125,11 @@ services:
       - ./src/marketing/:/src/marketing/
     environment:
       - DATABASE_TYPE=mongodb
-      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin
+      - MONGODB_USER=admin
+      - MONGODB_PASSWORD=admin123
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=alpespartners
       - BROKER_HOST=broker
       - PYTHONUNBUFFERED=1
     depends_on:
@@ -151,7 +155,11 @@ services:
       - ./src/tracking/:/src/tracking/
     environment:
       - DATABASE_TYPE=mongodb
-      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin
+      - MONGODB_USER=admin
+      - MONGODB_PASSWORD=admin123
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=alpespartners
       - BROKER_HOST=broker
       - PYTHONUNBUFFERED=1
     depends_on:
