@@ -158,6 +158,32 @@ services:
       - mongodb
     networks:
       - alpespartners-network
+  comisiones:
+    build:
+      context: .
+      dockerfile: comisiones.Dockerfile
+    profiles: ["alpespartners"]
+    container_name: comisiones
+    restart: unless-stopped
+    command: 
+      - sh
+      - -c
+      - |
+        python -m debugpy --listen 0.0.0.0:5678 -m flask --app src/comisiones/api run --host=0.0.0.0 -p 8000 --reload
+    ports:
+      - "8002:8000"
+      - "5680:5678"
+    volumes:
+      - ./src/comisiones/:/src/comisiones/
+    environment:
+      - DATABASE_TYPE=mongodb
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin
+      - BROKER_HOST=broker
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - mongodb
+    networks:
+      - alpespartners-network
 
 networks:
   alpespartners-network:
