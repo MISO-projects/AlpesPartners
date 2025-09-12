@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ## Ejecutar el proyecto en docker
 
 ```sh
-docker-compose --profile monolito up
+docker-compose --profile alpespartners up
 ```
 # Arquitectura
 Se utiliza una arquitectura hexagonal con separación de la capa de presentación utilizando flask. Los modulos contienen las capas de aplicacion, dominio e infraestructura.

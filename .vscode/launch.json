@@ -2,19 +2,34 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Alpes Partners Service",
+      "name": "Marketing Service",
       "type": "debugpy",
       "request": "attach",
       "connect": {
         "host": "localhost",
         "port": 5678
-      }
-      // "pathMappings": [
-      //   {
-      //     "localRoot": "${workspaceFolder}/rf003",
-      //     "remoteRoot": "/app"
-      //   }
-      // ]
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/"
+        }
+      ]
+    },
+    {
+      "name": "Tracking Service",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5679
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/"
+        }
+      ]
     }
   ]
 }
