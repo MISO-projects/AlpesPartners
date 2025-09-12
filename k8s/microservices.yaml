@@ -47,7 +47,7 @@ spec:
         - name: MONGODB_DATABASE
           value: "alpespartners"
         - name: BROKER_HOST
-          value: "broker"
+          value: "pulsar-mini-proxy.pulsar.svc.cluster.local"
         - name: PYTHONUNBUFFERED
           value: "1"
 ---
@@ -128,7 +128,7 @@ spec:
         - name: MONGODB_DATABASE
           value: "alpespartners"
         - name: BROKER_HOST
-          value: "broker"
+          value: "pulsar-mini-proxy.pulsar.svc.cluster.local"
         - name: PYTHONUNBUFFERED
           value: "1"
 ---
