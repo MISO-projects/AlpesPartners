@@ -1,6 +1,6 @@
 
-from alpespartners.seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from alpespartners.modulos.comisiones.dominio.eventos import (
+from seedwork.infraestructura.uow import UnidadTrabajoPuerto
+from modulos.comisiones.dominio.eventos import (
     ComisionReservada,
     ComisionConfirmada,
     ComisionRevertida,
@@ -8,7 +8,7 @@ from alpespartners.modulos.comisiones.dominio.eventos import (
     LoteComisionesConfirmadas,
     PoliticaFraudeAplicada
 )
-from alpespartners.modulos.comisiones.infraestructura.consumidores import ConsumidorEventosComision
+from modulos.comisiones.infraestructura.consumidores import ConsumidorEventosComision
 from datetime import datetime
 import json
 

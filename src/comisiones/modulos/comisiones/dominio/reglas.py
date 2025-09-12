@@ -1,6 +1,6 @@
 
-from alpespartners.seedwork.dominio.reglas import ReglaNegocio
-from alpespartners.modulos.comisiones.dominio.objetos_valor import (
+from seedwork.dominio.reglas import ReglaNegocio
+from modulos.comisiones.dominio.objetos_valor import (
     EstadoComision,
     MontoComision,
     PoliticaFraude,

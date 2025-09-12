@@ -106,6 +106,11 @@ class EventManager:
         topic = "persistent://public/default/marketing-events"
         return self.create_consumer(topic, "comisiones-marketing-sub", handler)
 
+    def subscribe_to_attribution_events(self, handler):
+        """Suscribirse a eventos del servicio de atribución"""
+        topic = "persistent://public/default/attribution-events"
+        return self.create_consumer(topic, "comisiones-attribution-sub", handler)
+
 event_manager = EventManager()
 
 def get_event_manager():

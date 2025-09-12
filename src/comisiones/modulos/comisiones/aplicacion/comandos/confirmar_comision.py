@@ -1,10 +1,9 @@
 
-from alpespartners.seedwork.aplicacion.comandos import Comando, ComandoHandler
-from alpespartners.modulos.comisiones.dominio.repositorios import RepositorioComision
-from alpespartners.modulos.comisiones.dominio.excepciones import ComisionNoEncontradaExcepcion
-from alpespartners.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
-from alpespartners.seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando as comando
+from seedwork.aplicacion.comandos import Comando, ComandoHandler, ejecutar_commando as comando
+from modulos.comisiones.dominio.repositorios import RepositorioComision
+from modulos.comisiones.dominio.excepciones import ComisionNoEncontradaExcepcion
+from modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
+from seedwork.infraestructura.uow import UnidadTrabajoPuerto
 from dataclasses import dataclass
 import uuid
 
@@ -59,7 +58,7 @@ class ConfirmarComisionesEnLoteHandler(ComandoHandler):
     def handle(self, comando: ConfirmarComisionesEnLote):
 
         try:
-            from alpespartners.modulos.comisiones.dominio.servicios import ServicioComision
+            from modulos.comisiones.dominio.servicios import ServicioComision
             from alpespartners.modulos.comisiones.dominio.repositorios import (
                 RepositorioConfiguracionComision,
                 RepositorioPoliticaFraude

@@ -1,5 +1,5 @@
 
-from alpespartners.modulos.comisiones.dominio.objetos_valor import EstadoComision
+from modulos.comisiones.dominio.objetos_valor import EstadoComision
 
 class ComisionMixin:
 

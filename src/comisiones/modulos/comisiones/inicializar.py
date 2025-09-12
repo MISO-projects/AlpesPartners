@@ -130,9 +130,13 @@ def insertar_politicas_fraude_default():
 def registrar_event_handlers():
 
     try:
+        # Usar el UoW local del módulo de comisiones
+        from config.uow import inicializar_uow
+        inicializar_uow()
+        
         registrar_handlers()
         registrar_despachadores()
-        print("Handlers y despachadores de eventos registrados")
+        print("Handlers y despachadores de eventos registrados correctamente")
     except Exception as e:
         print(f"Error registrando handlers: {e}")
         raise e

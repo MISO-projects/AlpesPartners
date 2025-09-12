@@ -71,3 +71,20 @@ class InteraccionAtribuidaRecibida(EventoDominio):
     fraud_ok: bool = None
     score_fraude: int = None
     timestamp: datetime = None
+
+@dataclass
+class ConversionAtribuida(EventoDominio):
+    """Evento que viene del AttributionService cuando hay una conversión atribuida"""
+    
+    id_interaccion: uuid.UUID = None
+    id_campania: uuid.UUID = None
+    tipo_interaccion: str = None
+    valor_interaccion: MontoComision = None
+    fraud_ok: bool = None
+    score_fraude: int = None
+    atribucion_data: dict = None
+    timestamp: datetime = None
+    
+    def __post_init__(self):
+        if self.atribucion_data is None:
+            self.atribucion_data = {}

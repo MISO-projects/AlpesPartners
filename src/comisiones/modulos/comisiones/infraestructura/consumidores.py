@@ -1,18 +1,16 @@
 
-from alpespartners.seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from alpespartners.modulos.comisiones.aplicacion.comandos.reservar_comision import (
-    ReservarComision,
-    ReservarComisionHandler
-)
-from alpespartners.modulos.comisiones.dominio.eventos import InteraccionAtribuidaRecibida
-from alpespartners.modulos.comisiones.dominio.objetos_valor import MontoComision
+from seedwork.infraestructura.uow import UnidadTrabajoPuerto
+from modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
+from modulos.comisiones.dominio.eventos import InteraccionAtribuidaRecibida
+from modulos.comisiones.dominio.objetos_valor import MontoComision
+from seedwork.aplicacion.comandos import ejecutar_commando
 from decimal import Decimal
 import uuid
 
 class ConsumidorInteraccionAtribuida:
 
     def __init__(self):
-        self._handler = ReservarComisionHandler()
+        pass  
 
     def consumir_interaccion_atribuida(self, evento_tracking: dict):
 
@@ -40,7 +38,7 @@ class ConsumidorInteraccionAtribuida:
                 parametros_adicionales=evento_tracking.get('parametros_tracking', {})
             )
 
-            resultado = self._handler.handle(comando)
+            resultado = ejecutar_commando(comando)
 
             if resultado:
                 print(f"Comisión {resultado.id} reservada exitosamente para interacción {id_interaccion}")

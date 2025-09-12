@@ -15,6 +15,7 @@ from config.eventos import get_event_manager
 from api.comisiones import router as comisiones_router
 from api.health import router as health_router
 from services.event_service import EventService
+from modulos.comisiones.inicializar import inicializar_modulo_comisiones
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,6 +50,9 @@ async def startup_event():
         
         logger.info("Inicializando base de datos...")
         db.create_tables()
+        
+        logger.info("Inicializando módulo de comisiones...")
+        inicializar_modulo_comisiones()
         
         logger.info("Conectando a sistema de eventos...")
         event_manager = get_event_manager()

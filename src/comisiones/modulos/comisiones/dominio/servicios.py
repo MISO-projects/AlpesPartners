@@ -1,8 +1,8 @@
 
 from typing import List
 from datetime import datetime, timedelta
-from alpespartners.modulos.comisiones.dominio.entidades import Comision
-from alpespartners.modulos.comisiones.dominio.objetos_valor import (
+from modulos.comisiones.dominio.entidades import Comision
+from modulos.comisiones.dominio.objetos_valor import (
     InteraccionAtribuida,
     ConfiguracionComision,
     PoliticaFraude,
@@ -10,16 +10,16 @@ from alpespartners.modulos.comisiones.dominio.objetos_valor import (
     MontoComision,
     TipoPoliticaFraude
 )
-from alpespartners.modulos.comisiones.dominio.repositorios import (
+from modulos.comisiones.dominio.repositorios import (
     RepositorioComision,
     RepositorioConfiguracionComision,
     RepositorioPoliticaFraude
 )
-from alpespartners.modulos.comisiones.dominio.excepciones import (
+from modulos.comisiones.dominio.excepciones import (
     InteraccionNoValidaParaComisionExcepcion,
     LoteComisionesInvalidoExcepcion
 )
-from alpespartners.seedwork.dominio.servicios import ServicioDominio
+from seedwork.dominio.servicios import ServicioDominio
 from decimal import Decimal
 import uuid
 

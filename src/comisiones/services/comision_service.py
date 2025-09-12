@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from uuid import UUID
 from decimal import Decimal
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from modulos.comisiones.dominio.entidades import Comision
 from modulos.comisiones.dominio.objetos_valor import (
@@ -81,7 +82,7 @@ class ComisionService:
                 repositorio.agregar(comision)
                 self.db_session.commit()
                 
-                await self._publicar_evento_comision_reservada(comision, interaccion)
+                await self._publicar_evento_comision_calculada(comision, interaccion)
                 
                 logger.info(f"Comisión {comision.id} reservada exitosamente")
                 return comision
@@ -272,24 +273,43 @@ class ComisionService:
         
         return estadisticas
     
-    async def _publicar_evento_comision_reservada(self, comision: Comision, interaccion: InteraccionAtribuida):
+    async def _publicar_evento_comision_calculada(self, comision: Comision, interaccion: InteraccionAtribuida):
+        """Publicar evento comisionCalculada como indica el diagrama"""
         try:
             event_data = {
                 "id_comision": str(comision.id),
                 "id_interaccion": str(interaccion.id_interaccion),
                 "id_campania": str(interaccion.id_campania),
-                "monto": {
-                    "valor": str(comision.monto.valor),
+                "monto_comision": {
+                    "valor": float(comision.monto.valor),
                     "moneda": comision.monto.moneda
                 },
+                "estado": str(comision.estado),
                 "tipo_interaccion": interaccion.tipo_interaccion,
-                "score_fraude": interaccion.score_fraude
+                "score_fraude": interaccion.score_fraude,
+                "configuracion_aplicada": self._serialize_configuracion(comision),
+                "timestamp": datetime.now().isoformat()
             }
             
-            self.event_manager.publish_event("ComisionReservada", event_data)
+            self.event_manager.publish_event("comisionCalculada", event_data)
+            logger.info(f"Evento comisionCalculada publicado para comisión {comision.id}")
             
         except Exception as e:
-            logger.error(f"Error publicando evento ComisionReservada: {e}")
+            logger.error(f"Error publicando evento comisionCalculada: {e}")
+    
+    def _serialize_configuracion(self, comision: Comision) -> Optional[Dict[str, Any]]:
+        """Serializar configuración de comisión para el evento"""
+        try:
+            if hasattr(comision, 'configuracion') and comision.configuracion:
+                return {
+                    "tipo": str(comision.configuracion.tipo) if hasattr(comision.configuracion, 'tipo') else None,
+                    "porcentaje": float(comision.configuracion.porcentaje) if hasattr(comision.configuracion, 'porcentaje') else None,
+                    "monto_fijo": float(comision.configuracion.monto_fijo.valor) if hasattr(comision.configuracion, 'monto_fijo') and comision.configuracion.monto_fijo else None
+                }
+            return None
+        except Exception as e:
+            logger.warning(f"Error serializando configuración: {e}")
+            return None
     
     async def _publicar_evento_comision_confirmada(self, comision: Comision):
         try:

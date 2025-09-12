@@ -1,7 +1,7 @@
 
-from alpespartners.seedwork.aplicacion.comandos import Comando, ComandoHandler
-from alpespartners.modulos.comisiones.dominio.entidades import Comision
-from alpespartners.modulos.comisiones.dominio.objetos_valor import (
+from seedwork.aplicacion.comandos import Comando, ComandoHandler, ejecutar_commando as comando
+from modulos.comisiones.dominio.entidades import Comision
+from modulos.comisiones.dominio.objetos_valor import (
     InteraccionAtribuida,
     MontoComision,
     ConfiguracionComision,
@@ -9,15 +9,14 @@ from alpespartners.modulos.comisiones.dominio.objetos_valor import (
     TipoComision,
     TipoPoliticaFraude
 )
-from alpespartners.modulos.comisiones.dominio.servicios import ServicioComision
-from alpespartners.modulos.comisiones.dominio.repositorios import (
+from modulos.comisiones.dominio.servicios import ServicioComision
+from modulos.comisiones.dominio.repositorios import (
     RepositorioComision,
     RepositorioConfiguracionComision,
     RepositorioPoliticaFraude
 )
-from alpespartners.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
-from alpespartners.seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from alpespartners.seedwork.aplicacion.comandos import ejecutar_commando as comando
+from modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
+from seedwork.infraestructura.uow import UnidadTrabajoPuerto
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
