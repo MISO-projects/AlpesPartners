@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from atribucion.seedwork.dominio.entidades import AgregacionRaiz
+from tracking.seedwork.dominio.entidades import AgregacionRaiz
 from pydispatch import dispatcher
 
 import pickle
@@ -71,7 +71,6 @@ class UnidadTrabajo(ABC):
 
     def _publicar_eventos_post_commit(self):
         for evento in self._obtener_eventos():
-            print(f'Publicando evento de integración: {type(evento).__name__}Integracion')
             dispatcher.send(signal=f'{type(evento).__name__}Integracion', evento=evento)
 
 
@@ -87,19 +86,21 @@ def is_flask():
 def registrar_unidad_de_trabajo(serialized_obj):
     from flask import session
 
-    session['uow'] = serialized_obj
+    session['tracking_uow'] = serialized_obj
 
 
 def flask_uow():
     from flask import session
-    from marketing.config.uow import get_unit_of_work
+    from tracking.config.uow import get_unit_of_work
 
-    if session.get('uow'):
-        return session['uow']
+    # Usamos una session tracking-specific key para evitar la contaminación entre servicios
+    tracking_uow_key = 'tracking_uow'
+    if session.get(tracking_uow_key):
+        return session[tracking_uow_key]
     else:
         uow = get_unit_of_work()
         uow_serialized = pickle.dumps(uow)
-        registrar_unidad_de_trabajo(uow_serialized)
+        session[tracking_uow_key] = uow_serialized
         return uow_serialized
 
 

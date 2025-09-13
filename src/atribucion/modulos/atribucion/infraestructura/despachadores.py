@@ -1,50 +1,70 @@
 import pulsar
-from pulsar.schema import AvroSchema
-from atribucion.modulos.atribucion.infraestructura.schema.v1.eventos import (
-    EventoInteraccionAtribuidaRecibida,
-    InteraccionAtribuidaRecibidaPayload,
-)
+from pulsar.schema import AvroSchema, Record
+import json
+from .schema.v1.eventos import EventoConversionAtribuida, ConversionAtribuidaPayload, MontoSchema
 from atribucion.seedwork.infraestructura import utils
+import uuid
 
 
-class DespachadorAtribucion:
+def avro_to_dict(record) -> dict:
+    """Convierte un objeto Avro Record a un diccionario de Python recursivamente."""
+    if not isinstance(record, Record):
+        return record
+    
+    result = {}
+    for key, value in record.__dict__.items():
+        if key.startswith('_'):
+            continue
+        if isinstance(value, Record):
+            result[key] = avro_to_dict(value)
+        elif isinstance(value, list):
+            result[key] = [avro_to_dict(item) for item in value]
+        else:
+            result[key] = value
+    return result
+
+
+class DespachadorEventosAtribucion:
     def _publicar_mensaje(self, mensaje, topico, schema_class):
-        print(f' AQUI ESTA DISPARANDO ATRIBUCION')
-        print(mensaje)
-        print(topico)
-        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
         try:
-            publicador = cliente.create_producer(
-                topico, schema=AvroSchema(schema_class)
-            )
+            print("DESPACHADOR: Conectando al broker Pulsar...")
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            print("DESPACHADOR: Conexión establecida.")
+            publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
+            
+            print(f"DESPACHADOR: Publicando mensaje en tópico: {topico}")
             publicador.send(mensaje)
-            print(f' Mensaje Atribucion publicado en tópico: {topico}')
+            
+            mensaje_completo = avro_to_dict(mensaje.data)
+            print("DESPACHADOR: Mensaje publicado exitosamente:")
+            print(json.dumps(mensaje_completo, indent=2, default=str, ensure_ascii=False))
+            
+            cliente.close()
         except Exception as e:
-            print(f' Error publicando mensaje Atribucion: {e}')
-            print(f' [FALLBACK] Publicando mensaje {mensaje.data} en tópico {topico}')
-        finally:
-            if cliente:
-                cliente.close()
+            print(f"ERROR DESPACHADOR: No se pudo publicar el evento. Causa: {e}")
 
-    def publicar_interaccion_atribuida(self, evento, topico="interaccion-atribuida"):
-        from atribucion.modulos.atribucion.infraestructura.schema.v1.eventos import MontoComisionSchema
+    def publicar_evento_conversion_atribuida(self, resultado_atribucion: list, datos_evento_original: dict, topico='eventos-atribucion'):
         
-        # Convertir MontoComision (dominio) a MontoComisionSchema (Pulsar)
-        monto_schema = MontoComisionSchema(
-            valor=float(evento.valor_interaccion.valor),
-            moneda=evento.valor_interaccion.moneda
+        if not resultado_atribucion:
+            print("DESPACHADOR: No hay atribución calculada para publicar.")
+            return
+            
+        atribucion_principal = resultado_atribucion[0]
+        
+        print(f"DESPACHADOR: Mapeando resultado de atribución a Payload: {atribucion_principal}")
+        
+        payload = ConversionAtribuidaPayload(
+            id_interaccion_atribuida=str(uuid.uuid4()),
+            id_campania=str(atribucion_principal.touchpoint.campania_id),
+            tipo_conversion=datos_evento_original.get('tipo', 'UNKNOWN'),
+            monto_atribuido=MontoSchema(
+                valor=float(atribucion_principal.valor_atribuido),
+                moneda='USD'
+            ),
+            id_interaccion_original=datos_evento_original.get('id_interaccion'),
+            score_fraude=15 # TODO: Calcular un score de fraude real
         )
         
-        payload = InteraccionAtribuidaRecibidaPayload(
-            id_interaccion=str(evento.id_interaccion),
-            id_campania=str(evento.id_campania),
-            tipo_interaccion=evento.tipo_interaccion,
-            valor_interaccion=monto_schema,
-            fraud_ok=evento.fraud_ok,
-            score_fraude=evento.score_fraude,
-            timestamp=int(evento.timestamp.timestamp() * 1000)
-        )
-        evento_integracion = EventoInteraccionAtribuidaRecibida(data=payload)
-        self._publicar_mensaje(
-            evento_integracion, topico, EventoInteraccionAtribuidaRecibida
-        )
+        evento_integracion = EventoConversionAtribuida(data=payload)
+        print(f"DESPACHADOR: Evento mapeado: {evento_integracion}")
+        self._publicar_mensaje(evento_integracion, topico, EventoConversionAtribuida)

@@ -1,28 +1,11 @@
 from pulsar.schema import *
 from atribucion.seedwork.infraestructura.schema.v1.eventos import EventoIntegracion
 
-
-class MontoComisionSchema(Record):
-    valor = Double()
-    moneda = String()
-
-
-class InteraccionAtribuidaRecibidaPayload(Record):
-    id_interaccion = String()
-    id_campania = String()
-    tipo_interaccion = String()
-    valor_interaccion = MontoComisionSchema()
-    fraud_ok = Boolean()
-    score_fraude = Integer()
-    timestamp = Long()
-
-
-class EventoInteraccionAtribuidaRecibida(EventoIntegracion):
-    data = InteraccionAtribuidaRecibidaPayload()
-
+class IdentidadUsuarioSchema(Record):
+    id_usuario = String()
+    id_anonimo = String()
 
 class ParametrosTrackingSchema(Record):
-    """Schema local para consumir parámetros de tracking"""
     fuente = String()
     medio = String()
     campania = String()
@@ -30,30 +13,16 @@ class ParametrosTrackingSchema(Record):
     termino = String()
     id_afiliado = String()
 
-
-class IdentidadUsuarioSchema(Record):
-    """Schema local para consumir identidad de usuario"""
-    id_usuario = String(required=False)
-    id_anonimo = String(required=False)
-    direccion_ip = String(required=False)
-    agente_usuario = String(required=False)
-
-
 class ElementoObjetivoSchema(Record):
-    """Schema local para consumir elemento objetivo"""
     url = String()
-    id_elemento = String(required=False)
-
+    id_elemento = String()
 
 class ContextoInteraccionSchema(Record):
-    """Schema local para consumir contexto de interacción"""
     url_pagina = String()
-    url_referente = String(required=False)
-    informacion_dispositivo = String(required=False)
-
+    url_referente = String()
+    informacion_dispositivo = String()
 
 class InteraccionRegistradaPayload(Record):
-    """Schema local para consumir InteraccionRegistrada desde Tracking"""
     id_interaccion = String()
     tipo = String()
     marca_temporal = Long()
@@ -62,7 +31,20 @@ class InteraccionRegistradaPayload(Record):
     elemento_objetivo = ElementoObjetivoSchema()
     contexto = ContextoInteraccionSchema()
 
-
 class EventoInteraccionRegistradaConsumo(EventoIntegracion):
-    """Evento de integración para consumir InteraccionRegistrada"""
     data = InteraccionRegistradaPayload()
+
+class MontoSchema(Record):
+    valor = Float()
+    moneda = String()
+
+class ConversionAtribuidaPayload(Record):
+    id_interaccion_atribuida = String()
+    id_campania = String()
+    tipo_conversion = String()
+    monto_atribuido = MontoSchema()
+    id_interaccion_original = String()
+    score_fraude = Integer()
+
+class EventoConversionAtribuida(EventoIntegracion):
+    data = ConversionAtribuidaPayload()

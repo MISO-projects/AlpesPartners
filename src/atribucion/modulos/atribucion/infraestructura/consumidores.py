@@ -1,24 +1,47 @@
 import pulsar
 import _pulsar
-from pulsar.schema import AvroSchema
-from atribucion.modulos.atribucion.infraestructura.schema.v1.eventos import EventoInteraccionRegistradaConsumo
-from atribucion.seedwork.infraestructura import utils
+from pulsar.schema import AvroSchema, Record
+import json
 import traceback
 
+from atribucion.modulos.atribucion.infraestructura.schema.v1.eventos import EventoInteraccionRegistradaConsumo
+from atribucion.seedwork.infraestructura import utils
+
+from atribucion.modulos.atribucion.aplicacion.mapeadores import MapeadorAtribucionDTOJson
+from atribucion.modulos.atribucion.aplicacion.comandos.registrar_atribucion import RegistrarAtribucion
+from atribucion.seedwork.aplicacion.comandos import ejecutar_commando
+
+def avro_to_dict(record: Record) -> dict:
+    """Convierte un objeto Avro Record a un diccionario de Python recursivamente."""
+    if not isinstance(record, Record):
+        return record
+    
+    result = {}
+    for key, value in record.__dict__.items():
+        if key.startswith('_'):
+            continue
+        if isinstance(value, Record):
+            result[key] = avro_to_dict(value)
+        elif isinstance(value, list):
+            result[key] = [avro_to_dict(item) for item in value]
+        else:
+            result[key] = value
+    return result
 
 class ConsumidorInteracciones:
-    """Consumidor de eventos InteraccionRegistrada desde el servicio de Tracking"""
-
     def __init__(self):
         self.cliente = None
         self.consumidor = None
 
     def suscribirse_a_eventos_interaccion(self, app=None):
-        """Configura la suscripción al evento InteraccionRegistrada"""
+        if not app:
+            return
+            
+        self.app = app
         try:
             self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
             self.consumidor = self.cliente.subscribe(
-                'interaccion-registrada',
+                'interaccion-registrada', 
                 consumer_type=_pulsar.ConsumerType.Shared,
                 subscription_name='atribucion-sub-interacciones',
                 schema=AvroSchema(EventoInteraccionRegistradaConsumo)
@@ -28,14 +51,15 @@ class ConsumidorInteracciones:
             while True:
                 mensaje = self.consumidor.receive()
                 try:
-                    self._procesar_evento_interaccion_registrada(mensaje)
+                    with self.app.app_context():
+                        with self.app.test_request_context():
+                            self._procesar_mensaje_con_comando(mensaje)
                     self.consumidor.acknowledge(mensaje)
-                    print(f"Evento InteraccionRegistrada procesado exitosamente")
+                    print(f"Evento InteraccionRegistrada procesado y comando despachado exitosamente.")
                 except Exception as e:
                     print(f"Error procesando InteraccionRegistrada: {e}")
                     traceback.print_exc()
                     self.consumidor.acknowledge(mensaje)
-
         except Exception as e:
             print(f"Error configurando consumidor de atribución: {e}")
             traceback.print_exc()
@@ -43,63 +67,16 @@ class ConsumidorInteracciones:
             if self.cliente:
                 self.cliente.close()
 
-    def _procesar_evento_interaccion_registrada(self, mensaje):
-        """Procesa el evento InteraccionRegistrada y ejecuta la lógica de atribución"""
-        evento_data = mensaje.value().data
-        print(f" Atribución procesando InteraccionRegistrada:")
-        print(f" - ID: {evento_data.id_interaccion}")
-        print(f" - Tipo: {evento_data.tipo}")
-        print(f" - Usuario: {evento_data.identidad_usuario.id_usuario or 'Anónimo'}")
-        print(f" - Campaña: {evento_data.parametros_tracking.campania}")
-        print(f" - Timestamp: {evento_data.marca_temporal}")
+    def _procesar_mensaje_con_comando(self, mensaje):
+        evento_dict = avro_to_dict(mensaje.value().data)
+        print(f"CONSUMIDOR: Evento recibido y convertido a dict: {evento_dict}")
         
-        # Ejecutar lógica de atribución
-        resultado_atribucion = self._ejecutar_logica_atribucion(evento_data)
+        map_atribucion = MapeadorAtribucionDTOJson()
+        atribucion_dto = map_atribucion.externo_a_dto(evento_dict)
+        print(f"CONSUMIDOR: DTO creado a partir del dict: {atribucion_dto}")
+
+        comando = RegistrarAtribucion(atribucion=atribucion_dto)
+        print(f"CONSUMIDOR: Comando '{type(comando).__name__}' creado. Despachando...")
+
+        ejecutar_commando(comando)
         
-        if resultado_atribucion:
-            print(f" ✅ Atribución exitosa - Disparando evento InteraccionAtribuidaRecibida")
-            self._disparar_evento_atribucion(evento_data, resultado_atribucion)
-        else:
-            print(f" ❌ Atribución fallida - No se disparará evento")
-        
-        return True
-    
-    def _ejecutar_logica_atribucion(self, evento_data):
-        """Lógica simplificada de atribución - TODO: Implementar lógica completa"""
-        print(f" 🔍 Ejecutando lógica de atribución...")
-        
-        # Por ahora, atribuimos si hay campaña en los parámetros
-        campania = evento_data.parametros_tracking.campania
-        if campania and campania.strip():
-            return {
-                'id_campania': 'c60e66b4-b12a-43b0-b97a-b5eaff030cae',
-                'valor_interaccion': {'valor': 25.50, 'moneda': 'USD'},
-                'fraud_ok': True,
-                'score_fraude': 15
-            }
-        return None
-    
-    def _disparar_evento_atribucion(self, evento_original, resultado):
-        """Dispara el evento InteraccionAtribuidaRecibida"""
-        from datetime import datetime
-        from decimal import Decimal
-        from atribucion.modulos.atribucion.dominio.eventos import InteraccionAtribuidaRecibida
-        from atribucion.modulos.atribucion.dominio.objetos_valor import MontoComision
-        from pydispatch import dispatcher
-        
-        # Crear el evento de atribución
-        evento_atribucion = InteraccionAtribuidaRecibida(
-            id_interaccion=evento_original.id_interaccion or 'unknown',
-            id_campania=resultado['id_campania'],
-            tipo_interaccion=evento_original.tipo,
-            valor_interaccion=MontoComision(
-                valor=Decimal(str(resultado['valor_interaccion']['valor'])),
-                moneda=resultado['valor_interaccion']['moneda']
-            ),
-            fraud_ok=resultado['fraud_ok'],
-            score_fraude=resultado['score_fraude'],
-            timestamp=datetime.now()
-        )
-        
-        # Disparar evento de integración
-        dispatcher.send(signal=f'{InteraccionAtribuidaRecibida.__name__}Integracion', evento=evento_atribucion)
