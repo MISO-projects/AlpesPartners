@@ -56,8 +56,7 @@ services:
   # Map the local directory to the container to avoid bookie startup failure due to insufficient container disks.
     volumes:
       - ./data/bookkeeper:/pulsar/data/bookkeeper
-    command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf
-      && exec bin/pulsar bookie"
+    command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
 
 # Start broker
   broker:
@@ -171,10 +170,36 @@ services:
       - |
         python -m debugpy --listen 0.0.0.0:5678 -m flask --app src/comisiones/api run --host=0.0.0.0 -p 8000 --reload
     ports:
-      - "8002:8000"
+      - "8003:8000"
       - "5680:5678"
     volumes:
       - ./src/comisiones/:/src/comisiones/
+    environment:
+      - DATABASE_TYPE=mongodb
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin
+      - BROKER_HOST=broker
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - mongodb
+    networks:
+      - alpespartners-network
+  atribucion:
+    build:
+      context: .
+      dockerfile: atribucion.Dockerfile
+    profiles: ["alpespartners"]
+    container_name: atribucion
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - |
+        python -m debugpy --listen 0.0.0.0:5678 -m flask --app src/atribucion/api run --host=0.0.0.0 -p 8000 --reload
+    ports:
+      - "8002:8000"
+      - "5681:5678"
+    volumes:
+      - ./src/atribucion/:/src/atribucion/
     environment:
       - DATABASE_TYPE=mongodb
       - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/alpespartners?authSource=admin
@@ -189,8 +214,5 @@ networks:
   alpespartners-network:
     driver: bridge
 
-volumes:
-  pulsar_data:
-    driver: local
-  mongodb_data:
-    driver: local
+# Volúmenes locales se crean automáticamente por Docker
+# pulsar_data y mongodb_data no se están usando en los servicios
