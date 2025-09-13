@@ -14,11 +14,11 @@ from tracking.seedwork.infraestructura import utils
 
 
 class DespachadorTracking:
-    def _publicar_mensaje(self, mensaje, topico, schema):
+    def _publicar_mensaje(self, mensaje, topico, schema_class):
         cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
         try:
             publicador = cliente.create_producer(
-                topico, schema=AvroSchema(schema)
+                topico, schema=AvroSchema(schema_class)
             )
             publicador.send(mensaje)
             print(f' Mensaje Tracking publicado en tópico: {topico}')
@@ -40,7 +40,7 @@ class DespachadorTracking:
         )
         evento_integracion = EventoInteraccionRegistrada(data=payload)
         self._publicar_mensaje(
-            evento_integracion, topico, AvroSchema(EventoInteraccionRegistrada)
+            evento_integracion, topico, EventoInteraccionRegistrada
         )
 
     def publicar_comando(self, comando, topico):
