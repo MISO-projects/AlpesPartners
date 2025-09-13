@@ -46,7 +46,6 @@ class ConsumidorInteracciones:
                 subscription_name='atribucion-sub-interacciones',
                 schema=AvroSchema(EventoInteraccionRegistradaConsumo)
             )
-            print("Consumidor Atribucion: Esperando eventos InteraccionRegistrada...")
 
             while True:
                 mensaje = self.consumidor.receive()
@@ -55,7 +54,6 @@ class ConsumidorInteracciones:
                         with self.app.test_request_context():
                             self._procesar_mensaje_con_comando(mensaje)
                     self.consumidor.acknowledge(mensaje)
-                    print(f"Evento InteraccionRegistrada procesado y comando despachado exitosamente.")
                 except Exception as e:
                     print(f"Error procesando InteraccionRegistrada: {e}")
                     traceback.print_exc()

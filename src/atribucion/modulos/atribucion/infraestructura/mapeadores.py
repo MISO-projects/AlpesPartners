@@ -68,6 +68,7 @@ class MapeadorJourneyMongoDB(Mapeador):
                 "orden": tp.orden,
                 "timestamp": tp.timestamp,
                 "campania_id": tp.campania_id,
+                "afiliado_id": tp.afiliado_id,
                 "canal": tp.canal,
                 "tipo_interaccion": tp.tipo_interaccion
             } for tp in entidad.touchpoints
@@ -90,6 +91,7 @@ class MapeadorJourneyMongoDB(Mapeador):
                 orden=tp_dict.get('orden'),
                 timestamp=tp_dict.get('timestamp'),
                 campania_id=tp_dict.get('campania_id'),
+                afiliado_id=tp_dict.get('afiliado_id'),
                 canal=tp_dict.get('canal'),
                 tipo_interaccion=tp_dict.get('tipo_interaccion')
             ) for tp_dict in dto.get('touchpoints', [])

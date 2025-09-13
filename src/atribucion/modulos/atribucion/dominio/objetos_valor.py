@@ -53,7 +53,7 @@ class AtribucionCalculada(ObjetoValor):
 class TipoInteraccion(str, Enum):
     CLICK = "click"
     VIEW = "view" 
-    CONVERSION = "conversion"
+    PURCHASE = "purchase"
 
 @dataclass(frozen=True)
 class IdentificadorUniversal(ObjetoValor):

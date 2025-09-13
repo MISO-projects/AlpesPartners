@@ -21,6 +21,7 @@ class MapeadorAtribucion(RepMap):
             orden=1,
             timestamp=timestamp_obj,
             campania_id=dto.parametros_tracking.campania,
+            afiliado_id=dto.parametros_tracking.id_afiliado, 
             canal=dto.parametros_tracking.medio,
             tipo_interaccion=dto.tipo
         )

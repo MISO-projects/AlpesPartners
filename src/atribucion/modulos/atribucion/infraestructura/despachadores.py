@@ -23,6 +23,33 @@ def avro_to_dict(record) -> dict:
             result[key] = value
     return result
 
+def calcular_score_fraude_basico(resultado_atribucion: list) -> int:
+    """Calcula un score de fraude básico usando los datos de atribución"""
+    if not resultado_atribucion:
+        return 0
+        
+    score = 0
+    atribucion_principal = resultado_atribucion[0]
+    touchpoint = atribucion_principal.touchpoint
+    
+    # Factor 1: Campaña vacía o None (sospechoso)
+    if not touchpoint.campania_id:
+        score += 25
+    
+    # Factor 2: Canal sospechoso
+    if touchpoint.canal in ['unknown', 'bot', 'crawler']:
+        score += 30
+    
+    # Factor 3: Tipo de interacción de bajo valor
+    if touchpoint.tipo_interaccion in ['IMPRESSION', 'VIEW']:
+        score += 10
+    
+    # Factor 4: Valor atribuido muy bajo o 0
+    if atribucion_principal.valor_atribuido <= 0:
+        score += 20
+    
+    score_final = min(score, 100)
+    return score_final
 
 class DespachadorEventosAtribucion:
     def _publicar_mensaje(self, mensaje, topico, schema_class):
@@ -50,21 +77,18 @@ class DespachadorEventosAtribucion:
             return
             
         atribucion_principal = resultado_atribucion[0]
-        
-        print(f"DESPACHADOR: Mapeando resultado de atribución a Payload: {atribucion_principal}")
-        
         payload = ConversionAtribuidaPayload(
             id_interaccion_atribuida=str(uuid.uuid4()),
             id_campania=str(atribucion_principal.touchpoint.campania_id),
+            id_afiliado=str(atribucion_principal.touchpoint.afiliado_id),
             tipo_conversion=datos_evento_original.get('tipo', 'UNKNOWN'),
             monto_atribuido=MontoSchema(
                 valor=float(atribucion_principal.valor_atribuido),
                 moneda='USD'
             ),
-            id_interaccion_original=datos_evento_original.get('id_interaccion'),
-            score_fraude=15 # TODO: Calcular un score de fraude real
+            id_interaccion_original=datos_evento_original.get('id_interaccion', 'UNKNOWN'),
+            score_fraude=calcular_score_fraude_basico(resultado_atribucion)
         )
         
         evento_integracion = EventoConversionAtribuida(data=payload)
-        print(f"DESPACHADOR: Evento mapeado: {evento_integracion}")
         self._publicar_mensaje(evento_integracion, topico, EventoConversionAtribuida)

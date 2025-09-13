@@ -4,6 +4,8 @@ from atribucion.seedwork.infraestructura.schema.v1.eventos import EventoIntegrac
 class IdentidadUsuarioSchema(Record):
     id_usuario = String()
     id_anonimo = String()
+    direccion_ip = String()
+    agente_usuario = String()
 
 class ParametrosTrackingSchema(Record):
     fuente = String()
@@ -41,6 +43,7 @@ class MontoSchema(Record):
 class ConversionAtribuidaPayload(Record):
     id_interaccion_atribuida = String()
     id_campania = String()
+    id_afiliado = String()
     tipo_conversion = String()
     monto_atribuido = MontoSchema()
     id_interaccion_original = String()

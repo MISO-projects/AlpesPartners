@@ -26,6 +26,7 @@ class Touchpoint:
     orden: int
     timestamp: datetime
     campania_id: str
+    afiliado_id: str 
     canal: str
     tipo_interaccion: str
 
@@ -57,25 +58,84 @@ class Journey(AgregacionRaiz):
             orden=len(self.touchpoints) + 1,
             timestamp=timestamp_obj,
             campania_id=datos_evento.get('parametros_tracking', {}).get('campania'),
+            afiliado_id=datos_evento.get('parametros_tracking', {}).get('id_afiliado'),
             canal=datos_evento.get('parametros_tracking', {}).get('medio'),
             tipo_interaccion=datos_evento.get('tipo')
         )
         self.touchpoints.append(nuevo_touchpoint)
         self.fecha_ultima_actividad = datetime.now()
-        # self.agregar_evento(TouchpointAgregado(...))
         print(f"ENTIDAD: Touchpoint tipo '{nuevo_touchpoint.tipo_interaccion}' agregado al Journey {self.id}.")
+
+    def calcular_valor_conversion_dinamico(self, datos_evento: dict) -> float:
+        """Calcula el valor de conversión basado en los datos del evento recibido por tracking"""
+        
+        # Valores base por tipo de conversión
+        valores_base = {
+            'PURCHASE': 150.0,
+            'SIGNUP': 25.0,
+            'SUBSCRIBE': 50.0,
+            'DOWNLOAD': 15.0,
+            'CLICK': 30.0,
+            'VIEW': 5.0,
+            'CONVERSION': 100.0
+        }
+        
+        tipo_conversion = datos_evento.get('tipo', 'UNKNOWN')
+        valor_base = valores_base.get(tipo_conversion, 50.0)
+        
+        # Multiplicadores por fuente
+        parametros = datos_evento.get('parametros_tracking', {})
+        fuente = parametros.get('fuente', 'unknown')
+        
+        multiplicadores_fuente = {
+            'google': 1.3,
+            'facebook': 1.1,
+            'instagram': 1.0,
+            'twitter': 0.9,
+            'linkedin': 1.4,
+            'email': 1.2,
+            'direct': 1.5,
+            'organic': 1.6
+        }
+        
+        multiplicador_fuente = multiplicadores_fuente.get(fuente.lower(), 1.0)
+        print(f"CALCULO VALOR: Fuente '{fuente}' -> multiplicador: {multiplicador_fuente}")
+        
+        # Multiplicadores por medio
+        medio = parametros.get('medio', 'unknown')
+        multiplicadores_medio = {
+            'cpc': 1.1,
+            'organic': 1.3,
+            'social': 0.9,
+            'email': 1.2,
+            'referral': 1.1,
+            'display': 0.8
+        }
+        
+        multiplicador_medio = multiplicadores_medio.get(medio.lower(), 1.0)
+        
+        campania = parametros.get('campania')
+        bonus_campania = 1.15 if campania else 1.0
+        if campania:
+            print(f"CALCULO VALOR: Campaña definida -> bonus: {bonus_campania}")
+        
+        valor_final = valor_base * multiplicador_fuente * multiplicador_medio * bonus_campania
+        valor_final = round(valor_final, 2)
+        return valor_final
 
     def registrar_conversion(self, datos_evento: dict) -> Conversion:
         self.estado = EstadoJourney.CONVERTIDO
         timestamp_num = datos_evento.get('marca_temporal', 0)
         timestamp_obj = datetime.fromtimestamp(timestamp_num / 1000, tz=timezone.utc)
+        
+        valor_calculado = self.calcular_valor_conversion_dinamico(datos_evento)
+        
         nueva_conversion = Conversion(
             timestamp=timestamp_obj,
             tipo=datos_evento.get('tipo'),
-            valor=float(datos_evento.get('parametros_tracking', {}).get('valor_monetario', 0.0))
+            valor=valor_calculado
         )
         self.conversiones.append(nueva_conversion)
-        # self.agregar_evento(ConversionRegistrada(...))
         print(f"ENTIDAD: Conversión registrada en Journey {self.id} por valor de {nueva_conversion.valor}.")
         return nueva_conversion
 
@@ -142,7 +202,7 @@ class ModeloAtribucion(AgregacionRaiz):
     def _atribucion_time_decay(self, touchpoints, conversion, config: ov.ConfiguracionAtribucion):
         total_peso_bruto = 0
         pesos_brutos = []
-        factor_dias = config.factor_decaimiento or 7.0 # Default a 7 días si no está configurado
+        factor_dias = config.factor_decaimiento or 7.0
 
         for tp in touchpoints:
             delta_segundos = (conversion.timestamp - tp.timestamp).total_seconds()
