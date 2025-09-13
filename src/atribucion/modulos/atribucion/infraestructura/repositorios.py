@@ -64,7 +64,6 @@ class RepositorioJourneyMongoDB(RepositorioJourney):
         
     def _get_collection(self):
         # ¡CAMBIO 2! Usamos el método .get_database() del objeto importado
-        print("REPOSITORIO MONGO: Obteniendo la colección 'journeys'")
         return mongo_config.get_database()['journeys']
 
     def obtener_por_id(self, id: UUID) -> Journey:
