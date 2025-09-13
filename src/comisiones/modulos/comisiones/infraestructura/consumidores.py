@@ -6,26 +6,78 @@ from comisiones.modulos.comisiones.dominio.objetos_valor import MontoComision
 from comisiones.seedwork.aplicacion.comandos import ejecutar_commando
 from decimal import Decimal
 import uuid
+import pulsar
+import _pulsar
+from pulsar.schema import AvroSchema, Record
+from comisiones.modulos.comisiones.infraestructura.schema.v1.eventos import EventoConversionAtribuida
+from comisiones.seedwork.infraestructura import utils
+import traceback
+
+def avro_to_dict(record: Record) -> dict:
+    """Convierte un objeto Avro Record a un diccionario de Python recursivamente."""
+    if not isinstance(record, Record):
+        return record
+    
+    result = {}
+    for key, value in record.__dict__.items():
+        if key.startswith('_'):
+            continue
+        if isinstance(value, Record):
+            result[key] = avro_to_dict(value)
+        elif isinstance(value, list):
+            result[key] = [avro_to_dict(item) for item in value]
+        else:
+            result[key] = value
+    return result
 
 class ConsumidorInteraccionAtribuida:
 
     def __init__(self):
         pass  
 
-    def consumir_interaccion_atribuida(self, evento_tracking: dict):
+    def suscribir_a_evento_interaccion_atribuida(self, app=None):
+        if not app:
+            return
+            
+        self.app = app
+        try:
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.consumidor = self.cliente.subscribe(
+                'eventos-atribucion', 
+                consumer_type=_pulsar.ConsumerType.Shared,
+                subscription_name='comisiones-sub-interaccion-atribuida',
+                schema=AvroSchema(EventoConversionAtribuida)
+            )
+            while True:
+                mensaje = self.consumidor.receive()
+                try:
+                    with self.app.app_context():
+                        with self.app.test_request_context():
+                            self.procesar_interaccion_atribuida(mensaje)
+                    self.consumidor.acknowledge(mensaje)
+                except Exception as e:
+                    print(f"Error procesando EventoConversionAtribuida: {e}")
+                    traceback.print_exc()
+                    self.consumidor.acknowledge(mensaje)
+        except Exception as e:
+            print(f"Error configurando consumidor de comisiones: {e}")
+            traceback.print_exc()
+        finally:
+            if self.cliente:
+                self.cliente.close()
+
+    def procesar_interaccion_atribuida(self, mensaje: dict):
 
         try:
-            if not self._validar_evento_tracking(evento_tracking):
-                print(f"Evento de tracking inválido: {evento_tracking}")
-                return
-
-            id_interaccion = uuid.UUID(evento_tracking.get('id_interaccion'))
-            id_campania = evento_tracking.get('id_campania')
-            tipo_interaccion = evento_tracking.get('tipo', 'UNKNOWN')
+            evento_conversion_atribuida = avro_to_dict(mensaje.value().data)
+            print(f"Evento recibido en comisiones: {evento_conversion_atribuida}")
+            id_interaccion = uuid.UUID(evento_conversion_atribuida.get('id_interaccion_atribuida'))
+            id_campania = evento_conversion_atribuida.get('id_campania')
+            tipo_interaccion = evento_conversion_atribuida.get('tipo_conversion', 'UNKNOWN')
             
-            valor_interaccion = self._calcular_valor_interaccion(evento_tracking)
+            valor_interaccion = self._calcular_valor_interaccion(evento_conversion_atribuida)
             
-            fraud_ok, score_fraude = self._evaluar_fraude(evento_tracking)
+            fraud_ok, score_fraude = self._evaluar_fraude(evento_conversion_atribuida)
 
             comando = ReservarComision(
                 id_interaccion=id_interaccion,
@@ -35,7 +87,7 @@ class ConsumidorInteraccionAtribuida:
                 moneda_interaccion="USD",
                 fraud_ok=fraud_ok,
                 score_fraude=score_fraude,
-                parametros_adicionales=evento_tracking.get('parametros_tracking', {})
+                parametros_adicionales=evento_conversion_atribuida.get('parametros_tracking', {})
             )
 
             resultado = ejecutar_commando(comando)
@@ -50,7 +102,7 @@ class ConsumidorInteraccionAtribuida:
                     valor_interaccion=MontoComision(valor=valor_interaccion, moneda="USD"),
                     fraud_ok=fraud_ok,
                     score_fraude=score_fraude,
-                    timestamp=evento_tracking.get('marca_temporal')
+                    timestamp=evento_conversion_atribuida.get('marca_temporal')
                 )
                 
                 UnidadTrabajoPuerto.publicar_evento(evento_interaccion_atribuida)

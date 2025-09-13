@@ -214,5 +214,9 @@ networks:
   alpespartners-network:
     driver: bridge
 
-# Volúmenes locales se crean automáticamente por Docker
-# pulsar_data y mongodb_data no se están usando en los servicios
+volumes:
+  pulsar_data:
+    driver: local
+  mongodb_data:
+    driver: local
+

@@ -79,8 +79,8 @@ class DespachadorEventosAtribucion:
         atribucion_principal = resultado_atribucion[0]
         payload = ConversionAtribuidaPayload(
             id_interaccion_atribuida=str(uuid.uuid4()),
-            id_campania=str(atribucion_principal.touchpoint.campania_id),
-            id_afiliado=str(atribucion_principal.touchpoint.afiliado_id),
+            id_campania=atribucion_principal.touchpoint.campania_id,
+            id_afiliado=atribucion_principal.touchpoint.afiliado_id,
             tipo_conversion=datos_evento_original.get('tipo', 'UNKNOWN'),
             monto_atribuido=MontoSchema(
                 valor=float(atribucion_principal.valor_atribuido),
