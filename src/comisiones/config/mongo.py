@@ -8,8 +8,14 @@ logger = logging.getLogger(__name__)
 class MongoConfig:
     
     def __init__(self):
-        self.connection_string = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-        self.database_name = "alpespartners"  
+
+        user = os.getenv('MONGODB_USER', 'admin')
+        password = os.getenv('MONGODB_PASSWORD', 'admin123')
+        host = os.getenv('MONGODB_HOST', 'mongodb')
+        port = os.getenv('MONGODB_PORT', '27017')
+        database = os.getenv('MONGODB_DATABASE', 'alpespartners')
+        self.connection_string = f"mongodb://{user}:{password}@{host}:{port}/{database}?authSource=admin"
+        self.database_name = database
         self.client = None
         self.database = None
         

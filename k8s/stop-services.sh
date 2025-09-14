@@ -34,6 +34,14 @@ kubectl scale deployment marketing-service --replicas=0
 echo "  - Scaling down tracking-service..."
 kubectl scale deployment tracking-service --replicas=0
 
+# Scale down atribucion service
+echo "  - Scaling down atribucion-service..."
+kubectl scale deployment atribucion-service --replicas=0
+
+# Scale down comisiones service
+echo "  - Scaling down comisiones-service..."
+kubectl scale deployment comisiones-service --replicas=0
+
 # Scale down MongoDB
 echo "  - Scaling down mongodb..."
 kubectl scale deployment mongodb --replicas=0

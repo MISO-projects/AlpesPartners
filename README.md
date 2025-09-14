@@ -52,7 +52,7 @@ Para desplegar en GKE, se debe tener un cluster de GKE creado y configurado.
 ```sh
 kubectl apply -f k8s/mongodb-k8s.yaml
 kubectl apply -f k8s/pulsar.yaml
-kubectl apply -f k8s/microservices.yaml
+kubectl apply -f k8s/microservices/
 ```
 
 ## Detener y reiniciar los servicios

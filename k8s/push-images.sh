@@ -13,12 +13,24 @@ elif [ "$1" == "tracking" ]; then
     echo "Building and pushing tracking image"
     docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/tracking:latest . -f tracking.Dockerfile
     docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/tracking:latest
+elif [ "$1" == "atribucion" ]; then
+    echo "Building and pushing atribucion image"
+    docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/atribucion:latest . -f atribucion.Dockerfile
+    docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/atribucion:latest
+elif [ "$1" == "comisiones" ]; then
+    echo "Building and pushing comisiones image"
+    docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest . -f comisiones.Dockerfile
+    docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest
 else
     echo "Building and pushing all images"
     docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/marketing:latest . -f marketing.Dockerfile
     docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/marketing:latest
     docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/tracking:latest . -f tracking.Dockerfile
     docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/tracking:latest
+    docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/atribucion:latest . -f atribucion.Dockerfile
+    docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/atribucion:latest
+    docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest . -f comisiones.Dockerfile
+    docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest
 fi
 
          

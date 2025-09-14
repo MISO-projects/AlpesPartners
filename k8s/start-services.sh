@@ -82,10 +82,20 @@ kubectl scale deployment marketing-service --replicas=1
 echo "  - Scaling up tracking-service..."
 kubectl scale deployment tracking-service --replicas=1
 
+# Scale up atribucion service
+echo "  - Scaling up atribucion-service..."
+kubectl scale deployment atribucion-service --replicas=1
+
+# Scale up comisiones service
+echo "  - Scaling up comisiones-service..."
+kubectl scale deployment comisiones-service --replicas=1
+
 echo ""
 echo "⏳ Waiting for all microservices to be ready..."
 kubectl wait --for=condition=available --timeout=300s deployment/marketing-service
 kubectl wait --for=condition=available --timeout=300s deployment/tracking-service
+kubectl wait --for=condition=available --timeout=300s deployment/atribucion-service
+kubectl wait --for=condition=available --timeout=300s deployment/comisiones-service
 
 echo ""
 echo "📊 Final status:"
