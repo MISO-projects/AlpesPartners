@@ -48,20 +48,63 @@ def reservar_comision():
                     status=400, mimetype="application/json"
                 )
         
-        comando = ReservarComision(
-            id_interaccion=UUID(data['id_interaccion']),
-            id_campania=UUID(data['id_campania']),
-            tipo_interaccion=data['tipo_interaccion'],
-            valor_interaccion=Decimal(str(data['valor_interaccion'])),
-            moneda_interaccion=data.get('moneda_interaccion', 'USD'),
-            fraud_ok=data.get('fraud_ok', True),
-            score_fraude=data.get('score_fraude', 0),
-            parametros_adicionales=data.get('parametros_adicionales', {})
+        from comisiones.modulos.comisiones.dominio.entidades import Comision
+        from comisiones.modulos.comisiones.dominio.objetos_valor import MontoComision, ConfiguracionComision, TipoComision
+        import uuid
+        from datetime import datetime
+        
+        comision_id = uuid.uuid4()
+        monto = MontoComision(
+            valor=Decimal(str(data['valor_interaccion'])) * Decimal('0.05'),  # 5% de comisión
+            moneda=data.get('moneda_interaccion', 'USD')
         )
         
-        ejecutar_commando(comando)
+        configuracion = ConfiguracionComision(
+            tipo=TipoComision.PORCENTAJE,
+            porcentaje=Decimal('5.0')
+        )
+        
+        comision = Comision(
+            id=comision_id,
+            id_interaccion=str(UUID(data['id_interaccion'])),
+            id_campania=str(UUID(data['id_campania'])),
+            monto=monto,
+            configuracion=configuracion
+        )
+        
+        from comisiones.config.mongo import mongo_config
+        comisiones_collection = mongo_config.get_collection("comisiones")
+        
+        comision_data = {
+            "_id": str(comision.id),
+            "id_interaccion": str(comision.id_interaccion),
+            "id_campania": str(comision.id_campania),
+            "monto": {
+                "valor": float(comision.monto.valor),
+                "moneda": comision.monto.moneda
+            },
+            "configuracion": {
+                "tipo": comision.configuracion.tipo.value,
+                "porcentaje": float(comision.configuracion.porcentaje) if comision.configuracion.porcentaje else None
+            },
+            "estado": "RESERVADA",
+            "timestamp": datetime.now().isoformat(),
+            "tipo_interaccion": data['tipo_interaccion'],
+            "fraud_ok": data.get('fraud_ok', True),
+            "score_fraude": data.get('score_fraude', 0)
+        }
+        
+        comisiones_collection.insert_one(comision_data)
+        
+        print(f"Comisión {comision.id} creada exitosamente para interacción {data['id_interaccion']}")
+        
         return Response(
-            json.dumps({"mensaje": "Comisión reservada exitosamente"}), 
+            json.dumps({
+                "mensaje": "Comisión reservada exitosamente",
+                "id_comision": str(comision.id),
+                "monto": float(comision.monto.valor),
+                "moneda": comision.monto.moneda
+            }), 
             status=202, 
             mimetype="application/json"
         )
@@ -173,24 +216,28 @@ def obtener_comision(comision_id):
 @bp.route("/comisiones", methods=("GET",))
 def listar_comisiones():
     try:
+        from comisiones.config.mongo import mongo_config
+        comisiones_collection = mongo_config.get_collection("comisiones")
+        
         estado = request.args.get('estado')
         id_campania = request.args.get('id_campania')
-        para_lote = request.args.get('para_lote', 'false').lower() == 'true'
         limite = int(request.args.get('limite', 100))
-
-        if para_lote:
-            query = ListarComisionesReservadasParaLote(limite=limite)
-        elif estado:
-            query = ListarComisionesPorEstado(estado=estado)
-        elif id_campania:
-            query = ListarComisionesPorCampania(id_campania=UUID(id_campania))
-        else:
-            query = ListarComisiones()
         
-        query_resultado = ejecutar_query(query)
-        comisiones_dto = query_resultado.resultado
+        filtro = {}
+        if estado:
+            filtro['estado'] = estado
+        if id_campania:
+            filtro['id_campania'] = id_campania
+            
+        cursor = comisiones_collection.find(filtro).limit(limite)
+        comisiones = list(cursor)
+        
+        for comision in comisiones:
+            if '_id' in comision:
+                comision['id'] = comision.pop('_id')
+        
         return Response(
-            json.dumps(to_json_safe(comisiones_dto)),
+            json.dumps(to_json_safe(comisiones)),
             status=200,
             mimetype="application/json"
         )

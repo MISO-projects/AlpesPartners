@@ -12,15 +12,67 @@ from comisiones.modulos.comisiones.dominio.eventos import (
 from comisiones.modulos.comisiones.infraestructura.consumidores import ConsumidorEventosComision
 from datetime import datetime
 import json
+import pulsar
+from pulsar.schema import AvroSchema
+from comisiones.modulos.comisiones.infraestructura.schema.v1.eventos import (
+    EventoComisionReservada,
+    EventoComisionCalculada,
+    ComisionReservadaPayload,
+    ComisionCalculadaPayload
+)
+from comisiones.seedwork.infraestructura import utils
 
 class DespachadorEventosComision:
 
     def __init__(self):
         self._consumidor = ConsumidorEventosComision()
+    
+    def _publicar_mensaje_pulsar(self, mensaje, topico, schema_class):
+        try:
+            print(f"COMISIONES: Conectando al broker Pulsar para publicar en {topico}...")
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
+            
+            print(f"COMISIONES: Publicando mensaje en tópico: {topico}")
+            publicador.send(mensaje)
+            
+            print(f"COMISIONES: Mensaje publicado exitosamente en {topico}")
+            cliente.close()
+        except Exception as e:
+            print(f"COMISIONES: Error publicando mensaje en {topico}: {e}")
 
     def despachar_comision_reservada(self, evento: ComisionReservada):
 
         try:
+            payload = ComisionReservadaPayload(
+                id_comision=str(evento.id_comision),
+                id_interaccion=str(evento.id_interaccion),
+                id_campania=str(evento.id_campania),
+                monto={
+                    'valor': float(evento.monto.valor),
+                    'moneda': evento.monto.moneda
+                },
+                configuracion={
+                    'tipo': evento.configuracion.tipo.value,
+                    'porcentaje': float(evento.configuracion.porcentaje) if evento.configuracion.porcentaje else 0.0
+                },
+                timestamp=evento.timestamp.isoformat(),
+                fraud_ok=True,
+                score_fraude=0
+            )
+            
+            evento_pulsar = EventoComisionReservada(
+                correlation_id=str(evento.id_comision),
+                message_id=f"comision-reservada-{evento.id_comision}",
+                type="ComisionReservada",
+                ingestion=int(datetime.now().timestamp() * 1000),
+                datacontenttype="application/json",
+                service_name="comisiones",
+                data=payload
+            )
+
+            self._publicar_mensaje_pulsar(evento_pulsar, 'comision-reservada', EventoComisionReservada)
+
             evento_dict = {
                 'tipo': 'ComisionReservada',
                 'id_comision': str(evento.id_comision),
@@ -30,25 +82,14 @@ class DespachadorEventosComision:
                     'valor': str(evento.monto.valor),
                     'moneda': evento.monto.moneda
                 },
-                'configuracion': {
-                    'tipo': evento.configuracion.tipo.value,
-                    'porcentaje': str(evento.configuracion.porcentaje) if evento.configuracion.porcentaje else None
-                },
-                'timestamp': evento.timestamp.isoformat(),
-                'politica_fraude': {
-                    'tipo': evento.politica_fraude.tipo.value,
-                    'threshold_score': evento.politica_fraude.threshold_score
-                }
+                'timestamp': evento.timestamp.isoformat()
             }
-
+            
             self._consumidor.consumir_comision_reservada(evento_dict)
-
-            self._publicar_evento_externo('comision.reservada', evento_dict)
-
-            print(f"Evento ComisionReservada despachado exitosamente: {evento.id_comision}")
+            print(f"COMISIONES: Evento ComisionReservada despachado exitosamente: {evento.id_comision}")
 
         except Exception as e:
-            print(f"Error despachando ComisionReservada: {e}")
+            print(f"COMISIONES: Error despachando ComisionReservada: {e}")
 
     def despachar_comision_calculada(self, evento: ComisionCalculada):
 
@@ -244,42 +285,43 @@ class DespachadorEventosComision:
             print(f"Error registrando auditoría: {e}")
 
 def registrar_despachadores():
-
+    from pydispatch import dispatcher
+    
     despachador = DespachadorEventosComision()
     
-    UnidadTrabajoPuerto.registrar_evento_handler(
-        ComisionReservada, 
-        despachador.despachar_comision_reservada
+    dispatcher.connect(
+        despachador.despachar_comision_reservada,
+        signal=f'{ComisionReservada.__name__}Dominio'
     )
     
-    UnidadTrabajoPuerto.registrar_evento_handler(
-        ComisionCalculada,
-        despachador.despachar_comision_calculada
+    dispatcher.connect(
+        despachador.despachar_comision_calculada,
+        signal=f'{ComisionCalculada.__name__}Dominio'
     )
     
-    UnidadTrabajoPuerto.registrar_evento_handler(
-        ComisionConfirmada,
-        despachador.despachar_comision_confirmada
+    dispatcher.connect(
+        despachador.despachar_comision_confirmada,
+        signal=f'{ComisionConfirmada.__name__}Dominio'
     )
     
-    UnidadTrabajoPuerto.registrar_evento_handler(
-        ComisionRevertida,
-        despachador.despachar_comision_revertida
+    dispatcher.connect(
+        despachador.despachar_comision_revertida,
+        signal=f'{ComisionRevertida.__name__}Dominio'
     )
     
-    UnidadTrabajoPuerto.registrar_evento_handler(
-        ComisionCancelada,
-        despachador.despachar_comision_cancelada
+    dispatcher.connect(
+        despachador.despachar_comision_cancelada,
+        signal=f'{ComisionCancelada.__name__}Dominio'
     )
     
-    UnidadTrabajoPuerto.registrar_evento_handler(
-        LoteComisionesConfirmadas,
-        despachador.despachar_lote_confirmado
+    dispatcher.connect(
+        despachador.despachar_lote_confirmado,
+        signal=f'{LoteComisionesConfirmadas.__name__}Dominio'
     )
     
-    UnidadTrabajoPuerto.registrar_evento_handler(
-        PoliticaFraudeAplicada,
-        despachador.despachar_politica_fraude_aplicada
+    dispatcher.connect(
+        despachador.despachar_politica_fraude_aplicada,
+        signal=f'{PoliticaFraudeAplicada.__name__}Dominio'
     )
     
     print("Despachadores de eventos de comisiones registrados")

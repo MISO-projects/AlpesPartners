@@ -14,8 +14,14 @@ def importar_modelos_alchemy():
     import comisiones.modulos.comisiones.infraestructura.dto 
 
 
-def comenzar_consumidor():
-    pass
+def comenzar_consumidor(app):
+    import threading
+    import comisiones.modulos.comisiones.infraestructura.consumidores as consumidores_comisiones
+    
+    consumidor = consumidores_comisiones.ConsumidorEventosAtribucion()
+    threading.Thread(
+        target=consumidor.suscribirse_a_eventos_atribucion, args=[app]
+    ).start()
 
 
 def create_app(configuracion={}):
@@ -39,7 +45,7 @@ def create_app(configuracion={}):
 
     with app.app_context():
         if not app.config.get('TESTING'):
-            comenzar_consumidor()
+            comenzar_consumidor(app)
 
     from . import comisiones
 

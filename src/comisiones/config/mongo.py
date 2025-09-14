@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 class MongoConfig:
     
     def __init__(self):
-        self.connection_string = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-        self.database_name = os.getenv("MONGODB_DATABASE", "comisiones")
+        self.connection_string = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+        self.database_name = "alpespartners"  
         self.client = None
         self.database = None
         
@@ -29,7 +29,7 @@ class MongoConfig:
             logger.info("Desconectado de MongoDB")
             
     def get_database(self):
-        if not self.database:
+        if self.database is None:
             self.connect()
         return self.database
         
@@ -40,11 +40,10 @@ class MongoConfig:
 mongo_config = MongoConfig()
 
 def init_mongo():
-    """Initialize MongoDB connection"""
     try:
         mongo_config.connect()
-        print("✅ MongoDB connection established for comisiones")
+        print("MongoDB connection established for comisiones")
         
     except Exception as e:
-        print(f"❌ MongoDB initialization failed for comisiones: {e}")
+        print(f"MongoDB initialization failed for comisiones: {e}")
         raise
