@@ -38,8 +38,6 @@ Para cada endpoint se utiliza el patron de diseño Command Query Responsibility 
 
 ## Microservicios
 
-Los detalles de los escenarios de calidad y
-
 - Marketing: Microservicio encargado de la gestion de campanias y sus estadisticas
 - Tracking: Microservicio encargado de la gestion de interacciones
 - Atribucion: Microservicio encargado de la gestion de atribuciones
