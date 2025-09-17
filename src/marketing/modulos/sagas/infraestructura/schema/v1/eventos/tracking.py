@@ -1,5 +1,5 @@
 from pulsar.schema import *
-from atribucion.seedwork.infraestructura.schema.v1.eventos import EventoIntegracion
+from marketing.seedwork.infraestructura.schema.v1.eventos import EventoIntegracion
 
 
 class IdentidadUsuarioSchema(Record):

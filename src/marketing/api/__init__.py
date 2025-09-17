@@ -19,15 +19,20 @@ def comenzar_consumidor(app):
     from marketing.modulos.sagas.infraestructura.consumidores import (
         ConsumidorInteracciones,
         ConsumidorAtribucion,
+        ConsumidorComisiones
     )
 
     consumidor_interacciones = ConsumidorInteracciones()
     consumidor_atribucion = ConsumidorAtribucion()
+    consumidor_comisiones = ConsumidorComisiones()
     threading.Thread(
         target=consumidor_interacciones.suscribirse_a_eventos, args=[app]
     ).start()
     threading.Thread(
         target=consumidor_atribucion.suscribirse_a_eventos, args=[app]
+    ).start()
+    threading.Thread(
+        target=consumidor_comisiones.suscribirse_a_eventos, args=[app]
     ).start()
 
 
