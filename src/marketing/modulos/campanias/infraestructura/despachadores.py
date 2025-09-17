@@ -10,11 +10,13 @@ from marketing.modulos.campanias.infraestructura.schema.v1.eventos import (
     CampaniaDesactivadaPayload,
     InteraccionRecibidaPayload
 )
-from marketing.modulos.campanias.infraestructura.schema.v1.comandos import (
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.campania import (
     ComandoCrearCampania,
-    ComandoActivarCampania,
-    CrearCampaniaPayload,
-    ActivarCampaniaPayload
+    CrearCampaniaPayload
+)
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.comision import (
+    ComandoRevertirComision,
+    RevertirComisionPayload
 )
 from marketing.seedwork.infraestructura import utils
 
@@ -22,12 +24,17 @@ from marketing.seedwork.infraestructura import utils
 class DespachadorMarketing:
     def __init__(self):
         self.cliente = None
-        
+
     def _obtener_cliente(self):
         if not self.cliente:
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(
+                f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(
+                    pulsar.LoggerLevel.Error
+                ),  # Only show errors
+            )
         return self.cliente
-    
+
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         cliente = self._obtener_cliente()
         try:
@@ -118,4 +125,15 @@ class DespachadorMarketing:
             comando_integracion,
             "crear-campania-comando",
             ComandoCrearCampania
+        )
+
+    def publicar_comando_revertir_comision(self, comando):
+        payload = RevertirComisionPayload(
+            id_interaccion=comando.id_interaccion
+        )
+        comando_integracion = ComandoRevertirComision(data=payload)
+        self._publicar_mensaje(
+            comando_integracion,
+            "revertir-comision-comando",
+            ComandoRevertirComision
         )

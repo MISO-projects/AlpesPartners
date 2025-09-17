@@ -31,7 +31,7 @@ services:
     container_name: alpespartners-mongodb
     ports:
       - "27017:27017"
-    command: mongod --quiet
+    command: mongod --quiet --logpath /tmp/mongo.log --setParameter logLevel=0 > /dev/null 2>&1
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
