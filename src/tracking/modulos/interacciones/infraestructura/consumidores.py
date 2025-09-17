@@ -10,7 +10,9 @@ import traceback
 def suscribirse_a_eventos(app=None):
     cliente = None
     try:
-        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+            logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+        )
         consumidor = cliente.subscribe(
             'campania-activada',
             consumer_type=_pulsar.ConsumerType.Shared,

@@ -41,7 +41,9 @@ class ConsumidorEventosAtribucion:
         self.app = app
         try:
             print("COMISIONES: Conectando a Pulsar para consumir eventos de atribución...")
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             self.consumidor = self.cliente.subscribe(
                 'eventos-atribucion',  # Tópico que publica el servicio de atribución
                 consumer_type=_pulsar.ConsumerType.Shared,

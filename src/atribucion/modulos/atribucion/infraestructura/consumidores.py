@@ -39,7 +39,9 @@ class ConsumidorInteracciones:
             
         self.app = app
         try:
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             self.consumidor = self.cliente.subscribe(
                 'interaccion-registrada', 
                 consumer_type=_pulsar.ConsumerType.Shared,

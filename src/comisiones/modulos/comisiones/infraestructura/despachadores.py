@@ -30,7 +30,9 @@ class DespachadorEventosComision:
     def _publicar_mensaje_pulsar(self, mensaje, topico, schema_class):
         try:
             print(f"COMISIONES: Conectando al broker Pulsar para publicar en {topico}...")
-            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
             
             print(f"COMISIONES: Publicando mensaje en tópico: {topico}")
