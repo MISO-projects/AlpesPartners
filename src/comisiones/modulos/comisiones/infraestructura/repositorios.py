@@ -123,6 +123,7 @@ class RepositorioComisionMongoDB(RepositorioComision):
 
     def __init__(self):
         self._fabrica_comision = FabricaComision()
+        self._fabrica_configuracion = FabricaConfiguracionComision()
 
     @property
     def fabrica_comision(self) -> FabricaComision:
@@ -220,6 +221,13 @@ class RepositorioComisionMongoDB(RepositorioComision):
         result = collection.delete_one({"_id": str(comision_id)})
         if result.deleted_count == 0:
             raise ValueError(f"Comisión con ID {comision_id} no encontrada")
+
+    def obtener_default(self) -> ConfiguracionComision:
+        return self._fabrica_configuracion.crear_configuracion_porcentaje(
+            porcentaje=Decimal('5.0'),
+            minimo=MontoComision(valor=Decimal('1.0'), moneda='USD'),
+            maximo=MontoComision(valor=Decimal('1000.0'), moneda='USD')
+        )
 
 class RepositorioConfiguracionComisionSQLite(RepositorioConfiguracionComision):
 

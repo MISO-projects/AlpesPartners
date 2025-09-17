@@ -81,18 +81,19 @@ def is_flask():
 def registrar_unidad_de_trabajo(serialized_obj):
     from flask import session
 
-    session['uow'] = serialized_obj
+    session['comisiones_uow'] = serialized_obj
 
 def flask_uow():
     from flask import session
     from comisiones.config.uow import get_unit_of_work
 
-    if session.get('uow'):
-        return session['uow']
+    comisiones_uow_key = 'comisiones_uow'
+    if session.get(comisiones_uow_key):
+        return session[comisiones_uow_key]
     else:
         uow = get_unit_of_work()
         uow_serialized = pickle.dumps(uow)
-        registrar_unidad_de_trabajo(uow_serialized)
+        session[comisiones_uow_key] = uow_serialized
         return uow_serialized
 
 def unidad_de_trabajo() -> UnidadTrabajo:

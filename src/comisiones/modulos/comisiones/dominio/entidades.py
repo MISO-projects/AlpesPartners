@@ -46,19 +46,7 @@ class Comision(AgregacionRaiz):
 
         if self.estado != EstadoComision.RESERVADA:
             raise EstadoComisionInvalidoExcepcion("Solo se pueden reservar comisiones en estado inicial")
-        
-        if not self._validar_politica_fraude(interaccion, politica_fraude):
-            self.estado = EstadoComision.CANCELADA
-            self.agregar_evento(
-                PoliticaFraudeAplicada(
-                    id_comision=self.id,
-                    id_interaccion=interaccion.id_interaccion,
-                    score_fraude=interaccion.score_fraude,
-                    politica_aplicada=politica_fraude,
-                    resultado="RECHAZADA"
-                )
-            )
-            return
+
         monto_calculado = self._calcular_monto_comision(interaccion.valor_interaccion, configuracion)
         
         self.id_interaccion = str(interaccion.id_interaccion)
