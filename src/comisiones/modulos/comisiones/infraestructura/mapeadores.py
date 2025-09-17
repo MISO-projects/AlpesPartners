@@ -187,7 +187,7 @@ class MapeadorComisionSQLite(Mapeador):
 class MapeadorComisionMongoDB(Mapeador):
 
     def obtener_tipo(self) -> type:
-        return dict
+        return Comision.__class__
 
     def entidad_a_dto(self, entidad: Comision) -> dict:
 
@@ -222,13 +222,7 @@ class MapeadorComisionMongoDB(Mapeador):
                     "moneda": entidad.configuracion.maximo.moneda
                 } if entidad.configuracion.maximo else None
             }
-        if entidad.politica_fraude_aplicada:
-            documento["politica_fraude"] = {
-                "tipo": entidad.politica_fraude_aplicada.tipo.value,
-                "threshold_score": entidad.politica_fraude_aplicada.threshold_score,
-                "requiere_revision_manual": entidad.politica_fraude_aplicada.requiere_revision_manual,
-                "tiempo_espera_minutos": entidad.politica_fraude_aplicada.tiempo_espera_minutos
-            }
+
 
         return documento
 
