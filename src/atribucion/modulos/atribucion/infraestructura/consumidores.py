@@ -77,4 +77,46 @@ class ConsumidorInteracciones:
         print(f"CONSUMIDOR: Comando '{type(comando).__name__}' creado. Despachando...")
 
         ejecutar_commando(comando)
+
+
+
+    def suscribirse_a_comandos_reversion(self, app=None):
+        cliente = None
+        try:
+            from atribucion.modulos.atribucion.infraestructura.schema.v1.comandos import ComandoRevertirAtribucion
+            
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            
+            consumidor = cliente.subscribe(
+                'comando-reversion-atribucion', 
+                consumer_type=_pulsar.ConsumerType.Shared,
+                subscription_name='atribucion-sub-comandos-reversion',
+                schema=AvroSchema(ComandoRevertirAtribucion) 
+            )
+            print("Consumidor Atribucion: Esperando comandos RevertirAtribucion...")
+
+            while True:
+                mensaje = consumidor.receive()
+                try:
+                    self._procesar_mensaje_comando_reversion(mensaje)
+                    consumidor.acknowledge(mensaje)
+                except Exception as e:
+                    print(f"Error procesando COMANDO de reversión: {e}")
+                    traceback.print_exc()
+                    consumidor.acknowledge(mensaje)
+
+        except Exception as e:
+            print(f"Error configurando consumidor de COMANDOS de reversión: {e}")
+        finally:
+            if cliente:
+                cliente.close()
+
+    def _procesar_mensaje_comando_reversion(self, mensaje):
+        from atribucion.modulos.atribucion.aplicacion.comandos.revertir_atribucion import RevertirAtribucion
+        
+        payload = mensaje.value().data
+        print(f"CONSUMIDOR: Comando 'RevertirAtribucion' recibido con payload: {payload}")
+        
+        comando = RevertirAtribucion(journey_id=payload.journey_id)
+        ejecutar_commando(comando)
         

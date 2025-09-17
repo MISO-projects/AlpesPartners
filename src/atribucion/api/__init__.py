@@ -21,6 +21,10 @@ def comenzar_consumidor(app):
         target=consumidor.suscribirse_a_eventos_interaccion, args=[app]
     ).start()
 
+    threading.Thread(
+        target=consumidor.suscribirse_a_comandos_reversion, args=[app]
+    ).start()
+
 
 def create_app(configuracion={}):
     app = Flask(__name__, instance_relative_config=True)

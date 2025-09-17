@@ -24,6 +24,7 @@ class TipoModeloAtribucion(Enum):
 @dataclass
 class Touchpoint:
     orden: int
+    interaccion_id: str
     timestamp: datetime
     campania_id: str
     afiliado_id: str 
@@ -56,6 +57,7 @@ class Journey(AgregacionRaiz):
 
         nuevo_touchpoint = Touchpoint(
             orden=len(self.touchpoints) + 1,
+            interaccion_id=datos_evento.get('id_interaccion'),
             timestamp=timestamp_obj,
             campania_id=datos_evento.get('parametros_tracking', {}).get('campania'),
             afiliado_id=datos_evento.get('parametros_tracking', {}).get('id_afiliado'),
