@@ -31,6 +31,7 @@ class DespachadorTracking:
 
     def publicar_evento(self, evento, topico):
         payload = InteraccionRegistradaPayload(
+            id_interaccion=str(evento.id_interaccion),
             tipo=evento.tipo,
             marca_temporal=int(evento.marca_temporal.timestamp() * 1000),
             identidad_usuario=evento.identidad_usuario,

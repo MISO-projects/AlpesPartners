@@ -14,9 +14,21 @@ def importar_modelos_alchemy():
     import marketing.modulos.campanias.infraestructura.dto
 
 
-def comenzar_consumidor():
-    ## TODO
-    pass
+def comenzar_consumidor(app):
+    import threading
+    from marketing.modulos.sagas.infraestructura.consumidores import (
+        ConsumidorInteracciones,
+        ConsumidorAtribucion,
+    )
+
+    consumidor_interacciones = ConsumidorInteracciones()
+    consumidor_atribucion = ConsumidorAtribucion()
+    threading.Thread(
+        target=consumidor_interacciones.suscribirse_a_eventos, args=[app]
+    ).start()
+    threading.Thread(
+        target=consumidor_atribucion.suscribirse_a_eventos, args=[app]
+    ).start()
 
 
 def create_app(configuracion={}):
@@ -33,6 +45,7 @@ def create_app(configuracion={}):
 
     # Initialize MongoDB
     from marketing.config.mongo import init_mongo
+
     with app.app_context():
         if not app.config.get('TESTING'):
             init_mongo()
@@ -41,7 +54,7 @@ def create_app(configuracion={}):
 
     with app.app_context():
         if not app.config.get('TESTING'):
-            comenzar_consumidor()
+            comenzar_consumidor(app)
 
     from . import marketing
 
