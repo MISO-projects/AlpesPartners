@@ -9,18 +9,9 @@ from marketing.seedwork.dominio.eventos import EventoDominio
 from dataclasses import dataclass
 import uuid
 from datetime import datetime
-from marketing.modulos.sagas.aplicacion.comandos.comisiones import (
-    ReservarComision,
-    RevertirComision,
-)
-from marketing.modulos.sagas.aplicacion.comandos.atribucion import (
-    RegistrarAtribucion,
-    RevertirAtribucion,
-)
-from marketing.modulos.sagas.aplicacion.comandos.tracking import (
-    RegistrarInteraccion,
-    DescartarInteraccion,
-)
+from marketing.modulos.sagas.aplicacion.comandos.comisiones import RevertirComision
+from marketing.modulos.sagas.aplicacion.comandos.atribucion import RevertirAtribucion
+from marketing.modulos.sagas.aplicacion.comandos.tracking import DescartarInteraccion
 from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionRegistrada
 from marketing.modulos.sagas.dominio.eventos.atribucion import ConversionAtribuida
 from marketing.modulos.sagas.dominio.eventos.comisiones import ComisionReservada
@@ -38,11 +29,10 @@ class SagaLogEntry:
     """Entrada del log de saga para persistir el estado"""
 
     id_correlacion: uuid.UUID
-    paso_index: int
-    tipo_paso: str  # 'INICIO', 'TRANSACCION', 'COMPENSACION', 'FIN'
-    comando: str = None
+    tipo_paso: str  # 'INICIO', 'EVENTO_NORMAL', 'COMPENSACION', 'FIN', 'ERROR'
     evento: str = None
-    estado: str = None  # 'PENDIENTE', 'EXITOSO', 'FALLIDO'
+    comando: str = None
+    estado: str = None  # 'EXITOSO', 'FALLIDO', 'PROCESANDO'
     timestamp: datetime = None
     datos_adicionales: dict = None
 
@@ -75,49 +65,17 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         self.inicializar_pasos()
 
     def inicializar_pasos(self):
-        """Define los pasos de la saga con sus comandos, eventos y compensaciones"""
-        self.pasos = [
-            Inicio(index=0),
-            Transaccion(
-                index=1,
-                comando=RegistrarInteraccion,
-                evento=InteraccionRegistrada,
-                error=None,  # En coreografía no manejamos errores directamente aquí
-                compensacion=DescartarInteraccion,
-                exitosa=False,
-            ),
-            Transaccion(
-                index=2,
-                comando=RegistrarAtribucion,
-                evento=ConversionAtribuida,
-                error=None,
-                compensacion=RevertirAtribucion,
-                exitosa=False,
-            ),
-            Transaccion(
-                index=3,
-                comando=ReservarComision,
-                evento=ComisionReservada,
-                error=None,
-                compensacion=RevertirComision,
-                exitosa=False,
-            ),
-            Fin(index=4),
-        ]
-
-        # Mapeo de eventos de compensación para el flujo reverso
-        self.eventos_compensacion = {
-            FraudeDetectado: 3,  # Empezar compensación desde el paso 3 (ReservarComision)
-            ComisionRevertida: 2,  # Continuar con paso 2 (RegistrarAtribucion)
-            AtribucionRevertida: 1,  # Continuar con paso 1 (RegistrarInteraccion)
-            InteraccionDescartada: 0,  # Terminar compensación
+        """Mapeo simple: qué comando de compensación ejecutar para cada evento"""
+        self.compensaciones = {
+            FraudeDetectado: RevertirComision,
+            ComisionRevertida: RevertirAtribucion,
+            AtribucionRevertida: DescartarInteraccion,
         }
 
     def iniciar(self):
         """Inicia la saga registrando el paso inicial"""
         entrada_log = SagaLogEntry(
             id_correlacion=self.id_correlacion,
-            paso_index=0,
             tipo_paso="INICIO",
             estado="EXITOSO",
         )
@@ -128,7 +86,6 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         """Termina la saga exitosamente"""
         entrada_log = SagaLogEntry(
             id_correlacion=self.id_correlacion,
-            paso_index=len(self.pasos) - 1,
             tipo_paso="FIN",
             estado="EXITOSO",
         )
@@ -139,8 +96,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         """Termina la saga después de completar todas las compensaciones"""
         entrada_log = SagaLogEntry(
             id_correlacion=self.id_correlacion,
-            paso_index=-1,
-            tipo_paso="COMPENSACION_COMPLETADA",
+            tipo_paso="FIN",
             estado="REVERTIDO",
         )
         self.persistir_en_saga_log(entrada_log)
@@ -151,7 +107,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         self.saga_log.append(entrada)
         # TODO: Implementar persistencia real en base de datos
         print(
-            f"SAGA LOG [{entrada.id_correlacion}]: {entrada.tipo_paso} - {entrada.estado} - Paso {entrada.paso_index}"
+            f"SAGA LOG [{entrada.id_correlacion}]: {entrada.tipo_paso} - {entrada.evento or entrada.comando or 'N/A'} - {entrada.estado}"
         )
 
     def construir_comando(self, evento: EventoDominio, tipo_comando: type) -> Comando:
@@ -180,60 +136,51 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
     def procesar_evento(self, evento: EventoDominio):
         """
         Procesa eventos de dominio para avanzar la saga o ejecutar compensaciones.
-
-        En coreografía, los eventos llegan de forma asíncrona y el coordinador
-        debe determinar qué acción tomar basándose en el tipo de evento.
         """
         try:
-            # Registrar el evento recibido
-            entrada_log = SagaLogEntry(
-                id_correlacion=self.id_correlacion,
-                paso_index=-1,
-                tipo_paso="EVENTO_RECIBIDO",
-                evento=type(evento).__name__,
-                estado="PROCESANDO",
-                datos_adicionales={"evento_data": str(evento)},
-            )
-            self.persistir_en_saga_log(entrada_log)
-
             # Procesar eventos del flujo normal
             if isinstance(evento, InteraccionRegistrada):
-                self._marcar_transaccion_exitosa(1)
+                self._registrar_evento_exitoso(evento, "EVENTO_NORMAL")
                 print(f"✅ Interacción {evento.id_interaccion} registrada exitosamente")
 
             elif isinstance(evento, ConversionAtribuida):
-                self._marcar_transaccion_exitosa(2)
+                self._registrar_evento_exitoso(evento, "EVENTO_NORMAL")
                 print(
                     f"✅ Conversión {evento.id_interaccion_atribuida} atribuida exitosamente"
                 )
 
             elif isinstance(evento, ComisionReservada):
-                self._marcar_transaccion_exitosa(3)
+                self._registrar_evento_exitoso(evento, "EVENTO_NORMAL")
                 print(
                     f"✅ Comisión reservada exitosamente para interacción {evento.id_interaccion}"
                 )
-                # Si todas las transacciones están completas, terminar saga
-                if self._todas_transacciones_exitosas():
+
+                # Si todos los pasos están completos, terminar saga
+                if self._saga_completa():
                     self.terminar()
 
             # Procesar eventos de compensación
             elif isinstance(evento, FraudeDetectado):
+                self._registrar_evento_compensacion(evento)
                 print(
                     f"🚨 Fraude detectado para interacción {evento.id_interaccion}, iniciando compensación..."
                 )
                 self._iniciar_compensacion(evento)
 
             elif isinstance(evento, ComisionRevertida):
+                self._registrar_evento_compensacion(evento)
                 print(f"↩️ Comisión revertida para interacción {evento.id_interaccion}")
                 self._continuar_compensacion(evento)
 
             elif isinstance(evento, AtribucionRevertida):
+                self._registrar_evento_compensacion(evento)
                 print(
                     f"↩️ Atribución revertida para interacción {evento.id_interaccion}"
                 )
                 self._continuar_compensacion(evento)
 
             elif isinstance(evento, InteraccionDescartada):
+                self._registrar_evento_compensacion(evento)
                 print(
                     f"↩️ Interacción {evento.id_interaccion} descartada, compensación completada"
                 )
@@ -243,101 +190,100 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
                 print(f"⚠️ Evento no reconocido: {type(evento).__name__}")
 
         except Exception as e:
-            entrada_log = SagaLogEntry(
-                id_correlacion=self.id_correlacion,
-                paso_index=-1,
-                tipo_paso="ERROR",
-                estado="FALLIDO",
-                datos_adicionales={"error": str(e)},
-            )
-            self.persistir_en_saga_log(entrada_log)
+            self._registrar_error(evento, str(e))
             print(f"❌ Error procesando evento {type(evento).__name__}: {e}")
             raise
 
-    def _marcar_transaccion_exitosa(self, index: int):
-        """Marca una transacción como exitosa"""
-        if index < len(self.pasos) and isinstance(self.pasos[index], Transaccion):
-            self.pasos[index].exitosa = True
+    def _registrar_evento_exitoso(self, evento: EventoDominio, tipo_paso: str):
+        """Registra un evento exitoso del flujo normal"""
+        entrada_log = SagaLogEntry(
+            id_correlacion=self.id_correlacion,
+            tipo_paso=tipo_paso,
+            evento=type(evento).__name__,
+            estado="EXITOSO",
+        )
+        self.persistir_en_saga_log(entrada_log)
 
-            entrada_log = SagaLogEntry(
-                id_correlacion=self.id_correlacion,
-                paso_index=index,
-                tipo_paso="TRANSACCION",
-                estado="EXITOSO",
-            )
-            self.persistir_en_saga_log(entrada_log)
+    def _registrar_evento_compensacion(self, evento: EventoDominio):
+        """Registra un evento de compensación"""
+        entrada_log = SagaLogEntry(
+            id_correlacion=self.id_correlacion,
+            tipo_paso="COMPENSACION",
+            evento=type(evento).__name__,
+            estado="EXITOSO",
+        )
+        self.persistir_en_saga_log(entrada_log)
 
-    def _todas_transacciones_exitosas(self) -> bool:
-        """Verifica si todas las transacciones han sido completadas exitosamente"""
-        for paso in self.pasos:
-            if isinstance(paso, Transaccion) and not paso.exitosa:
-                return False
-        return True
+    def _registrar_error(self, evento: EventoDominio, error: str):
+        """Registra un error"""
+        entrada_log = SagaLogEntry(
+            id_correlacion=self.id_correlacion,
+            tipo_paso="ERROR",
+            evento=type(evento).__name__,
+            estado="FALLIDO",
+            datos_adicionales={"error": error},
+        )
+        self.persistir_en_saga_log(entrada_log)
+
+    def _saga_completa(self) -> bool:
+        """Verifica si todos los pasos de la saga normal están completos basándose en el log"""
+        eventos_exitosos = {
+            entrada.evento
+            for entrada in self.saga_log
+            if entrada.tipo_paso == "EVENTO_NORMAL" and entrada.estado == "EXITOSO"
+        }
+
+        eventos_requeridos = {
+            "InteraccionRegistrada",
+            "ConversionAtribuida",
+            "ComisionReservada",
+        }
+
+        return eventos_requeridos.issubset(eventos_exitosos)
 
     def _iniciar_compensacion(self, evento: EventoDominio):
         """Inicia el proceso de compensación"""
         self.estado_actual = "COMPENSANDO"
-
-        entrada_log = SagaLogEntry(
-            id_correlacion=self.id_correlacion,
-            paso_index=-1,
-            tipo_paso="INICIO_COMPENSACION",
-            estado="INICIADO",
-            datos_adicionales={"trigger_evento": type(evento).__name__},
-        )
-        self.persistir_en_saga_log(entrada_log)
-
-        # Comenzar compensación desde el último paso completado
         self._continuar_compensacion(evento)
 
     def _continuar_compensacion(self, evento: EventoDominio):
         """Continúa el proceso de compensación ejecutando el siguiente comando"""
         tipo_evento = type(evento)
 
-        if tipo_evento in self.eventos_compensacion:
-            paso_index = self.eventos_compensacion[tipo_evento]
+        if tipo_evento in self.compensaciones:
+            tipo_comando = self.compensaciones[tipo_evento]
 
-            if paso_index > 0:  # Hay más pasos para compensar
-                paso = self.pasos[paso_index]
-                if isinstance(paso, Transaccion):
-                    try:
-                        comando = self.construir_comando(evento, paso.compensacion)
+            try:
+                comando = self.construir_comando(evento, tipo_comando)
 
-                        entrada_log = SagaLogEntry(
-                            id_correlacion=self.id_correlacion,
-                            paso_index=paso_index,
-                            tipo_paso="COMPENSACION",
-                            comando=type(comando).__name__,
-                            estado="EJECUTANDO",
-                        )
-                        self.persistir_en_saga_log(entrada_log)
+                # Registrar que vamos a ejecutar un comando de compensación
+                entrada_log = SagaLogEntry(
+                    id_correlacion=self.id_correlacion,
+                    tipo_paso="COMPENSACION",
+                    comando=type(comando).__name__,
+                    estado="EJECUTANDO",
+                )
+                self.persistir_en_saga_log(entrada_log)
 
-                        # Ejecutar comando de compensación
-                        self.publicar_comando(evento, paso.compensacion)
+                # Ejecutar comando de compensación
+                self.publicar_comando(evento, tipo_comando)
 
-                    except Exception as e:
-                        entrada_log = SagaLogEntry(
-                            id_correlacion=self.id_correlacion,
-                            paso_index=paso_index,
-                            tipo_paso="COMPENSACION",
-                            estado="FALLIDO",
-                            datos_adicionales={"error": str(e)},
-                        )
-                        self.persistir_en_saga_log(entrada_log)
-                        raise
-            else:
-                # No hay más pasos para compensar, terminar
-                self.terminar_con_compensacion()
+            except Exception as e:
+                self._registrar_error(evento, str(e))
+                raise
 
     def obtener_estado_saga(self) -> dict:
         """Retorna el estado actual de la saga para monitoreo"""
+        eventos_completados = [
+            entrada.evento
+            for entrada in self.saga_log
+            if entrada.tipo_paso == "EVENTO_NORMAL" and entrada.estado == "EXITOSO"
+        ]
+
         return {
             "id_correlacion": str(self.id_correlacion),
             "estado": self.estado_actual,
-            "pasos_completados": len(
-                [p for p in self.pasos if isinstance(p, Transaccion) and p.exitosa]
-            ),
-            "total_pasos": len([p for p in self.pasos if isinstance(p, Transaccion)]),
+            "eventos_completados": eventos_completados,
             "log_entries": len(self.saga_log),
             "ultima_actividad": self.saga_log[-1].timestamp if self.saga_log else None,
         }
@@ -347,15 +293,10 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
 def procesar_evento_saga(evento: EventoDominio, id_correlacion: uuid.UUID = None):
     """
     Función principal para procesar eventos de dominio en la saga de interacciones.
-
-    Esta función actúa como punto de entrada para todos los eventos relacionados
-    con el flujo de interacciones de marketing.
     """
     if not isinstance(evento, EventoDominio):
         raise ValueError("El mensaje debe ser un evento de dominio")
 
-    # Crear o recuperar coordinador basado en el ID de correlación
-    # En una implementación real, recuperaríamos el estado desde la base de datos
     coordinador = CoordinadorInteracciones(id_correlacion)
 
     try:
