@@ -164,6 +164,23 @@ services:
       - broker
     networks:
       - alpespartners-network
+  bff:
+    build:
+      context: .
+      dockerfile: bff.Dockerfile
+    profiles: ["alpespartners"]
+    container_name: bff
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      - MARKETING_SERVICE_URL=http://marketing:8000
+      - TRACKING_SERVICE_URL=http://tracking:8000
+    depends_on:
+      - marketing
+      - tracking
+    networks:
+      - alpespartners-network
 
 networks:
   alpespartners-network:
