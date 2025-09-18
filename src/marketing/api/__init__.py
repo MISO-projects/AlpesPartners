@@ -20,12 +20,14 @@ def comenzar_consumidor(app):
         ConsumidorInteracciones,
         ConsumidorAtribucion,
         ConsumidorComisiones,
-        ConsumidorFraude
+        ConsumidorComisionesRevertidas,
+        ConsumidorFraude,
     )
 
     consumidor_interacciones = ConsumidorInteracciones()
     consumidor_atribucion = ConsumidorAtribucion()
     consumidor_comisiones = ConsumidorComisiones()
+    consumidor_comisiones_revertidas = ConsumidorComisionesRevertidas()
     consumidor_fraude = ConsumidorFraude()
     threading.Thread(
         target=consumidor_interacciones.suscribirse_a_eventos, args=[app]
@@ -37,8 +39,9 @@ def comenzar_consumidor(app):
         target=consumidor_comisiones.suscribirse_a_eventos, args=[app]
     ).start()
     threading.Thread(
-        target=consumidor_fraude.suscribirse_a_eventos, args=[app]
+        target=consumidor_comisiones_revertidas.suscribirse_a_eventos, args=[app]
     ).start()
+    threading.Thread(target=consumidor_fraude.suscribirse_a_eventos, args=[app]).start()
 
 
 def create_app(configuracion={}):

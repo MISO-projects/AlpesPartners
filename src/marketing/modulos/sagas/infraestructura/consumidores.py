@@ -8,6 +8,7 @@ from marketing.modulos.sagas.infraestructura.schema.v1.eventos.atribucion import
 )
 from marketing.modulos.sagas.infraestructura.schema.v1.eventos.comision import (
     EventoComisionReservadaConsumoSaga,
+    EventoComisionRevertidaConsumoSaga,
 )
 from marketing.modulos.sagas.infraestructura.schema.v1.eventos.comision import (
     EventoFraudeDetectadoConsumoSaga,
@@ -21,8 +22,10 @@ from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionRegistra
 from marketing.modulos.sagas.dominio.eventos.atribucion import ConversionAtribuida
 from marketing.modulos.sagas.dominio.eventos.comisiones import (
     ComisionReservada,
+    ComisionRevertida,
     FraudeDetectado,
 )
+from marketing.seedwork.infraestructura.consumidores import BaseConsumidor
 
 
 def avro_to_dict(record: Record) -> dict:
@@ -42,193 +45,76 @@ def avro_to_dict(record: Record) -> dict:
     return result
 
 
-class ConsumidorInteracciones:
-    def __init__(self):
-        self.cliente = None
-        self.consumidor = None
-
-    def suscribirse_a_eventos(self, app=None):
-        if not app:
-            return
-
-        self.app = app
-        try:
-            self.cliente = pulsar.Client(
-                f'pulsar://{utils.broker_host()}:6650',
-                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
-            )
-            self.consumidor = self.cliente.subscribe(
-                'interaccion-registrada',
-                consumer_type=pulsar.ConsumerType.Shared,
-                subscription_name='marketing-sub-interacciones-saga',
-                schema=AvroSchema(EventoInteraccionRegistradaConsumoSaga),
-            )
-
-            while True:
-                mensaje = self.consumidor.receive()
-                try:
-                    with self.app.app_context():
-                        with self.app.test_request_context():
-                            self._procesar_evento_saga(mensaje)
-                    self.consumidor.acknowledge(mensaje)
-                except Exception as e:
-                    print(f'Error procesando evento: {e}')
-                    traceback.print_exc()
-                    self.consumidor.acknowledge(mensaje)
-
-        except Exception as e:
-            print(f'Error suscribiendose a eventos: {e}')
-            traceback.print_exc()
-        finally:
-            if self.cliente:
-                self.cliente.close()
+class ConsumidorInteracciones(BaseConsumidor):
+    def get_subscription_config(self):
+        return {
+            'topico': 'interaccion-registrada',
+            'subscription_name': 'marketing-sub-interacciones-saga',
+            'schema_class': EventoInteraccionRegistradaConsumoSaga,
+        }
 
     def _procesar_evento_saga(self, mensaje):
         evento_dict = avro_to_dict(mensaje.value().data)
-        print(f'Evento recibido en saga marketing: {evento_dict}')
+        print(f'📥 InteraccionRegistrada recibida en saga: {evento_dict}')
         event_dominio = InteraccionRegistrada(**evento_dict)
         procesar_evento_saga(event_dominio)
 
 
-class ConsumidorAtribucion:
-    def __init__(self):
-        self.cliente = None
-        self.consumidor = None
-
-    def suscribirse_a_eventos(self, app=None):
-        if not app:
-            return
-
-        self.app = app
-        try:
-            self.cliente = pulsar.Client(
-                f'pulsar://{utils.broker_host()}:6650',
-                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
-            )
-            self.consumidor = self.cliente.subscribe(
-                'eventos-atribucion',
-                consumer_type=pulsar.ConsumerType.Shared,
-                subscription_name='marketing-sub-atribucion-saga',
-                schema=AvroSchema(EventoConversionAtribuidaConsumoSaga),
-            )
-
-            while True:
-                mensaje = self.consumidor.receive()
-                try:
-                    with self.app.app_context():
-                        with self.app.test_request_context():
-                            self._procesar_evento_saga(mensaje)
-                    self.consumidor.acknowledge(mensaje)
-                except Exception as e:
-                    print(f'Error procesando evento: {e}')
-                    traceback.print_exc()
-                    self.consumidor.acknowledge(mensaje)
-
-        except Exception as e:
-            print(f'Error suscribiendose a eventos: {e}')
-            traceback.print_exc()
-        finally:
-            if self.cliente:
-                self.cliente.close()
+class ConsumidorAtribucion(BaseConsumidor):
+    def get_subscription_config(self):
+        return {
+            'topico': 'eventos-atribucion',
+            'subscription_name': 'marketing-sub-atribucion-saga',
+            'schema_class': EventoConversionAtribuidaConsumoSaga,
+        }
 
     def _procesar_evento_saga(self, mensaje):
         evento_dict = avro_to_dict(mensaje.value().data)
-        print(f'Evento recibido en saga marketing: {evento_dict}')
+        print(f'📥 ConversionAtribuida recibida en saga: {evento_dict}')
         event_dominio = ConversionAtribuida(**evento_dict)
         procesar_evento_saga(event_dominio)
 
 
-class ConsumidorComisiones:
-    def __init__(self):
-        self.cliente = None
-        self.consumidor = None
-
-    def suscribirse_a_eventos(self, app=None):
-        if not app:
-            return
-
-        self.app = app
-        try:
-            self.cliente = pulsar.Client(
-                f'pulsar://{utils.broker_host()}:6650',
-                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
-            )
-            self.consumidor = self.cliente.subscribe(
-                'comision-reservada',
-                consumer_type=pulsar.ConsumerType.Shared,
-                subscription_name='marketing-sub-comision-reservada-saga',
-                schema=AvroSchema(EventoComisionReservadaConsumoSaga),
-            )
-
-            while True:
-                mensaje = self.consumidor.receive()
-                try:
-                    with self.app.app_context():
-                        with self.app.test_request_context():
-                            self._procesar_evento_saga(mensaje)
-                    self.consumidor.acknowledge(mensaje)
-                except Exception as e:
-                    print(f'Error procesando evento: {e}')
-                    traceback.print_exc()
-                    self.consumidor.acknowledge(mensaje)
-
-        except Exception as e:
-            print(f'Error suscribiendose a eventos: {e}')
-            traceback.print_exc()
-        finally:
-            if self.cliente:
-                self.cliente.close()
+class ConsumidorComisiones(BaseConsumidor):
+    def get_subscription_config(self):
+        return {
+            'topico': 'comision-reservada',
+            'subscription_name': 'marketing-sub-comision-reservada-saga',
+            'schema_class': EventoComisionReservadaConsumoSaga,
+        }
 
     def _procesar_evento_saga(self, mensaje):
         evento_dict = avro_to_dict(mensaje.value().data)
-        print(f'Evento recibido en saga marketing: {evento_dict}')
+        print(f'📥 ComisionReservada recibida en saga: {evento_dict}')
         event_dominio = ComisionReservada(**evento_dict)
         procesar_evento_saga(event_dominio)
 
 
-class ConsumidorFraude:
-    def __init__(self):
-        self.cliente = None
-        self.consumidor = None
-
-    def suscribirse_a_eventos(self, app=None):
-        if not app:
-            return
-
-        self.app = app
-        try:
-            self.cliente = pulsar.Client(
-                f'pulsar://{utils.broker_host()}:6650',
-                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
-            )
-            self.consumidor = self.cliente.subscribe(
-                'fraude-detectado',
-                consumer_type=pulsar.ConsumerType.Shared,
-                subscription_name='marketing-sub-fraude-detectado-saga',
-                schema=AvroSchema(EventoFraudeDetectadoConsumoSaga),
-            )
-
-            while True:
-                mensaje = self.consumidor.receive()
-                try:
-                    with self.app.app_context():
-                        with self.app.test_request_context():
-                            self._procesar_evento_saga(mensaje)
-                    self.consumidor.acknowledge(mensaje)
-                except Exception as e:
-                    print(f'Error procesando evento: {e}')
-                    traceback.print_exc()
-                    self.consumidor.acknowledge(mensaje)
-
-        except Exception as e:
-            print(f'Error suscribiendose a eventos: {e}')
-            traceback.print_exc()
-        finally:
-            if self.cliente:
-                self.cliente.close()
+class ConsumidorComisionesRevertidas(BaseConsumidor):
+    def get_subscription_config(self):
+        return {
+            'topico': 'comision-revertida',
+            'subscription_name': 'marketing-sub-comision-revertida-saga',
+            'schema_class': EventoComisionRevertidaConsumoSaga,
+        }
 
     def _procesar_evento_saga(self, mensaje):
         evento_dict = avro_to_dict(mensaje.value().data)
-        print(f'Evento recibido en saga marketing: {evento_dict}')
+        print(f'📥 ComisionRevertida recibida en saga: {evento_dict}')
+        event_dominio = ComisionRevertida(**evento_dict)
+        procesar_evento_saga(event_dominio)
+
+
+class ConsumidorFraude(BaseConsumidor):
+    def get_subscription_config(self):
+        return {
+            'topico': 'fraude-detectado',
+            'subscription_name': 'marketing-sub-fraude-detectado-saga',
+            'schema_class': EventoFraudeDetectadoConsumoSaga,
+        }
+
+    def _procesar_evento_saga(self, mensaje):
+        evento_dict = avro_to_dict(mensaje.value().data)
+        print(f'📥 FraudeDetectado recibido en saga: {evento_dict}')
         event_dominio = FraudeDetectado(**evento_dict)
         procesar_evento_saga(event_dominio)

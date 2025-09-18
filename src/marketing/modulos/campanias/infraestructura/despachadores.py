@@ -18,6 +18,10 @@ from marketing.modulos.campanias.infraestructura.schema.v1.comandos.comision imp
     ComandoRevertirComision,
     RevertirComisionPayload
 )
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.atribucion import (
+    ComandoRevertirAtribucion,
+    RevertirAtribucionPayload
+)
 from marketing.seedwork.infraestructura import utils
 
 
@@ -40,7 +44,7 @@ class DespachadorMarketing:
         try:
             publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
             publicador.send(mensaje)
-            print(f' Evento Marketing publicado en tópico: {topico}')
+            print(f'{schema_class.__name__} publicado en tópico: {topico}')
         except Exception as e:
             print(f' Error publicando evento Marketing: {e}')
             raise e
@@ -136,4 +140,15 @@ class DespachadorMarketing:
             comando_integracion,
             "revertir-comision-comando",
             ComandoRevertirComision
+        )
+
+    def publicar_comando_revertir_atribucion(self, comando):
+        payload = RevertirAtribucionPayload(
+            id_interaccion=comando.id_interaccion
+        )
+        comando_integracion = ComandoRevertirAtribucion(data=payload)
+        self._publicar_mensaje(
+            comando_integracion,
+            "revertir-atribucion-comando",
+            ComandoRevertirAtribucion
         )

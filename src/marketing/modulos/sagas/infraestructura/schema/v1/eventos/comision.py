@@ -45,3 +45,9 @@ class FraudeDetectadoPayload(Record):
 
 class EventoFraudeDetectadoConsumoSaga(EventoIntegracion):
     data = FraudeDetectadoPayload()
+
+class ComisionRevertidaPayload(Record):
+    id_interaccion = String()
+
+class EventoComisionRevertidaConsumoSaga(EventoIntegracion):
+    data = ComisionRevertidaPayload()
