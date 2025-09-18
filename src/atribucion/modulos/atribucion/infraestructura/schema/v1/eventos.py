@@ -1,6 +1,7 @@
 from pulsar.schema import *
 from atribucion.seedwork.infraestructura.schema.v1.eventos import EventoIntegracion
 
+# evento recibido en atribucion desde tracking
 class IdentidadUsuarioSchema(Record):
     id_usuario = String()
     id_anonimo = String()
@@ -36,6 +37,8 @@ class InteraccionRegistradaPayload(Record):
 class EventoInteraccionRegistradaConsumo(EventoIntegracion):
     data = InteraccionRegistradaPayload()
 
+
+# schema para consumir eventos de atribución a comisiones
 class MontoSchema(Record):
     valor = Float()
     moneda = String()
@@ -48,6 +51,15 @@ class ConversionAtribuidaPayload(Record):
     monto_atribuido = MontoSchema()
     id_interaccion_original = String()
     score_fraude = Integer()
-
 class EventoConversionAtribuida(EventoIntegracion):
     data = ConversionAtribuidaPayload()
+
+
+# --- Schema del Evento de Reversión ---
+
+class AtribucionRevertidaPayload(Record):
+    journey_id_revertido = String()
+    interacciones = Array(String()) 
+
+class EventoAtribucionRevertida(EventoIntegracion):
+    data = AtribucionRevertidaPayload()
