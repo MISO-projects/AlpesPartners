@@ -12,6 +12,7 @@ class EstadoJourney(Enum):
     ACTIVO = "ACTIVO"
     CONVERTIDO = "CONVERTIDO"
     EXPIRADO = "EXPIRADO"
+    REVERTIDO_POR_FRAUDE = "REVERTIDO_POR_FRAUDE"
 
 class TipoModeloAtribucion(Enum):
     FIRST_TOUCH = "FIRST_TOUCH"
@@ -140,6 +141,19 @@ class Journey(AgregacionRaiz):
         self.conversiones.append(nueva_conversion)
         print(f"ENTIDAD: Conversión registrada en Journey {self.id} por valor de {nueva_conversion.valor}.")
         return nueva_conversion
+    
+    def revertir_por_fraude(self):
+        """
+        Regla de negocio para revertir una atribución por fraude.
+        """
+        if self.estado != EstadoJourney.CONVERTIDO:
+            print(f"ERROR DE DOMINIO: No se puede revertir un Journey en estado {self.estado.value}")
+            return
+
+        print(f"ENTIDAD: Cambiando estado de Journey {self.id} de CONVERTIDO a REVERTIDO_POR_FRAUDE.")
+        self.estado = EstadoJourney.REVERTIDO_POR_FRAUDE
+        self.fecha_ultima_actividad = datetime.now()
+        
 
 @dataclass
 class ModeloAtribucion(AgregacionRaiz):
