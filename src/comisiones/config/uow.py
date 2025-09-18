@@ -1,119 +1,114 @@
-from comisiones.seedwork.infraestructura.uow import UnidadTrabajoPuerto
-from comisiones.seedwork.aplicacion.handlers import Handler
-from typing import Dict, Type, Any
-import logging
-
-logger = logging.getLogger(__name__)
+from comisiones.config.db import db
+from comisiones.seedwork.infraestructura.uow import UnidadTrabajo, Batch
+import os
 
 
-class ComisionesUnitOfWork(UnidadTrabajoPuerto):
-    """
-    Unidad de Trabajo específica para el módulo de comisiones
-    Gestiona los handlers de eventos y coordina las operaciones transaccionales
-    """
-    
+class UnidadTrabajoSQLAlchemy(UnidadTrabajo):
+
     def __init__(self):
-        super().__init__()
-        self._handlers: Dict[Type, Handler] = {}
-        self._initialized = False
-    
-    def registrar_handler(self, evento_tipo: Type, handler: Handler):
-        """Registrar un handler para un tipo de evento específico"""
+        self._batches: list[Batch] = list()
+
+    def __enter__(self) -> UnidadTrabajo:
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        self.rollback()
+
+    def _limpiar_batches(self):
+        self._batches = list()
+
+    @property
+    def savepoints(self) -> list:
+        return list[db.session.get_nested_transaction()]
+
+    @property
+    def batches(self) -> list[Batch]:
+        return self._batches
+
+    def commit(self):
+        for batch in self.batches:
+            lock = batch.lock
+            batch.operacion(*batch.args, **batch.kwargs)
+
+        db.session.commit()
+
+        super().commit()
+
+    def rollback(self, savepoint=None):
+        if savepoint:
+            savepoint.rollback()
+        else:
+            db.session.rollback()
+
+        super().rollback()
+
+    def savepoint(self):
+        db.session.begin_nested()
+
+
+class UnidadTrabajoMongoDB(UnidadTrabajo):
+    """
+    MongoDB Unit of Work implementation that's pickle-safe
+    No MongoDB client references to avoid pickle issues
+    """
+
+    def __init__(self):
+        self._batches: list[Batch] = list()
+        # Absolutely no MongoDB client/session references stored
+
+    def __enter__(self) -> UnidadTrabajo:
+        return super().__enter__()
+
+    def __exit__(self, *args):
+        self.rollback()
+
+    def _limpiar_batches(self):
+        self._batches = list()
+
+    @property
+    def savepoints(self) -> list:
+        # MongoDB doesn't have savepoints like SQL databases
+        return []
+
+    @property
+    def batches(self) -> list[Batch]:
+        return self._batches
+
+    def commit(self):
+        """
+        Execute all batched operations immediately
+        MongoDB is designed for high-throughput writes, so we don't need complex transaction management
+        """
         try:
-            self._handlers[evento_tipo] = handler
-            logger.info(f"Handler registrado para evento: {evento_tipo.__name__}")
+            for batch in self.batches:
+                # Execute the operation directly - the repository handles MongoDB connection
+                batch.operacion(*batch.args, **batch.kwargs)
+            
+            super().commit()
         except Exception as e:
-            logger.error(f"Error registrando handler para {evento_tipo.__name__}: {e}")
-    
-    def obtener_handler(self, evento_tipo: Type) -> Handler:
-        """Obtener el handler para un tipo de evento"""
-        return self._handlers.get(evento_tipo)
-    
-    def procesar_evento(self, evento):
-        """Procesar un evento usando su handler correspondiente"""
-        try:
-            evento_tipo = type(evento)
-            handler = self.obtener_handler(evento_tipo)
-            
-            if handler:
-                logger.debug(f"Procesando evento {evento_tipo.__name__} con handler {handler.__class__.__name__}")
-                handler.handle(evento)
-            else:
-                logger.warning(f"No se encontró handler para evento: {evento_tipo.__name__}")
-                
-        except Exception as e:
-            logger.error(f"Error procesando evento {type(evento).__name__}: {e}")
-            raise e
-    
-    def inicializar_handlers(self):
-        """Inicializar todos los handlers del módulo de comisiones"""
-        if self._initialized:
-            logger.info("Handlers ya inicializados")
-            return
-        
-        try:
-            from comisiones.modulos.comisiones.aplicacion.handlers import (
-                HandlerInteraccionAtribuidaRecibida,
-                HandlerConversionAtribuida,
-                HandlerComisionReservada,
-                HandlerComisionCalculada,
-                HandlerComisionConfirmada,
-                HandlerComisionRevertida,
-                HandlerComisionCancelada,
-                HandlerLoteComisionesConfirmadas
-            )
-            
-            from comisiones.modulos.comisiones.dominio.eventos import (
-                InteraccionAtribuidaRecibida,
-                ConversionAtribuida,
-                ComisionReservada,
-                ComisionCalculada,
-                ComisionConfirmada,
-                ComisionRevertida,
-                ComisionCancelada,
-                LoteComisionesConfirmadas
-            )
-            
-            self.registrar_handler(InteraccionAtribuidaRecibida, HandlerInteraccionAtribuidaRecibida())
-            self.registrar_handler(ConversionAtribuida, HandlerConversionAtribuida())
-            self.registrar_handler(ComisionReservada, HandlerComisionReservada())
-            self.registrar_handler(ComisionCalculada, HandlerComisionCalculada())
-            self.registrar_handler(ComisionConfirmada, HandlerComisionConfirmada())
-            self.registrar_handler(ComisionRevertida, HandlerComisionRevertida())
-            self.registrar_handler(ComisionCancelada, HandlerComisionCancelada())
-            self.registrar_handler(LoteComisionesConfirmadas, HandlerLoteComisionesConfirmadas())
-            
-            from comisiones.modulos.comisiones.infraestructura.despachadores import registrar_despachadores
-            registrar_despachadores()
-            
-            self._initialized = True
-            logger.info("Todos los handlers del módulo de comisiones inicializados correctamente")
-            
-        except Exception as e:
-            logger.error(f"Error inicializando handlers: {e}")
-            raise e
-    
-    def limpiar_handlers(self):
-        """Limpiar todos los handlers registrados"""
-        self._handlers.clear()
-        self._initialized = False
-        logger.info("Handlers limpiados")
+            print(f"Error during MongoDB commit: {e}")
+            super().rollback()
+            raise
+
+    def rollback(self, savepoint=None):
+        """
+        MongoDB doesn't support traditional rollback
+        We just clear the batches and call parent rollback for event cleanup
+        """
+        super().rollback()
+
+    def savepoint(self):
+        """
+        MongoDB doesn't support savepoints - no-op for compatibility
+        """
+        pass
 
 
-_uow_instance = None
-
-
-def get_unit_of_work() -> ComisionesUnitOfWork:
-    """Obtener la instancia global del UoW"""
-    global _uow_instance
+def get_unit_of_work() -> UnidadTrabajo:
+    """Factory function to get the appropriate Unit of Work based on database type"""
+    database_type = os.getenv('DATABASE_TYPE', 'mongodb').lower()
     
-    if _uow_instance is None:
-        _uow_instance = ComisionesUnitOfWork()
-        _uow_instance.inicializar_handlers()
-    
-    return _uow_instance
-
-
-def inicializar_uow():
-    """Función helper para inicializar el UoW desde otros módulos"""
-    return get_unit_of_work()
+    if database_type == 'mongodb':
+        return UnidadTrabajoMongoDB()
+    else:
+        return UnidadTrabajoSQLAlchemy()

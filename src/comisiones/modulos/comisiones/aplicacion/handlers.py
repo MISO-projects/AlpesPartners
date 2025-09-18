@@ -18,6 +18,7 @@ from comisiones.modulos.comisiones.aplicacion.comandos.confirmar_comision import
 )
 from comisiones.modulos.comisiones.aplicacion.comandos.revertir_comision import RevertirComision
 from comisiones.seedwork.aplicacion.comandos import ejecutar_commando
+from comisiones.modulos.comisiones.infraestructura.despachadores import DespachadorEventosComision
 
 class HandlerInteraccionAtribuidaRecibida(Handler):
 
@@ -43,8 +44,10 @@ class HandlerInteraccionAtribuidaRecibida(Handler):
 
 class HandlerComisionReservada(Handler):
 
-    def handle(self, evento: ComisionReservada):
-
+    @staticmethod
+    def handle(evento: ComisionReservada):
+        despachador = DespachadorEventosComision()
+        despachador.despachar_comision_reservada(evento)
         print(f"Comisión reservada: {evento.id_comision} para interacción {evento.id_interaccion}")
 
 class HandlerComisionConfirmada(Handler):

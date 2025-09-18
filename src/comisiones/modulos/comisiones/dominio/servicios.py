@@ -134,18 +134,7 @@ class ServicioComision(Servicio):
         return True
 
     def _obtener_configuracion_comision(self, interaccion: InteraccionAtribuida) -> ConfiguracionComision:
-        try:
-            configuracion = self._repositorio_configuracion.obtener_por_campania(interaccion.id_campania)
-            if configuracion:
-                return configuracion
-        except:
-            pass
-        try:
-            configuracion = self._repositorio_configuracion.obtener_por_tipo_interaccion(interaccion.tipo_interaccion)
-            if configuracion:
-                return configuracion
-        except:
-            pass
+
         return self._repositorio_configuracion.obtener_default()
 
     def _obtener_politica_fraude(self, interaccion: InteraccionAtribuida) -> PoliticaFraude:

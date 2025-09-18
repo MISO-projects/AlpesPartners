@@ -1,3 +1,4 @@
+# pyright: reportUnreachable=false
 import pulsar
 import _pulsar
 from pulsar.schema import AvroSchema, Record
@@ -9,6 +10,8 @@ from decimal import Decimal
 from comisiones.modulos.comisiones.infraestructura.schema.v1.eventos import EventoConversionAtribuida
 from comisiones.seedwork.infraestructura import utils
 from comisiones.modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
+
+from comisiones.seedwork.aplicacion.comandos import ejecutar_commando
 
 def avro_to_dict(record: Record) -> dict:
     if not isinstance(record, Record):
@@ -118,68 +121,8 @@ class ConsumidorEventosAtribucion:
                     'id_interaccion_original': evento_dict.get('id_interaccion_original', '')
                 }
             )
-            
-            from comisiones.modulos.comisiones.dominio.entidades import Comision
-            from comisiones.modulos.comisiones.dominio.objetos_valor import MontoComision, ConfiguracionComision, TipoComision
-            from comisiones.config.mongo import mongo_config
-            from datetime import datetime
-            
-            comision_id = uuid.uuid4()
-            monto = MontoComision(
-                valor=comando.valor_interaccion * Decimal('0.05'),  # 5% de comisión
-                moneda=comando.moneda_interaccion
-            )
-            
-            configuracion = ConfiguracionComision(
-                tipo=TipoComision.PORCENTAJE,
-                porcentaje=Decimal('5.0')
-            )
-            
-            comision = Comision(
-                id=comision_id,
-                id_interaccion=str(comando.id_interaccion),
-                id_campania=str(comando.id_campania),
-                monto=monto,
-                configuracion=configuracion
-            )
-            
-            comisiones_collection = mongo_config.get_collection("comisiones")
-            
-            comision_data = {
-                "_id": str(comision.id),
-                "id_interaccion": str(comision.id_interaccion),
-                "id_campania": str(comision.id_campania),
-                "id_afiliado": id_afiliado,
-                "monto": {
-                    "valor": float(comision.monto.valor),
-                    "moneda": comision.monto.moneda
-                },
-                "monto_atribuido": {
-                    "valor": float(comando.valor_interaccion),
-                    "moneda": comando.moneda_interaccion
-                },
-                "configuracion": {
-                    "tipo": comision.configuracion.tipo.value,
-                    "porcentaje": float(comision.configuracion.porcentaje) if comision.configuracion.porcentaje else None
-                },
-                "estado": "RESERVADA",
-                "timestamp": datetime.now().isoformat(),
-                "tipo_interaccion": comando.tipo_interaccion,
-                "fraud_ok": comando.fraud_ok,
-                "score_fraude": comando.score_fraude,
-                "origen": "atribucion",
-                "id_interaccion_original": evento_dict.get('id_interaccion_original', '')
-            }
-            
-            comisiones_collection.insert_one(comision_data)
-            resultado = comision
-            
-            if resultado:
-                print(f"COMISIONES: Comisión {resultado.id} creada exitosamente desde atribución")
-                print(f"COMISIONES: Monto atribuido: {comando.valor_interaccion} {comando.moneda_interaccion}")
-                print(f"COMISIONES: Comisión calculada: {monto.valor} {monto.moneda}")
-            else:
-                print(f"COMISIONES: No se generó comisión para la conversión atribuida")
+            ejecutar_commando(comando)
+
                 
         except Exception as e:
             print(f"COMISIONES: Error procesando conversión atribuida: {e}")

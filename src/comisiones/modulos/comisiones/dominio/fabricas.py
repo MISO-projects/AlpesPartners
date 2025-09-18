@@ -12,15 +12,31 @@ from comisiones.modulos.comisiones.dominio.objetos_valor import (
 from decimal import Decimal
 from datetime import datetime
 import uuid
+from comisiones.seedwork.dominio.fabricas import Fabrica
+from comisiones.seedwork.dominio.repositorios import Mapeador
+from comisiones.modulos.comisiones.dominio.entidades import Comision
+from comisiones.seedwork.dominio.entidades import Entidad
+from dataclasses import dataclass
+from comisiones.modulos.comisiones.dominio.excepciones import TipoComisionNoValidoExcepcion
+
+@dataclass
+class _FabricaComision(Fabrica):
+    def crear_objeto(self, obj: any, mapeador: Mapeador) -> any:
+        if isinstance(obj, Entidad):
+            return mapeador.entidad_a_dto(obj)
+        else:
+            interaccion: Comision = mapeador.dto_a_entidad(obj)
+            return interaccion
 
 class FabricaComision(Fabrica):
-
-    def crear_objeto(self, obj: any, mapeador: any = None) -> Comision:
-
-        if mapeador:
-            return mapeador.obtener_tipo().crear_objeto(obj, mapeador)
-        
-        return obj
+    def crear_objeto(self, obj: any, mapeador: Mapeador) -> any:
+        if mapeador.obtener_tipo() == Comision.__class__:
+            fabrica_comision = _FabricaComision()
+            return fabrica_comision.crear_objeto(obj, mapeador)
+        else:
+            raise TipoComisionNoValidoExcepcion(
+                f"No se puede crear un objeto de tipo {mapeador.obtener_tipo()}"
+            )
 
 class FabricaConfiguracionComision(Fabrica):
 

@@ -17,7 +17,7 @@ class FabricaRepositorio(Fabrica):
 
     def crear_objeto(self, obj: any, mapeador: any = None) -> any:
 
-        db_type = os.getenv('COMISIONES_DB_TYPE', 'sqlite').lower()
+        db_type = os.getenv('COMISIONES_DB_TYPE', 'mongodb').lower()
         
         if obj == RepositorioComision.__class__:
             if db_type == 'mongodb':
