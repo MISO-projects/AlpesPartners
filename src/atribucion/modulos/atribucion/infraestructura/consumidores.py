@@ -88,10 +88,10 @@ class ConsumidorInteracciones:
             cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
             
             consumidor = cliente.subscribe(
-                'comando-reversion-atribucion', 
+                'revertir-atribucion',
                 consumer_type=_pulsar.ConsumerType.Shared,
                 subscription_name='atribucion-sub-comandos-reversion',
-                schema=AvroSchema(ComandoRevertirAtribucion) 
+                schema=AvroSchema(ComandoRevertirAtribucion)
             )
             print("Consumidor Atribucion: Esperando comandos RevertirAtribucion...")
 

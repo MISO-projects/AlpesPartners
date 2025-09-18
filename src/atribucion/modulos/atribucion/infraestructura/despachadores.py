@@ -2,9 +2,12 @@ import pulsar
 from pulsar.schema import AvroSchema, Record
 import json
 from .schema.v1.eventos import EventoConversionAtribuida, ConversionAtribuidaPayload, MontoSchema
+from .schema.v1.eventos import (
+    EventoConversionAtribuida, ConversionAtribuidaPayload, MontoSchema,
+    EventoAtribucionRevertida, AtribucionRevertidaPayload
+)
 from atribucion.modulos.atribucion.dominio.entidades import Journey
 from atribucion.seedwork.infraestructura import utils
-import uuid
 
 
 def avro_to_dict(record) -> dict:
@@ -53,6 +56,26 @@ def calcular_score_fraude_basico(resultado_atribucion: list) -> int:
     return score_final
 
 class DespachadorEventosAtribucion:
+
+   
+
+    def publicar_evento_atribucion_revertida(self, journey, topico='atribucion-revertida'):
+        print(f"DESPACHADOR: Iniciando publicación de 'AtribucionRevertida' para Journey ID: {journey.id}")
+        
+  
+        touchpoints_info = [
+            str(tp.interaccion_id) for tp in journey.touchpoints
+            
+        ]
+        
+        payload = AtribucionRevertidaPayload(
+            journey_id_revertido=str(journey.id),
+            interacciones=touchpoints_info
+        )
+        
+        evento_integracion = EventoAtribucionRevertida(data=payload)
+        self._publicar_mensaje(evento_integracion, topico, EventoAtribucionRevertida)
+
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         try:
             print("DESPACHADOR: Conectando al broker Pulsar...")
