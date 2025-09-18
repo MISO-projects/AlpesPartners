@@ -41,3 +41,10 @@ class InteraccionRegistradaPayload(Record):
 
 class EventoInteraccionRegistradaConsumoSaga(EventoIntegracion):
     data = InteraccionRegistradaPayload()
+
+
+class InteraccionDescartadaPayload(Record):
+    id_interaccion = String()
+
+class EventoInteraccionDescartadaConsumoSaga(EventoIntegracion):
+    data = InteraccionDescartadaPayload()

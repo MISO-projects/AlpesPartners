@@ -2,6 +2,7 @@ import pulsar
 from pulsar.schema import *
 from marketing.modulos.sagas.infraestructura.schema.v1.eventos.tracking import (
     EventoInteraccionRegistradaConsumoSaga,
+    EventoInteraccionDescartadaConsumoSaga,
 )
 from marketing.modulos.sagas.infraestructura.schema.v1.eventos.atribucion import (
     EventoConversionAtribuidaConsumoSaga,
@@ -19,7 +20,10 @@ import traceback
 from marketing.modulos.sagas.aplicacion.coordinadores.saga_interacciones import (
     procesar_evento_saga,
 )
-from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionRegistrada
+from marketing.modulos.sagas.dominio.eventos.tracking import (
+    InteraccionRegistrada,
+    InteraccionDescartada,
+)
 from marketing.modulos.sagas.dominio.eventos.atribucion import (
     ConversionAtribuida,
     AtribucionRevertida,
@@ -61,6 +65,21 @@ class ConsumidorInteracciones(BaseConsumidor):
         evento_dict = avro_to_dict(mensaje.value().data)
         print(f'📥 InteraccionRegistrada recibida en saga: {evento_dict}')
         event_dominio = InteraccionRegistrada(**evento_dict)
+        procesar_evento_saga(event_dominio)
+
+
+class ConsumidorInteraccionDescartada(BaseConsumidor):
+    def get_subscription_config(self):
+        return {
+            'topico': 'interaccion-descartada',
+            'subscription_name': 'marketing-sub-interaccion-descartada-saga',
+            'schema_class': EventoInteraccionDescartadaConsumoSaga,
+        }
+
+    def _procesar_evento_saga(self, mensaje):
+        evento_dict = avro_to_dict(mensaje.value().data)
+        print(f'📥 InteraccionDescartada recibida en saga: {evento_dict}')
+        event_dominio = InteraccionDescartada(**evento_dict)
         procesar_evento_saga(event_dominio)
 
 
