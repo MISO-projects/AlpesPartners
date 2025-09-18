@@ -19,3 +19,10 @@ class ConversionAtribuidaPayload(Record):
 
 class EventoConversionAtribuidaConsumoSaga(EventoIntegracion):
     data = ConversionAtribuidaPayload()
+
+
+class AtribucionRevertidaPayload(Record):
+    id_interaccion = String()
+
+class EventoAtribucionRevertidaConsumoSaga(EventoIntegracion):
+    data = AtribucionRevertidaPayload()

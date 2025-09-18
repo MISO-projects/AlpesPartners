@@ -19,6 +19,7 @@ def comenzar_consumidor(app):
     from marketing.modulos.sagas.infraestructura.consumidores import (
         ConsumidorInteracciones,
         ConsumidorAtribucion,
+        ConsumidorAtribucionRevertida,
         ConsumidorComisiones,
         ConsumidorComisionesRevertidas,
         ConsumidorFraude,
@@ -26,6 +27,7 @@ def comenzar_consumidor(app):
 
     consumidor_interacciones = ConsumidorInteracciones()
     consumidor_atribucion = ConsumidorAtribucion()
+    consumidor_atribucion_revertida = ConsumidorAtribucionRevertida()
     consumidor_comisiones = ConsumidorComisiones()
     consumidor_comisiones_revertidas = ConsumidorComisionesRevertidas()
     consumidor_fraude = ConsumidorFraude()
@@ -34,6 +36,9 @@ def comenzar_consumidor(app):
     ).start()
     threading.Thread(
         target=consumidor_atribucion.suscribirse_a_eventos, args=[app]
+    ).start()
+    threading.Thread(
+        target=consumidor_atribucion_revertida.suscribirse_a_eventos, args=[app]
     ).start()
     threading.Thread(
         target=consumidor_comisiones.suscribirse_a_eventos, args=[app]

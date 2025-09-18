@@ -1,4 +1,4 @@
-from marketing.seedwork.aplicacion.comandos import Comando
+from marketing.seedwork.aplicacion.comandos import Comando, ComandoHandler
 from dataclasses import dataclass
 import uuid
 from marketing.modulos.sagas.aplicacion.dto.interaccion import (
@@ -8,6 +8,10 @@ from marketing.modulos.sagas.aplicacion.dto.interaccion import (
     ContextoInteraccionDTO,
 )
 from datetime import datetime
+from marketing.seedwork.aplicacion.comandos import ejecutar_commando as comando
+from marketing.modulos.campanias.infraestructura.despachadores import (
+    DespachadorMarketing,
+)
 
 
 @dataclass
@@ -20,5 +24,18 @@ class RegistrarInteraccion(Comando):
     contexto: ContextoInteraccionDTO
 
 
+@dataclass
 class DescartarInteraccion(Comando):
     id_interaccion: uuid.UUID
+
+
+class DescartarInteraccionHandler(ComandoHandler):
+    def handle(self, comando: DescartarInteraccion):
+        despachador = DespachadorMarketing()
+        despachador.publicar_comando_descartar_interaccion(comando)
+
+
+@comando.register(DescartarInteraccion)
+def ejecutar_comando(comando: DescartarInteraccion):
+    handler = DescartarInteraccionHandler()
+    return handler.handle(comando)

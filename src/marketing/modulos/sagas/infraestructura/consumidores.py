@@ -5,6 +5,7 @@ from marketing.modulos.sagas.infraestructura.schema.v1.eventos.tracking import (
 )
 from marketing.modulos.sagas.infraestructura.schema.v1.eventos.atribucion import (
     EventoConversionAtribuidaConsumoSaga,
+    EventoAtribucionRevertidaConsumoSaga,
 )
 from marketing.modulos.sagas.infraestructura.schema.v1.eventos.comision import (
     EventoComisionReservadaConsumoSaga,
@@ -19,7 +20,10 @@ from marketing.modulos.sagas.aplicacion.coordinadores.saga_interacciones import 
     procesar_evento_saga,
 )
 from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionRegistrada
-from marketing.modulos.sagas.dominio.eventos.atribucion import ConversionAtribuida
+from marketing.modulos.sagas.dominio.eventos.atribucion import (
+    ConversionAtribuida,
+    AtribucionRevertida,
+)
 from marketing.modulos.sagas.dominio.eventos.comisiones import (
     ComisionReservada,
     ComisionRevertida,
@@ -72,6 +76,21 @@ class ConsumidorAtribucion(BaseConsumidor):
         evento_dict = avro_to_dict(mensaje.value().data)
         print(f'📥 ConversionAtribuida recibida en saga: {evento_dict}')
         event_dominio = ConversionAtribuida(**evento_dict)
+        procesar_evento_saga(event_dominio)
+
+
+class ConsumidorAtribucionRevertida(BaseConsumidor):
+    def get_subscription_config(self):
+        return {
+            'topico': 'atribucion-revertida',
+            'subscription_name': 'marketing-sub-atribucion-revertida-saga',
+            'schema_class': EventoAtribucionRevertidaConsumoSaga,
+        }
+
+    def _procesar_evento_saga(self, mensaje):
+        evento_dict = avro_to_dict(mensaje.value().data)
+        print(f'📥 AtribucionRevertida recibida en saga: {evento_dict}')
+        event_dominio = AtribucionRevertida(**evento_dict)
         procesar_evento_saga(event_dominio)
 
 
