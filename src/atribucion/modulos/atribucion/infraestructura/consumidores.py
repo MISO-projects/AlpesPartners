@@ -102,7 +102,9 @@ class ConsumidorInteracciones:
             while True:
                 mensaje = consumidor.receive()
                 try:
-                    self._procesar_mensaje_comando_reversion(mensaje)
+                    with self.app.app_context():
+                        with self.app.test_request_context():
+                            self._procesar_mensaje_comando_reversion(mensaje)
                     consumidor.acknowledge(mensaje)
                 except Exception as e:
                     print(f"Error procesando COMANDO de reversión: {e}")

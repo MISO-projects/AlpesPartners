@@ -247,6 +247,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
                 print(
                     f"↩️ Atribución revertida para journey {evento.journey_id_revertido}"
                 )
+                print(f"Interacciones: {evento.interacciones}")
                 self._continuar_compensacion(evento)
 
             elif isinstance(evento, InteraccionDescartada):
@@ -331,7 +332,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
                     id_correlacion=self.id_correlacion,
                     tipo_paso="COMPENSACION",
                     comando=type(comando).__name__,
-                    estado="EJECUTANDO",
+                    estado="DESPACHADO",
                 )
                 self.persistir_en_saga_log(entrada_log)
 
