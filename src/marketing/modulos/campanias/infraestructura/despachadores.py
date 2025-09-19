@@ -137,7 +137,7 @@ class DespachadorMarketing:
 
     def publicar_comando_revertir_comision(self, comando):
         payload = RevertirComisionPayload(
-            id_interaccion=comando.id_interaccion
+            journey_id=comando.journey_id
         )
         comando_integracion = ComandoRevertirComision(data=payload)
         self._publicar_mensaje(
@@ -148,18 +148,18 @@ class DespachadorMarketing:
 
     def publicar_comando_revertir_atribucion(self, comando):
         payload = RevertirAtribucionPayload(
-            id_interaccion=comando.id_interaccion
+            journey_id=comando.journey_id
         )
         comando_integracion = ComandoRevertirAtribucion(data=payload)
         self._publicar_mensaje(
             comando_integracion,
-            "revertir-atribucion-comando",
+            "revertir-atribucion",
             ComandoRevertirAtribucion
         )
     
     def publicar_comando_descartar_interaccion(self, comando):
         payload = DescartarInteraccionPayload(
-            id_interaccion=comando.id_interaccion
+            interacciones=comando.interacciones
         )
         comando_integracion = ComandoDescartarInteraccion(data=payload)
         self._publicar_mensaje(

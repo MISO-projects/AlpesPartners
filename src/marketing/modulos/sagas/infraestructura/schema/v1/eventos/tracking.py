@@ -44,7 +44,7 @@ class EventoInteraccionRegistradaConsumoSaga(EventoIntegracion):
 
 
 class InteraccionDescartadaPayload(Record):
-    id_interaccion = String()
+    interacciones = Array(String())
 
 class EventoInteraccionDescartadaConsumoSaga(EventoIntegracion):
     data = InteraccionDescartadaPayload()

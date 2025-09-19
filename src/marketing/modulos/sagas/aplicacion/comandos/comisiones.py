@@ -23,7 +23,7 @@ class ReservarComision(Comando):
 
 @dataclass
 class RevertirComision(Comando):
-    id_interaccion: uuid.UUID
+    journey_id: uuid.UUID
 
 
 class RevertirComisionHandler(ComandoHandler):

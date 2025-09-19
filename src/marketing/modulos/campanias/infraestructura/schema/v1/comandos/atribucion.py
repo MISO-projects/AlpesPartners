@@ -3,7 +3,7 @@ from marketing.seedwork.infraestructura.schema.v1.comandos import ComandoIntegra
 
 
 class RevertirAtribucionPayload(Record):
-    id_interaccion = String()
+    journey_id = String()
 
 
 class ComandoRevertirAtribucion(ComandoIntegracion):

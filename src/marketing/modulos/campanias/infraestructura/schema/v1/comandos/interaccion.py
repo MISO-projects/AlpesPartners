@@ -3,7 +3,7 @@ from marketing.seedwork.infraestructura.schema.v1.comandos import ComandoIntegra
 
 
 class DescartarInteraccionPayload(Record):
-    id_interaccion = String()
+    interacciones = Array(String())
 
 
 class ComandoDescartarInteraccion(ComandoIntegracion):

@@ -14,7 +14,7 @@ class RegistrarAtribucion(Comando):
 
 @dataclass
 class RevertirAtribucion(Comando):
-    id_interaccion: uuid.UUID
+    journey_id: uuid.UUID
 
 class RevertirAtribucionHandler(ComandoHandler):
     def handle(self, comando: RevertirAtribucion):

@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import uuid
 from decimal import Decimal
-from datetime import datetime
 from dataclasses import field
 
 from marketing.seedwork.dominio.eventos import EventoDominio
@@ -9,7 +8,8 @@ from marketing.seedwork.dominio.eventos import EventoDominio
 
 @dataclass
 class AtribucionRevertida(EventoDominio):
-    id_interaccion: uuid.UUID = None
+    journey_id_revertido: uuid.UUID = None
+    interacciones: list[uuid.UUID] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

@@ -26,7 +26,7 @@ class RegistrarInteraccion(Comando):
 
 @dataclass
 class DescartarInteraccion(Comando):
-    id_interaccion: uuid.UUID
+    interacciones: list[uuid.UUID]
 
 
 class DescartarInteraccionHandler(ComandoHandler):

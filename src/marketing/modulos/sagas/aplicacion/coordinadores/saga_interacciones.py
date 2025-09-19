@@ -27,6 +27,7 @@ from marketing.config.db import db
 from marketing.modulos.sagas.infraestructura.fabricas import FabricaRepositorio
 from marketing.modulos.sagas.dominio.repositorios import RepositorioSagaLog
 
+
 @dataclass
 class SagaLogEntry:
     """Entrada del log de saga para persistir el estado"""
@@ -66,16 +67,20 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         self.saga_log: list[SagaLogEntry] = []
         self.estado_actual = "INICIADO"
         self.fabrica_repositorio = FabricaRepositorio()
-        self.repositorio_saga_log = self.fabrica_repositorio.crear_objeto(RepositorioSagaLog.__class__)
+        self.repositorio_saga_log = self.fabrica_repositorio.crear_objeto(
+            RepositorioSagaLog.__class__
+        )
         self.inicializar_pasos()
-        
+
         # Cargar logs existentes si la saga ya existe
         self._cargar_logs_existentes()
 
     def _cargar_logs_existentes(self):
         """Carga los logs existentes de la saga desde la base de datos"""
         try:
-            logs_existentes = self.repositorio_saga_log.obtener_todos(self.id_correlacion)
+            logs_existentes = self.repositorio_saga_log.obtener_todos(
+                self.id_correlacion
+            )
             for log_entidad in logs_existentes:
                 # Convertir la entidad SagaLog a SagaLogEntry para compatibilidad
                 entrada = SagaLogEntry(
@@ -85,10 +90,10 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
                     comando=log_entidad.comando,
                     estado=log_entidad.estado,
                     timestamp=log_entidad.timestamp,
-                    datos_adicionales=log_entidad.datos_adicionales
+                    datos_adicionales=log_entidad.datos_adicionales,
                 )
                 self.saga_log.append(entrada)
-            
+
             # Actualizar estado basado en logs existentes
             if self.saga_log:
                 ultimo_log = self.saga_log[-1]
@@ -101,7 +106,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
                     self.estado_actual = "COMPENSANDO"
                 else:
                     self.estado_actual = "EN_PROGRESO"
-                    
+
         except Exception as e:
             print(f"Error cargando logs existentes: {e}")
             # Continuar con saga vacía si hay error
@@ -148,7 +153,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         """Persiste una entrada en el log de saga"""
         # Agregar a memoria local
         self.saga_log.append(entrada)
-        
+
         # Convertir a entidad de dominio
         saga_log_entidad = SagaLog(
             id=uuid.uuid4(),
@@ -158,14 +163,14 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
             comando=entrada.comando or "",
             estado=entrada.estado,
             timestamp=entrada.timestamp,
-            datos_adicionales=entrada.datos_adicionales
+            datos_adicionales=entrada.datos_adicionales,
         )
-        
+
         try:
             # Persistir en base de datos
             self.repositorio_saga_log.agregar(saga_log_entidad)
             db.session.commit()
-            
+
             print(
                 f"SAGA LOG [{entrada.id_correlacion}]: {entrada.tipo_paso} - {entrada.evento or entrada.comando or 'N/A'} - {entrada.estado}"
             )
@@ -181,17 +186,17 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         Mapea los atributos del evento a los parámetros del comando.
         """
         if tipo_comando == RevertirComision and isinstance(evento, FraudeDetectado):
-            return RevertirComision(id_interaccion=evento.id_interaccion)
+            return RevertirComision(journey_id=evento.journey_id)
 
         elif tipo_comando == RevertirAtribucion and isinstance(
             evento, ComisionRevertida
         ):
-            return RevertirAtribucion(id_interaccion=evento.id_interaccion)
+            return RevertirAtribucion(journey_id=evento.journey_id)
 
         elif tipo_comando == DescartarInteraccion and isinstance(
             evento, AtribucionRevertida
         ):
-            return DescartarInteraccion(id_interaccion=evento.id_interaccion)
+            return DescartarInteraccion(interacciones=evento.interacciones)
 
         else:
             raise NotImplementedError(
@@ -228,26 +233,26 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
             elif isinstance(evento, FraudeDetectado):
                 self._registrar_evento_compensacion(evento)
                 print(
-                    f"🚨 Fraude detectado para interacción {evento.id_interaccion}, iniciando compensación..."
+                    f"🚨 Fraude detectado para journey {evento.journey_id}, iniciando compensación..."
                 )
                 self._iniciar_compensacion(evento)
 
             elif isinstance(evento, ComisionRevertida):
                 self._registrar_evento_compensacion(evento)
-                print(f"↩️ Comisión revertida para interacción {evento.id_interaccion}")
+                print(f"↩️ Comisión revertida para journey {evento.journey_id}")
                 self._continuar_compensacion(evento)
 
             elif isinstance(evento, AtribucionRevertida):
                 self._registrar_evento_compensacion(evento)
                 print(
-                    f"↩️ Atribución revertida para interacción {evento.id_interaccion}"
+                    f"↩️ Atribución revertida para journey {evento.journey_id_revertido}"
                 )
                 self._continuar_compensacion(evento)
 
             elif isinstance(evento, InteraccionDescartada):
                 self._registrar_evento_compensacion(evento)
                 print(
-                    f"↩️ Interacción {evento.id_interaccion} descartada, compensación completada"
+                    f"↩️ Interacciónes {evento.interacciones} descartadas, compensación completada"
                 )
                 self.terminar_con_compensacion()
 

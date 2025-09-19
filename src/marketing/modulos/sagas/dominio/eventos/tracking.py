@@ -8,7 +8,7 @@ from datetime import datetime
 
 @dataclass
 class InteraccionDescartada(EventoDominio):
-    id_interaccion: uuid.UUID = None
+    interacciones: list[uuid.UUID] = None
 
 
 @dataclass(frozen=True)

@@ -22,7 +22,8 @@ class EventoConversionAtribuidaConsumoSaga(EventoIntegracion):
 
 
 class AtribucionRevertidaPayload(Record):
-    id_interaccion = String()
+    journey_id_revertido = String()
+    interacciones = Array(String()) 
 
 class EventoAtribucionRevertidaConsumoSaga(EventoIntegracion):
     data = AtribucionRevertidaPayload()

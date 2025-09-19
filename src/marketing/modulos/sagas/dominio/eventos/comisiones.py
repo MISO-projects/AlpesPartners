@@ -83,9 +83,9 @@ class ComisionReservada(EventoDominio):
 
 @dataclass
 class ComisionRevertida(EventoDominio):
-    id_interaccion: uuid.UUID = None
+    journey_id: uuid.UUID = None
 
 
 @dataclass
 class FraudeDetectado(EventoDominio):
-    id_interaccion: uuid.UUID = None
+    journey_id: uuid.UUID = None
