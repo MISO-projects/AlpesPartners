@@ -43,6 +43,7 @@ class RegistrarInteraccionHandler(CrearInteraccionBaseHandler):
                 parametros_tracking=comando.parametros_tracking,
                 elemento_objetivo=comando.elemento_objetivo,
                 contexto=comando.contexto,
+                estado='REGISTRADA',
             )
 
             interaccion: Interaccion = self.fabrica_interaccion.crear_objeto(

@@ -24,6 +24,7 @@ class MapeadorInteraccionSQLite(Mapeador):
             parametros_tracking="temp",
             elemento_objetivo="temp",
             contexto="temp",
+            estado=entidad.estado,
         )
 
     def dto_a_entidad(self, dto: InteraccionDbDto) -> Interaccion:
@@ -34,6 +35,7 @@ class MapeadorInteraccionSQLite(Mapeador):
             parametros_tracking=dto.parametros_tracking,
             elemento_objetivo=dto.elemento_objetivo,
             contexto=dto.contexto,
+            estado=dto.estado,
         )
 
 
@@ -73,6 +75,7 @@ class MapeadorInteraccionMongoDB(Mapeador):
                 ),
             },
             "fecha_creacion": datetime.utcnow(),  # Para auditoría
+            "estado": interaccion.estado,
         }
 
     def dto_a_entidad(self, document: dict) -> Interaccion:
@@ -118,6 +121,7 @@ class MapeadorInteraccionMongoDB(Mapeador):
             parametros_tracking=parametros_tracking,
             elemento_objetivo=elemento_objetivo,
             contexto=contexto,
+            estado=document["estado"],
         )
 
         interaccion.id = UUID(document["_id"])

@@ -20,3 +20,4 @@ class InteraccionRegistrada(EventoDominio):
     parametros_tracking: ParametrosTracking = None
     elemento_objetivo: ElementoObjetivo = None
     contexto: ContextoInteraccion = None
+    estado: str = None

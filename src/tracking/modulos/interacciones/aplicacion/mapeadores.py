@@ -16,6 +16,7 @@ class MapeadorInteraccionDTOJson(AppMap):
             parametros_tracking=externo["parametros_tracking"],
             elemento_objetivo=externo["elemento_objetivo"],
             contexto=externo["contexto"],
+            estado=externo.get("estado", "REGISTRADA"),
         )
 
     def dto_a_externo(self, dto: InteraccionDTO) -> dict:
@@ -36,6 +37,7 @@ class MapeadorInteraccion(RepMap):
             parametros_tracking=entidad.parametros_tracking,
             elemento_objetivo=entidad.elemento_objetivo,
             contexto=entidad.contexto,
+            estado=entidad.estado,
         )
 
     def dto_a_entidad(self, dto: InteraccionDTO) -> Interaccion:
@@ -46,4 +48,5 @@ class MapeadorInteraccion(RepMap):
             parametros_tracking=dto.parametros_tracking,
             elemento_objetivo=dto.elemento_objetivo,
             contexto=dto.contexto,
+            estado=dto.estado,
         )

@@ -37,6 +37,7 @@ class InteraccionRegistradaPayload(Record):
     parametros_tracking = ParametrosTrackingSchema()
     elemento_objetivo = ElementoObjetivoSchema()
     contexto = ContextoInteraccionSchema()
+    estado = String()
 
 
 class EventoInteraccionRegistradaConsumoSaga(EventoIntegracion):

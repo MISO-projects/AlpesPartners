@@ -13,3 +13,4 @@ class InteraccionDbDto(db.Model):
     parametros_tracking = Column(String)
     elemento_objetivo = Column(String)
     contexto = Column(String)
+    estado = Column(String)

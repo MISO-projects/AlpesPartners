@@ -40,6 +40,7 @@ class DespachadorTracking:
             parametros_tracking=evento.parametros_tracking,
             elemento_objetivo=evento.elemento_objetivo,
             contexto=evento.contexto,
+            estado=evento.estado,
         )
         evento_integracion = EventoInteraccionRegistrada(data=payload)
         self._publicar_mensaje(

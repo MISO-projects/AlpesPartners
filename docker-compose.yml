@@ -73,6 +73,8 @@ services:
     volumes:
       - ./src/marketing/:/src/marketing/
     environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
       - DATABASE_TYPE=postgresql
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=saga_log_pass
@@ -110,6 +112,8 @@ services:
     volumes:
       - ./src/tracking/:/src/tracking/
     environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
       - DATABASE_TYPE=mongodb
       - MONGODB_USER=admin
       - MONGODB_PASSWORD=admin123
