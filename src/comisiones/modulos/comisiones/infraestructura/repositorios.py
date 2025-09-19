@@ -119,6 +119,13 @@ class RepositorioComisionSQLite(RepositorioComision):
         if comision_dto:
             db.session.delete(comision_dto)
 
+    def obtener_por_journey_id(self, journey_id: UUID) -> Comision:
+
+        comision_dto = db.session.query(ComisionDbDto).filter_by(id_journey=str(journey_id)).first()
+        if comision_dto:
+            return self.fabrica_comision.crear_objeto(comision_dto, MapeadorComisionSQLite())
+        return None
+
 class RepositorioComisionMongoDB(RepositorioComision):
 
     def __init__(self):
@@ -228,6 +235,15 @@ class RepositorioComisionMongoDB(RepositorioComision):
             minimo=MontoComision(valor=Decimal('1.0'), moneda='USD'),
             maximo=MontoComision(valor=Decimal('1000.0'), moneda='USD')
         )
+
+    def obtener_por_journey_id(self, journey_id: UUID) -> Comision:
+
+        collection = self._get_collection()
+        document = collection.find_one({"id_journey": str(journey_id)})
+        if not document:
+            return None
+        
+        return self.fabrica_comision.crear_objeto(document, MapeadorComisionMongoDB())
 
 class RepositorioConfiguracionComisionSQLite(RepositorioConfiguracionComision):
 

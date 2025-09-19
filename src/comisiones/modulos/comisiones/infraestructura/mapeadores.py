@@ -195,6 +195,7 @@ class MapeadorComisionMongoDB(Mapeador):
             "_id": str(entidad.id),
             "id_interaccion": entidad.id_interaccion,
             "id_campania": entidad.id_campania,
+            "id_journey": entidad.id_journey,
             "monto": {
                 "valor": str(entidad.monto.valor),
                 "moneda": entidad.monto.moneda
@@ -222,7 +223,6 @@ class MapeadorComisionMongoDB(Mapeador):
                     "moneda": entidad.configuracion.maximo.moneda
                 } if entidad.configuracion.maximo else None
             }
-
 
         return documento
 
@@ -258,6 +258,7 @@ class MapeadorComisionMongoDB(Mapeador):
             id=uuid.UUID(documento["_id"]),
             id_interaccion=documento["id_interaccion"],
             id_campania=documento["id_campania"],
+            id_journey=documento.get("id_journey"),
             monto=MontoComision(
                 valor=Decimal(documento["monto"]["valor"]),
                 moneda=documento["monto"]["moneda"]
