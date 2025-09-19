@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 @dataclass
-class InteraccionDescartada(EventoDominio):
+class InteraccionesDescartadas(EventoDominio):
     interacciones: list[uuid.UUID] = None
 
 

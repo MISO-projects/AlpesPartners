@@ -21,3 +21,19 @@ class InteraccionRegistrada(EventoDominio):
     elemento_objetivo: ElementoObjetivo = None
     contexto: ContextoInteraccion = None
     estado: str = None
+
+@dataclass
+class InteraccionDescartada(EventoDominio):
+    id_interaccion: uuid.UUID = None
+    tipo: str = None
+    marca_temporal: datetime = None
+    identidad_usuario: IdentidadUsuario = None
+    parametros_tracking: ParametrosTracking = None
+    elemento_objetivo: ElementoObjetivo = None
+    contexto: ContextoInteraccion = None
+    estado: str = None
+
+
+@dataclass
+class InteraccionesDescartadas(EventoDominio):
+    interacciones: list[uuid.UUID] = None

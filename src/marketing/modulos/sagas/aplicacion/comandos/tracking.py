@@ -25,17 +25,17 @@ class RegistrarInteraccion(Comando):
 
 
 @dataclass
-class DescartarInteraccion(Comando):
+class DescartarInteracciones(Comando):
     interacciones: list[uuid.UUID]
 
 
-class DescartarInteraccionHandler(ComandoHandler):
-    def handle(self, comando: DescartarInteraccion):
+class DescartarInteraccionesHandler(ComandoHandler):
+    def handle(self, comando: DescartarInteracciones):
         despachador = DespachadorMarketing()
-        despachador.publicar_comando_descartar_interaccion(comando)
+        despachador.publicar_comando_descartar_interacciones(comando)
 
 
-@comando.register(DescartarInteraccion)
-def ejecutar_comando(comando: DescartarInteraccion):
-    handler = DescartarInteraccionHandler()
+@comando.register(DescartarInteracciones)
+def ejecutar_comando(comando: DescartarInteracciones):
+    handler = DescartarInteraccionesHandler()
     return handler.handle(comando)

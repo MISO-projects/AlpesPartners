@@ -1,5 +1,6 @@
 from tracking.seedwork.infraestructura.schema.v1.comandos import ComandoIntegracion
 from datetime import datetime
+from pulsar.schema import *
 
 
 class ComandoRegistrarInteraccionPayload(ComandoIntegracion):
@@ -13,3 +14,10 @@ class ComandoRegistrarInteraccionPayload(ComandoIntegracion):
 
 class ComandoRegistrarInteraccion(ComandoIntegracion):
     data = ComandoRegistrarInteraccionPayload()
+
+class DescartarInteraccionesPayload(Record):
+    interacciones = Array(String())
+
+
+class ComandoDescartarInteracciones(ComandoIntegracion):
+    data = DescartarInteraccionesPayload()

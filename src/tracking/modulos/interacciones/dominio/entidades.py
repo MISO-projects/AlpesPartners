@@ -9,6 +9,7 @@ from tracking.modulos.interacciones.dominio.objetos_valor import (
     ContextoInteraccion,
 )
 from tracking.modulos.interacciones.dominio.eventos import InteraccionRegistrada
+from tracking.modulos.interacciones.dominio.eventos import InteraccionDescartada
 from enum import Enum
 
 class TipoInteraccion(Enum):
@@ -44,6 +45,22 @@ class Interaccion(AgregacionRaiz):
 
         self.agregar_evento(
             InteraccionRegistrada(
+                id_interaccion=self.id,
+                tipo=interaccion.tipo,
+                marca_temporal=interaccion.marca_temporal,
+                identidad_usuario=interaccion.identidad_usuario.__dict__,
+                parametros_tracking=interaccion.parametros_tracking.__dict__,
+                elemento_objetivo=interaccion.elemento_objetivo.__dict__,
+                contexto=interaccion.contexto.__dict__,
+                estado=interaccion.estado,
+            )
+        )
+
+    def descartar_interaccion(self, interaccion: Interaccion):
+        self.estado = EstadoInteraccion.DESCARTADA
+
+        self.agregar_evento(
+            InteraccionDescartada(
                 id_interaccion=self.id,
                 tipo=interaccion.tipo,
                 marca_temporal=interaccion.marca_temporal,

@@ -9,6 +9,8 @@ from tracking.modulos.interacciones.infraestructura.schema.v1.comandos import (
 )
 from tracking.modulos.interacciones.infraestructura.schema.v1.eventos import (
     InteraccionRegistradaPayload,
+    InteraccionesDescartadasPayload,
+    EventoInteraccionesDescartadas,
 )
 from tracking.seedwork.infraestructura import utils
 
@@ -40,7 +42,7 @@ class DespachadorTracking:
             parametros_tracking=evento.parametros_tracking,
             elemento_objetivo=evento.elemento_objetivo,
             contexto=evento.contexto,
-            estado=evento.estado,
+            estado=evento.estado.value,
         )
         evento_integracion = EventoInteraccionRegistrada(data=payload)
         self._publicar_mensaje(
@@ -59,4 +61,13 @@ class DespachadorTracking:
         comando_integracion = ComandoRegistrarInteraccion(data=payload)
         self._publicar_mensaje(
             comando_integracion, topico, AvroSchema(ComandoRegistrarInteraccion)
+        )
+    
+    def publicar_evento_interacciones_descartadas(self, evento, topico):
+        payload = InteraccionesDescartadasPayload(
+            interacciones=evento.interacciones
+        )
+        evento_integracion = EventoInteraccionesDescartadas(data=payload)
+        self._publicar_mensaje(
+            evento_integracion, topico, EventoInteraccionesDescartadas
         )

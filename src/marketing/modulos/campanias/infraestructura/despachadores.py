@@ -23,8 +23,8 @@ from marketing.modulos.campanias.infraestructura.schema.v1.comandos.atribucion i
     RevertirAtribucionPayload
 )
 from marketing.modulos.campanias.infraestructura.schema.v1.comandos.interaccion import (
-    ComandoDescartarInteraccion,
-    DescartarInteraccionPayload
+    ComandoDescartarInteracciones,
+    DescartarInteraccionesPayload
 )
 from marketing.seedwork.infraestructura import utils
 
@@ -157,13 +157,13 @@ class DespachadorMarketing:
             ComandoRevertirAtribucion
         )
     
-    def publicar_comando_descartar_interaccion(self, comando):
-        payload = DescartarInteraccionPayload(
+    def publicar_comando_descartar_interacciones(self, comando):
+        payload = DescartarInteraccionesPayload(
             interacciones=comando.interacciones
         )
-        comando_integracion = ComandoDescartarInteraccion(data=payload)
+        comando_integracion = ComandoDescartarInteracciones(data=payload)
         self._publicar_mensaje(
             comando_integracion,
-            "descartar-interaccion-comando",
-            ComandoDescartarInteraccion
+            "descartar-interacciones-comando",
+            ComandoDescartarInteracciones
         )

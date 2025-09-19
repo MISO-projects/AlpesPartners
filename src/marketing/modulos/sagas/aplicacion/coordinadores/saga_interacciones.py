@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 from marketing.modulos.sagas.aplicacion.comandos.comisiones import RevertirComision
 from marketing.modulos.sagas.aplicacion.comandos.atribucion import RevertirAtribucion
-from marketing.modulos.sagas.aplicacion.comandos.tracking import DescartarInteraccion
+from marketing.modulos.sagas.aplicacion.comandos.tracking import DescartarInteracciones
 from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionRegistrada
 from marketing.modulos.sagas.dominio.eventos.atribucion import ConversionAtribuida
 from marketing.modulos.sagas.dominio.eventos.comisiones import ComisionReservada
@@ -21,7 +21,7 @@ from marketing.modulos.sagas.dominio.eventos.comisiones import (
     ComisionRevertida,
 )
 from marketing.modulos.sagas.dominio.eventos.atribucion import AtribucionRevertida
-from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionDescartada
+from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionesDescartadas
 from marketing.modulos.sagas.dominio.entidades import SagaLog
 from marketing.config.db import db
 from marketing.modulos.sagas.infraestructura.fabricas import FabricaRepositorio
@@ -59,7 +59,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
     Flujo de compensación (cuando se detecta fraude):
     1. FraudeDetectado → RevertirComision → ComisionRevertida
     2. ComisionRevertida → RevertirAtribucion → AtribucionRevertida
-    3. AtribucionRevertida → DescartarInteraccion → InteraccionDescartada
+    3. AtribucionRevertida → DescartarInteracciones → InteraccionesDescartadas
     """
 
     def __init__(self, id_correlacion: uuid.UUID = None):
@@ -116,7 +116,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         self.compensaciones = {
             FraudeDetectado: RevertirComision,
             ComisionRevertida: RevertirAtribucion,
-            AtribucionRevertida: DescartarInteraccion,
+            AtribucionRevertida: DescartarInteracciones,
         }
 
     def iniciar(self):
@@ -193,10 +193,10 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         ):
             return RevertirAtribucion(journey_id=evento.journey_id)
 
-        elif tipo_comando == DescartarInteraccion and isinstance(
+        elif tipo_comando == DescartarInteracciones and isinstance(
             evento, AtribucionRevertida
         ):
-            return DescartarInteraccion(interacciones=evento.interacciones)
+            return DescartarInteracciones(interacciones=evento.interacciones)
 
         else:
             raise NotImplementedError(
@@ -250,7 +250,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
                 print(f"Interacciones: {evento.interacciones}")
                 self._continuar_compensacion(evento)
 
-            elif isinstance(evento, InteraccionDescartada):
+            elif isinstance(evento, InteraccionesDescartadas):
                 self._registrar_evento_compensacion(evento)
                 print(
                     f"↩️ Interacciónes {evento.interacciones} descartadas, compensación completada"

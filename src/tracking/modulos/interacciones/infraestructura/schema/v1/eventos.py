@@ -94,3 +94,11 @@ class EventoCampaniaDesactivada(EventoIntegracion):
 
 class EventoInteraccionRecibida(EventoIntegracion):
     data = InteraccionRecibidaPayload()
+
+
+class InteraccionesDescartadasPayload(Record):
+    interacciones = Array(String())
+
+
+class EventoInteraccionesDescartadas(EventoIntegracion):
+    data = InteraccionesDescartadasPayload()

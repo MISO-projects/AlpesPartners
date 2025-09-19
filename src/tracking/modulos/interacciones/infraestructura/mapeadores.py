@@ -1,5 +1,5 @@
 from tracking.seedwork.dominio.repositorios import Mapeador
-from tracking.modulos.interacciones.dominio.entidades import Interaccion
+from tracking.modulos.interacciones.dominio.entidades import Interaccion, EstadoInteraccion
 from tracking.modulos.interacciones.infraestructura.dto import InteraccionDbDto
 from datetime import datetime
 from uuid import UUID
@@ -35,7 +35,7 @@ class MapeadorInteraccionSQLite(Mapeador):
             parametros_tracking=dto.parametros_tracking,
             elemento_objetivo=dto.elemento_objetivo,
             contexto=dto.contexto,
-            estado=dto.estado,
+            estado=EstadoInteraccion(dto.estado),
         )
 
 
@@ -50,32 +50,30 @@ class MapeadorInteraccionMongoDB(Mapeador):
             "tipo": interaccion.tipo,
             "marca_temporal": interaccion.marca_temporal,
             "identidad_usuario": {
-                "id_usuario": interaccion.identidad_usuario.get("id_usuario"),
-                "id_anonimo": interaccion.identidad_usuario.get("id_anonimo"),
-                "direccion_ip": interaccion.identidad_usuario.get("direccion_ip"),
-                "agente_usuario": interaccion.identidad_usuario.get("agente_usuario"),
+                "id_usuario": interaccion.identidad_usuario.id_usuario,
+                "id_anonimo": interaccion.identidad_usuario.id_anonimo,
+                "direccion_ip": interaccion.identidad_usuario.direccion_ip,
+                "agente_usuario": interaccion.identidad_usuario.agente_usuario,
             },
             "parametros_tracking": {
-                "fuente": interaccion.parametros_tracking.get("fuente"),
-                "medio": interaccion.parametros_tracking.get("medio"),
-                "campania": interaccion.parametros_tracking.get("campaña"),
-                "contenido": interaccion.parametros_tracking.get("contenido"),
-                "termino": interaccion.parametros_tracking.get("termino"),
-                "id_afiliado": interaccion.parametros_tracking.get("id_afiliado", ""),
+                "fuente": interaccion.parametros_tracking.fuente,
+                "medio": interaccion.parametros_tracking.medio,
+                "campania": interaccion.parametros_tracking.campania,
+                "contenido": interaccion.parametros_tracking.contenido,
+                "termino": interaccion.parametros_tracking.termino,
+                "id_afiliado": interaccion.parametros_tracking.id_afiliado,
             },
             "elemento_objetivo": {
-                "url": interaccion.elemento_objetivo.get("url"),
-                "id_elemento": interaccion.elemento_objetivo.get("id_elemento"),
+                "url": interaccion.elemento_objetivo.url,
+                "id_elemento": interaccion.elemento_objetivo.id_elemento,
             },
             "contexto": {
-                "url_pagina": interaccion.contexto.get("url_pagina"),
-                "url_referente": interaccion.contexto.get("url_referente"),
-                "informacion_dispositivo": interaccion.contexto.get(
-                    "informacion_dispositivo"
-                ),
+                "url_pagina": interaccion.contexto.url_pagina,
+                "url_referente": interaccion.contexto.url_referente,
+                "informacion_dispositivo": interaccion.contexto.informacion_dispositivo,
             },
             "fecha_creacion": datetime.utcnow(),  # Para auditoría
-            "estado": interaccion.estado,
+            "estado": interaccion.estado.value,
         }
 
     def dto_a_entidad(self, document: dict) -> Interaccion:
@@ -121,7 +119,7 @@ class MapeadorInteraccionMongoDB(Mapeador):
             parametros_tracking=parametros_tracking,
             elemento_objetivo=elemento_objetivo,
             contexto=contexto,
-            estado=document["estado"],
+            estado=EstadoInteraccion(document["estado"]),
         )
 
         interaccion.id = UUID(document["_id"])

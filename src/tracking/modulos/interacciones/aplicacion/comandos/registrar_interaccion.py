@@ -1,6 +1,6 @@
 from tracking.seedwork.aplicacion.comandos import Comando, ComandoHandler
 from tracking.modulos.interacciones.aplicacion.comandos.base import (
-    CrearInteraccionBaseHandler,
+    ComandoInteraccionBaseHandler,
 )
 from tracking.modulos.interacciones.aplicacion.dto import (
     IdentidadUsuarioDTO,
@@ -33,7 +33,7 @@ class RegistrarInteraccion(Comando):
     contexto: ContextoInteraccionDTO
 
 
-class RegistrarInteraccionHandler(CrearInteraccionBaseHandler):
+class RegistrarInteraccionHandler(ComandoInteraccionBaseHandler):
     def handle(self, comando: RegistrarInteraccion):
         try:
             interaccion_dto = InteraccionDTO(

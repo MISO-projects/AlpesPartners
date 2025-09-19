@@ -2,7 +2,13 @@ from tracking.seedwork.dominio.repositorios import Mapeador as RepMap
 from tracking.modulos.interacciones.aplicacion.dto import (
     InteraccionDTO,
 )
-from tracking.modulos.interacciones.dominio.entidades import Interaccion
+from tracking.modulos.interacciones.dominio.entidades import Interaccion, EstadoInteraccion
+from tracking.modulos.interacciones.dominio.objetos_valor import (
+    IdentidadUsuario,
+    ParametrosTracking,
+    ElementoObjetivo,
+    ContextoInteraccion,
+)
 from tracking.seedwork.aplicacion.dto import Mapeador as AppMap
 from datetime import datetime
 
@@ -41,12 +47,35 @@ class MapeadorInteraccion(RepMap):
         )
 
     def dto_a_entidad(self, dto: InteraccionDTO) -> Interaccion:
+        identidad_usuario = IdentidadUsuario(
+            id_usuario=dto.identidad_usuario.get("id_usuario"),
+            id_anonimo=dto.identidad_usuario.get("id_anonimo"),
+            direccion_ip=dto.identidad_usuario.get("direccion_ip"),
+            agente_usuario=dto.identidad_usuario.get("agente_usuario"),
+        )
+        parametros_tracking = ParametrosTracking(
+            fuente=dto.parametros_tracking.get("fuente"),
+            medio=dto.parametros_tracking.get("medio"),
+            campania=dto.parametros_tracking.get("campania"),
+            contenido=dto.parametros_tracking.get("contenido"),
+            termino=dto.parametros_tracking.get("termino"),
+            id_afiliado=dto.parametros_tracking.get("id_afiliado"),
+        )
+        elemento_objetivo = ElementoObjetivo(
+            url=dto.elemento_objetivo.get("url"),
+            id_elemento=dto.elemento_objetivo.get("id_elemento"),
+        )
+        contexto = ContextoInteraccion(
+            url_pagina=dto.contexto.get("url_pagina"),
+            url_referente=dto.contexto.get("url_referente"),
+            informacion_dispositivo=dto.contexto.get("informacion_dispositivo"),
+        )
         return Interaccion(
             tipo=dto.tipo,
             marca_temporal=datetime.strptime(dto.marca_temporal, self._FORMATO_FECHA),
-            identidad_usuario=dto.identidad_usuario,
-            parametros_tracking=dto.parametros_tracking,
-            elemento_objetivo=dto.elemento_objetivo,
-            contexto=dto.contexto,
-            estado=dto.estado,
+            identidad_usuario=identidad_usuario,
+            parametros_tracking=parametros_tracking,
+            elemento_objetivo=elemento_objetivo,
+            contexto=contexto,
+            estado=EstadoInteraccion(dto.estado),
         )

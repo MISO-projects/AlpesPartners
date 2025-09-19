@@ -44,8 +44,8 @@ class EventoInteraccionRegistradaConsumoSaga(EventoIntegracion):
     data = InteraccionRegistradaPayload()
 
 
-class InteraccionDescartadaPayload(Record):
+class InteraccionesDescartadasPayload(Record):
     interacciones = Array(String())
 
-class EventoInteraccionDescartadaConsumoSaga(EventoIntegracion):
-    data = InteraccionDescartadaPayload()
+class EventoInteraccionesDescartadasConsumoSaga(EventoIntegracion):
+    data = InteraccionesDescartadasPayload()
