@@ -23,6 +23,7 @@ class MapeadorJourneySQLite(Mapeador):
             touchpoint_dto = TouchpointDTO(
                 id=str(uuid.uuid4()), 
                 orden=touchpoint_entidad.orden,
+                interaccion_id=touchpoint_entidad.interaccion_id,
                 timestamp=touchpoint_entidad.timestamp,
                 campania_id=touchpoint_entidad.campania_id,
                 canal=touchpoint_entidad.canal,
@@ -45,6 +46,7 @@ class MapeadorJourneySQLite(Mapeador):
         for touchpoint_dto in dto.touchpoints:
             touchpoint_entidad = Touchpoint(
                 orden=touchpoint_dto.orden,
+                interaccion_id=touchpoint_dto.interaccion_id,
                 timestamp=touchpoint_dto.timestamp,
                 campania_id=touchpoint_dto.campania_id,
                 canal=touchpoint_dto.canal,
@@ -66,6 +68,8 @@ class MapeadorJourneyMongoDB(Mapeador):
         touchpoints_dict = [
             {
                 "orden": tp.orden,
+                "interaccion_id": tp.interaccion_id,
+                "afiliado_id": tp.afiliado_id,
                 "timestamp": tp.timestamp,
                 "campania_id": tp.campania_id,
                 "afiliado_id": tp.afiliado_id,
@@ -89,9 +93,10 @@ class MapeadorJourneyMongoDB(Mapeador):
         touchpoints_entidad = [
             Touchpoint(
                 orden=tp_dict.get('orden'),
+                interaccion_id=tp_dict.get('interaccion_id'),
+                afiliado_id=tp_dict.get('afiliado_id'),
                 timestamp=tp_dict.get('timestamp'),
                 campania_id=tp_dict.get('campania_id'),
-                afiliado_id=tp_dict.get('afiliado_id'),
                 canal=tp_dict.get('canal'),
                 tipo_interaccion=tp_dict.get('tipo_interaccion')
             ) for tp_dict in dto.get('touchpoints', [])

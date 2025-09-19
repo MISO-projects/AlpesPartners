@@ -19,6 +19,7 @@ class MapeadorAtribucion(RepMap):
         timestamp_obj = datetime.fromtimestamp(dto.marca_temporal / 1000, tz=timezone.utc)
         primer_touchpoint = Touchpoint(
             orden=1,
+            interaccion_id=dto.id_interaccion,
             timestamp=timestamp_obj,
             campania_id=dto.parametros_tracking.campania,
             afiliado_id=dto.parametros_tracking.id_afiliado, 

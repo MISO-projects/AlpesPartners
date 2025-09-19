@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "d7fb0830-78a5-47ec-90ef-6e47d131d1c0",
+		"_postman_id": "620579c5-9e09-4d4a-86c7-9ac12963bcb5",
 		"name": "No Monoliticas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "34079454"
@@ -282,6 +282,29 @@
 							"port": "8002",
 							"path": [
 								"atribucion-registrada-comando"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "revertir-atribucion comando",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8002/revertir-atribucion/4504c49b-f646-404a-96ba-a6f97afb051b",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8002",
+							"path": [
+								"revertir-atribucion",
+								"4504c49b-f646-404a-96ba-a6f97afb051b"
 							]
 						}
 					},

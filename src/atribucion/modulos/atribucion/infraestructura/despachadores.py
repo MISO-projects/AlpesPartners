@@ -2,8 +2,12 @@ import pulsar
 from pulsar.schema import AvroSchema, Record
 import json
 from .schema.v1.eventos import EventoConversionAtribuida, ConversionAtribuidaPayload, MontoSchema
+from .schema.v1.eventos import (
+    EventoConversionAtribuida, ConversionAtribuidaPayload, MontoSchema,
+    EventoAtribucionRevertida, AtribucionRevertidaPayload
+)
+from atribucion.modulos.atribucion.dominio.entidades import Journey
 from atribucion.seedwork.infraestructura import utils
-import uuid
 
 
 def avro_to_dict(record) -> dict:
@@ -38,20 +42,40 @@ def calcular_score_fraude_basico(resultado_atribucion: list) -> int:
     
     # Factor 2: Canal sospechoso
     if touchpoint.canal in ['unknown', 'bot', 'crawler']:
-        score += 30
+        score += 60
     
     # Factor 3: Tipo de interacción de bajo valor
-    if touchpoint.tipo_interaccion in ['IMPRESSION', 'VIEW']:
-        score += 10
+    # if touchpoint.tipo_interaccion in ['IMPRESSION', 'VIEW']:
+    #     score += 10
     
     # Factor 4: Valor atribuido muy bajo o 0
-    if atribucion_principal.valor_atribuido <= 0:
-        score += 20
+    # if atribucion_principal.valor_atribuido <= 0:
+    #     score += 20
     
     score_final = min(score, 100)
     return score_final
 
 class DespachadorEventosAtribucion:
+
+   
+
+    def publicar_evento_atribucion_revertida(self, journey, topico='atribucion-revertida'):
+        print(f"DESPACHADOR: Iniciando publicación de 'AtribucionRevertida' para Journey ID: {journey.id}")
+        
+  
+        touchpoints_info = [
+            str(tp.interaccion_id) for tp in journey.touchpoints
+            
+        ]
+        
+        payload = AtribucionRevertidaPayload(
+            journey_id_revertido=str(journey.id),
+            interacciones=touchpoints_info
+        )
+        
+        evento_integracion = EventoAtribucionRevertida(data=payload)
+        self._publicar_mensaje(evento_integracion, topico, EventoAtribucionRevertida)
+
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         try:
             print("DESPACHADOR: Conectando al broker Pulsar...")
@@ -72,7 +96,7 @@ class DespachadorEventosAtribucion:
         except Exception as e:
             print(f"ERROR DESPACHADOR: No se pudo publicar el evento. Causa: {e}")
 
-    def publicar_evento_conversion_atribuida(self, resultado_atribucion: list, datos_evento_original: dict, topico='eventos-atribucion'):
+    def publicar_evento_conversion_atribuida(self,journey: Journey, resultado_atribucion: list, datos_evento_original: dict,  topico='eventos-atribucion'):
         
         if not resultado_atribucion:
             print("DESPACHADOR: No hay atribución calculada para publicar.")
@@ -80,7 +104,7 @@ class DespachadorEventosAtribucion:
             
         atribucion_principal = resultado_atribucion[0]
         payload = ConversionAtribuidaPayload(
-            id_interaccion_atribuida=str(uuid.uuid4()),
+            id_interaccion_atribuida=str(journey.id),
             id_campania=str(atribucion_principal.touchpoint.campania_id),
             id_afiliado=str(atribucion_principal.touchpoint.afiliado_id),
             tipo_conversion=datos_evento_original.get('tipo', 'UNKNOWN'),

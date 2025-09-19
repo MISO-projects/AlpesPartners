@@ -19,8 +19,10 @@ class Touchpoint(db.Model):
     id = db.Column(db.String(40), primary_key=True)
     journey_id = db.Column(db.String(40), ForeignKey("journeys.id"), nullable=False)
     orden = db.Column(db.Integer, nullable=False)
+    interaccion_id = db.Column(db.String(40))
     timestamp = db.Column(db.DateTime, nullable=False)
     campania_id = db.Column(db.String(40))
+    afiliado_id = db.Column(db.String(40))
     canal = db.Column(db.String(40))
     tipo_interaccion = db.Column(db.String(40))
 
