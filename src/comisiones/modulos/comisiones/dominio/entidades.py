@@ -29,6 +29,7 @@ from comisiones.modulos.comisiones.dominio.excepciones import (
 class Comision(AgregacionRaiz):
     id_interaccion: str = field(default="")
     id_campania: str = field(default="")
+    id_journey: str = field(default=None)
     monto: MontoComision = field(default=None)
     estado: EstadoComision = field(default=EstadoComision.RESERVADA)
     configuracion: ConfiguracionComision = field(default=None)
