@@ -29,6 +29,7 @@ class ReservarComision(Comando):
     id_campania: uuid.UUID
     tipo_interaccion: str
     valor_interaccion: Decimal
+    id_journey: uuid.UUID = None
     moneda_interaccion: str = "USD"
     fraud_ok: bool = True
     score_fraude: int = 0
@@ -72,6 +73,9 @@ class ReservarComisionHandler(ComandoHandler):
             comision = servicio_comision.procesar_interaccion_atribuida(interaccion)
 
             if comision:
+                if comando.id_journey:
+                    comision.id_journey = str(comando.id_journey)
+                
                 UnidadTrabajoPuerto.registrar_batch(repositorio_comision.agregar, comision)
                 UnidadTrabajoPuerto.savepoint()
                 UnidadTrabajoPuerto.commit()

@@ -1,7 +1,6 @@
 from pulsar.schema import *
 from comisiones.seedwork.infraestructura.schema.v1.eventos import EventoIntegracion
 
-# Schema para consumir eventos de atribución
 class MontoSchema(Record):
     valor = Float()
     moneda = String()
@@ -50,3 +49,10 @@ class ComisionCalculadaPayload(Record):
 
 class EventoComisionCalculada(EventoIntegracion):
     data = ComisionCalculadaPayload()
+
+class RevertirComisionPayload(Record):
+    journey_id = String()
+    motivo = String()
+
+class EventoRevertirComision(EventoIntegracion):
+    data = RevertirComisionPayload()

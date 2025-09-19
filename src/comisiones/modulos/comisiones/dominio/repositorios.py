@@ -58,6 +58,11 @@ class RepositorioComision(ABC):
 
         ...
 
+    @abstractmethod
+    def obtener_por_journey_id(self, journey_id: UUID) -> Comision:
+
+        ...
+
 class RepositorioConfiguracionComision(ABC):
 
     @abstractmethod
