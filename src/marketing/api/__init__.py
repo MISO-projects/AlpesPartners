@@ -11,7 +11,7 @@ def registrar_handlers():
 
 
 def importar_modelos_alchemy():
-    import marketing.modulos.campanias.infraestructura.dto
+    import marketing.modulos.sagas.infraestructura.dto
 
 
 def comenzar_consumidor(app):
@@ -57,21 +57,20 @@ def comenzar_consumidor(app):
 def create_app(configuracion={}):
     app = Flask(__name__, instance_relative_config=True)
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
-        basedir, "alpespartners.db"
-    )
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
     app.secret_key = '9d58f98f-3ae8-4149-a09f-3a8c2012e32c'
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['TESTING'] = configuracion.get('TESTING')
 
-    # Initialize MongoDB
+    # Initialize databases
     from marketing.config.mongo import init_mongo
+    from marketing.config.db import init_postgres, db
+    init_postgres(app)
+    importar_modelos_alchemy()
 
     with app.app_context():
         if not app.config.get('TESTING'):
             init_mongo()
+            db.create_all()
 
     registrar_handlers()
 

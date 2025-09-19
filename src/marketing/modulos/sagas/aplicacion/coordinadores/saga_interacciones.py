@@ -22,7 +22,10 @@ from marketing.modulos.sagas.dominio.eventos.comisiones import (
 )
 from marketing.modulos.sagas.dominio.eventos.atribucion import AtribucionRevertida
 from marketing.modulos.sagas.dominio.eventos.tracking import InteraccionDescartada
-
+from marketing.modulos.sagas.dominio.entidades import SagaLog
+from marketing.config.db import db
+from marketing.modulos.sagas.infraestructura.fabricas import FabricaRepositorio
+from marketing.modulos.sagas.dominio.repositorios import RepositorioSagaLog
 
 @dataclass
 class SagaLogEntry:
@@ -62,7 +65,46 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         self.id_correlacion = id_correlacion or uuid.uuid4()
         self.saga_log: list[SagaLogEntry] = []
         self.estado_actual = "INICIADO"
+        self.fabrica_repositorio = FabricaRepositorio()
+        self.repositorio_saga_log = self.fabrica_repositorio.crear_objeto(RepositorioSagaLog.__class__)
         self.inicializar_pasos()
+        
+        # Cargar logs existentes si la saga ya existe
+        self._cargar_logs_existentes()
+
+    def _cargar_logs_existentes(self):
+        """Carga los logs existentes de la saga desde la base de datos"""
+        try:
+            logs_existentes = self.repositorio_saga_log.obtener_todos(self.id_correlacion)
+            for log_entidad in logs_existentes:
+                # Convertir la entidad SagaLog a SagaLogEntry para compatibilidad
+                entrada = SagaLogEntry(
+                    id_correlacion=log_entidad.id_correlacion,
+                    tipo_paso=log_entidad.tipo_paso,
+                    evento=log_entidad.evento,
+                    comando=log_entidad.comando,
+                    estado=log_entidad.estado,
+                    timestamp=log_entidad.timestamp,
+                    datos_adicionales=log_entidad.datos_adicionales
+                )
+                self.saga_log.append(entrada)
+            
+            # Actualizar estado basado en logs existentes
+            if self.saga_log:
+                ultimo_log = self.saga_log[-1]
+                if ultimo_log.tipo_paso == "FIN":
+                    if ultimo_log.estado == "REVERTIDO":
+                        self.estado_actual = "REVERTIDO"
+                    else:
+                        self.estado_actual = "COMPLETADO"
+                elif any(log.tipo_paso == "COMPENSACION" for log in self.saga_log):
+                    self.estado_actual = "COMPENSANDO"
+                else:
+                    self.estado_actual = "EN_PROGRESO"
+                    
+        except Exception as e:
+            print(f"Error cargando logs existentes: {e}")
+            # Continuar con saga vacía si hay error
 
     def inicializar_pasos(self):
         """Mapeo simple: qué comando de compensación ejecutar para cada evento"""
@@ -104,11 +146,34 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
 
     def persistir_en_saga_log(self, entrada: SagaLogEntry):
         """Persiste una entrada en el log de saga"""
+        # Agregar a memoria local
         self.saga_log.append(entrada)
-        # TODO: Implementar persistencia real en base de datos
-        print(
-            f"SAGA LOG [{entrada.id_correlacion}]: {entrada.tipo_paso} - {entrada.evento or entrada.comando or 'N/A'} - {entrada.estado}"
+        
+        # Convertir a entidad de dominio
+        saga_log_entidad = SagaLog(
+            id=uuid.uuid4(),
+            id_correlacion=entrada.id_correlacion,
+            tipo_paso=entrada.tipo_paso,
+            evento=entrada.evento or "",
+            comando=entrada.comando or "",
+            estado=entrada.estado,
+            timestamp=entrada.timestamp,
+            datos_adicionales=entrada.datos_adicionales
         )
+        
+        try:
+            # Persistir en base de datos
+            self.repositorio_saga_log.agregar(saga_log_entidad)
+            db.session.commit()
+            
+            print(
+                f"SAGA LOG [{entrada.id_correlacion}]: {entrada.tipo_paso} - {entrada.evento or entrada.comando or 'N/A'} - {entrada.estado}"
+            )
+        except Exception as e:
+            print(f"Error persistiendo saga log: {e}")
+            db.session.rollback()
+            # Re-lanzar la excepción para que el coordinador pueda manejarla
+            raise
 
     def construir_comando(self, evento: EventoDominio, tipo_comando: type) -> Comando:
         """
