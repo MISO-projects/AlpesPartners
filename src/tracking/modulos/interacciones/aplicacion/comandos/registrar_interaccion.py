@@ -25,6 +25,7 @@ from dataclasses import dataclass
 
 @dataclass
 class RegistrarInteraccion(Comando):
+    id_correlacion: str
     tipo: str
     marca_temporal: datetime
     identidad_usuario: IdentidadUsuarioDTO
@@ -49,7 +50,7 @@ class RegistrarInteraccionHandler(ComandoInteraccionBaseHandler):
             interaccion: Interaccion = self.fabrica_interaccion.crear_objeto(
                 interaccion_dto, MapeadorInteraccion()
             )
-            interaccion.registrar_interaccion(interaccion)
+            interaccion.registrar_interaccion(interaccion, comando.id_correlacion)
             repositorio = self.fabrica_repositorio.crear_objeto(
                 RepositorioInteraccion.__class__
             )

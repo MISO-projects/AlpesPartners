@@ -30,6 +30,7 @@ class ContextoInteraccionSchema(Record):
 
 
 class InteraccionRegistradaPayload(Record):
+    id_correlacion = String(required=False)  # Correlation ID for tracking requests
     id_interaccion = String()  # UUID as string
     tipo = String()
     marca_temporal = Long()  # Unix timestamp in milliseconds

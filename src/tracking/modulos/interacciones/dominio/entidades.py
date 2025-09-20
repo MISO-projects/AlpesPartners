@@ -34,6 +34,7 @@ class Interaccion(AgregacionRaiz):
     def registrar_interaccion(
         self,
         interaccion: Interaccion,
+        id_correlacion: str = None,
     ):
         self.tipo = interaccion.tipo
         self.marca_temporal = interaccion.marca_temporal
@@ -45,6 +46,7 @@ class Interaccion(AgregacionRaiz):
 
         self.agregar_evento(
             InteraccionRegistrada(
+                id_correlacion=id_correlacion,
                 id_interaccion=self.id,
                 tipo=interaccion.tipo,
                 marca_temporal=interaccion.marca_temporal,

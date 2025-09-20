@@ -44,6 +44,7 @@ class ContextoInteraccion(ObjetoValor):
 
 @dataclass
 class InteraccionRegistrada(EventoDominio):
+    id_correlacion: str = None
     id_interaccion: uuid.UUID = None
     tipo: str = None
     marca_temporal: datetime = None

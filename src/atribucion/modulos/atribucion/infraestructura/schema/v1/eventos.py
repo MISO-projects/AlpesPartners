@@ -26,6 +26,7 @@ class ContextoInteraccionSchema(Record):
     informacion_dispositivo = String()
 
 class InteraccionRegistradaPayload(Record):
+    id_correlacion = String(required=False)
     id_interaccion = String()
     tipo = String()
     marca_temporal = Long()

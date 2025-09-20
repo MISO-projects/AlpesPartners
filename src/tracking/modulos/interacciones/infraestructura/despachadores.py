@@ -1,8 +1,5 @@
 import pulsar
 from pulsar.schema import *
-from tracking.modulos.interacciones.infraestructura.schema.v1.eventos import (
-    EventoInteraccionRegistrada,
-)
 from tracking.modulos.interacciones.infraestructura.schema.v1.comandos import (
     ComandoRegistrarInteraccion,
     ComandoRegistrarInteraccionPayload,
@@ -11,6 +8,7 @@ from tracking.modulos.interacciones.infraestructura.schema.v1.eventos import (
     InteraccionRegistradaPayload,
     InteraccionesDescartadasPayload,
     EventoInteraccionesDescartadas,
+    EventoInteraccionRegistrada,
 )
 from tracking.seedwork.infraestructura import utils
 
@@ -35,6 +33,7 @@ class DespachadorTracking:
 
     def publicar_evento(self, evento, topico):
         payload = InteraccionRegistradaPayload(
+            id_correlacion=evento.id_correlacion,
             id_interaccion=str(evento.id_interaccion),
             tipo=evento.tipo,
             marca_temporal=int(evento.marca_temporal.timestamp() * 1000),
