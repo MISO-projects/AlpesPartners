@@ -11,10 +11,29 @@ def registrar_handlers():
 
 
 def importar_modelos_alchemy():
+    import marketing.modulos.campanias.infraestructura.dto
+
+
+def comenzar_consumidor():
+    from marketing.modulos.campanias.infraestructura.consumidores import suscribirse_a_eventos
+    import threading
+    from flask import current_app
+
+    # Obtener la instancia de la app antes de crear el hilo
+    app_instance = current_app._get_current_object()
+
+    # Pasar la app al consumer
+    def consumer_with_app():
+        suscribirse_a_eventos(app_instance)
+
+    # Ejecutar el consumer en un hilo separado para no bloquear la app
+    consumer_thread = threading.Thread(target=consumer_with_app, daemon=True)
+    consumer_thread.start()
+    print("✓ Consumer de marketing iniciado en hilo separado")
     import marketing.modulos.sagas.infraestructura.dto
 
 
-def comenzar_consumidor(app):
+def comenzar_consumidor_sagas(app):
     import threading
     from marketing.modulos.sagas.infraestructura.consumidores import (
         ConsumidorInteracciones,
@@ -76,7 +95,8 @@ def create_app(configuracion={}):
 
     with app.app_context():
         if not app.config.get('TESTING'):
-            comenzar_consumidor(app)
+            comenzar_consumidor()
+            comenzar_consumidor_sagas(app)
 
     from . import marketing
 
