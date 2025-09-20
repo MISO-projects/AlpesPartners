@@ -47,7 +47,11 @@ class EventoFraudeDetectadoConsumoSaga(EventoIntegracion):
     data = FraudeDetectadoPayload()
 
 class ComisionRevertidaPayload(Record):
+    id_comision = String()
     journey_id = String()
+    monto_revertido = MontoComisionSchema()
+    motivo = String()
+    fecha_reversion = String()
 
 class EventoComisionRevertidaConsumoSaga(EventoIntegracion):
     data = ComisionRevertidaPayload()

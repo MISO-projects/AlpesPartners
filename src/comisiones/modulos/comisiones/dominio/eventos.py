@@ -43,8 +43,8 @@ class ComisionConfirmada(EventoDominio):
 
 @dataclass
 class ComisionRevertida(EventoDominio):
-
     id_comision: uuid.UUID = None
+    journey_id: uuid.UUID = None
     monto_revertido: MontoComision = None
     motivo: str = None
     fecha_reversion: datetime = None

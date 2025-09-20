@@ -4,6 +4,7 @@ from marketing.seedwork.infraestructura.schema.v1.comandos import ComandoIntegra
 
 class RevertirComisionPayload(Record):
     journey_id = String()
+    motivo = String()
 
 
 class ComandoRevertirComision(ComandoIntegracion):
