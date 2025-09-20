@@ -24,9 +24,6 @@ def comenzar_consumidor(app):
     consumidor_comandos = ConsumidorComandosInteracciones()
 
     threading.Thread(
-        target=consumidor_eventos.suscribirse_a_eventos, args=[app]
-    ).start()
-    threading.Thread(
         target=consumidor_comandos.suscribirse_a_comandos, args=[app]
     ).start()
 
