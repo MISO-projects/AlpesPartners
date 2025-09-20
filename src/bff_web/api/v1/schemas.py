@@ -17,10 +17,10 @@ class CrearCampaniaRequest(BaseModel):
     canales: Optional[List[str]] = ["WEB", "EMAIL"]
 
 class CrearCampaniaResponse(BaseModel):
-    message: str = "Campaña creada exitosamente"
+    message: str = "Comando de creación enviado para procesamiento"
 
 class ActivarCampaniaResponse(BaseModel):
-    message: str = "Campaña activada exitosamente"
+    message: str = "Comando de activación enviado para procesamiento"
 
 class RegistrarInteraccionRequest(BaseModel):
     tipo: str
