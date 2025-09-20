@@ -222,7 +222,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
             elif isinstance(evento, ComisionReservada):
                 self._registrar_evento_exitoso(evento, "EVENTO_NORMAL")
                 print(
-                    f"✅ Comisión reservada exitosamente para interacción {evento.id_interaccion}"
+                    f"✅ Comisión reservada exitosamente para journey {evento.id_journey}"
                 )
 
                 # Si todos los pasos están completos, terminar saga

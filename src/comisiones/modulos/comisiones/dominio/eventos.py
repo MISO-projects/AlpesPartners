@@ -13,7 +13,7 @@ import uuid
 class ComisionReservada(EventoDominio):
     id_correlacion: str = None
     id_comision: uuid.UUID = None
-    id_interaccion: uuid.UUID = None
+    id_journey: uuid.UUID = None
     id_campania: uuid.UUID = None
     monto: MontoComision = None
     configuracion: ConfiguracionComision = None

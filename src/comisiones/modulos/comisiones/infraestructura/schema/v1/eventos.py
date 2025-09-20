@@ -29,8 +29,8 @@ class ConfiguracionComisionSchema(Record):
 
 class ComisionReservadaPayload(Record):
     id_correlacion = String()
+    id_journey = String()
     id_comision = String()
-    id_interaccion = String()
     id_campania = String()
     monto = MontoComisionSchema()
     configuracion = ConfiguracionComisionSchema()

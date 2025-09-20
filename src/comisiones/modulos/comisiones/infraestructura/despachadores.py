@@ -49,8 +49,8 @@ class DespachadorEventosComision:
         try:
             payload = ComisionReservadaPayload(
                 id_correlacion=evento.id_correlacion,
+                id_journey=str(evento.id_journey),
                 id_comision=str(evento.id_comision),
-                id_interaccion=str(evento.id_interaccion),
                 id_campania=str(evento.id_campania),
                 monto={
                     'valor': float(evento.monto.valor),
@@ -77,19 +77,6 @@ class DespachadorEventosComision:
 
             self._publicar_mensaje_pulsar(evento_pulsar, 'comision-reservada', EventoComisionReservada)
 
-            evento_dict = {
-                'tipo': 'ComisionReservada',
-                'id_comision': str(evento.id_comision),
-                'id_interaccion': str(evento.id_interaccion),
-                'id_campania': str(evento.id_campania),
-                'monto': {
-                    'valor': str(evento.monto.valor),
-                    'moneda': evento.monto.moneda
-                },
-                'timestamp': evento.timestamp.isoformat()
-            }
-            
-            self._consumidor.consumir_comision_reservada(evento_dict)
             print(f"COMISIONES: Evento ComisionReservada despachado exitosamente: {evento.id_comision}")
 
         except Exception as e:

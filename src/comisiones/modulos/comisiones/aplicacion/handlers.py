@@ -48,7 +48,7 @@ class HandlerComisionReservada(Handler):
     def handle(evento: ComisionReservada):
         despachador = DespachadorEventosComision()
         despachador.despachar_comision_reservada(evento)
-        print(f"Comisión reservada: {evento.id_comision} para interacción {evento.id_interaccion}")
+        print(f"Comisión reservada: {evento.id_comision} para journey {evento.id_journey}")
 
 class HandlerComisionConfirmada(Handler):
 

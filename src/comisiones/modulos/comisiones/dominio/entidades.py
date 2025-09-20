@@ -73,7 +73,7 @@ class Comision(AgregacionRaiz):
             ComisionReservada(
                 id_correlacion=interaccion.id_correlacion,
                 id_comision=self.id,
-                id_interaccion=interaccion.id_interaccion,
+                id_journey=interaccion.id_interaccion,
                 id_campania=interaccion.id_campania,
                 monto=monto_calculado,
                 configuracion=configuracion,
