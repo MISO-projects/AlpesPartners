@@ -12,6 +12,7 @@ from .base import RevertirAtribucionBaseHandler # Asumimos que base.py existe
 
 @dataclass
 class RevertirAtribucion(Comando): 
+    id_correlacion: str
     journey_id: str
 
 class RevertirAtribucionHandler(RevertirAtribucionBaseHandler):
@@ -33,7 +34,7 @@ class RevertirAtribucionHandler(RevertirAtribucionBaseHandler):
         UnidadTrabajoPuerto.commit()
         
         despachador = DespachadorEventosAtribucion()
-        despachador.publicar_evento_atribucion_revertida(journey)
+        despachador.publicar_evento_atribucion_revertida(journey, id_correlacion=comando.id_correlacion)
         
         print("HANDLER: Commit realizado. Journey revertido exitosamente.")
         print("--- FIN FLUJO REVERTIR ATRIBUCIÓN ---\n")

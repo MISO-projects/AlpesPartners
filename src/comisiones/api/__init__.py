@@ -25,9 +25,9 @@ def comenzar_consumidor(app):
     ).start()
     
     # Consumidor de eventos de reversión
-    consumidor_reversion = consumidores_comisiones.ConsumidorEventosReversion()
+    consumidor_reversion = consumidores_comisiones.ConsumidorComandosReversion()
     threading.Thread(
-        target=consumidor_reversion.suscribirse_a_eventos_reversion, args=[app]
+        target=consumidor_reversion.suscribirse_a_comandos_reversion, args=[app]
     ).start()
 
 

@@ -1,6 +1,6 @@
 import pulsar, _pulsar
 from pulsar.schema import *
-from marketing.modulos.campanias.infraestructura.schema.v1.comandos import (
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.campania import (
     ComandoCrearCampania,
     ComandoActivarCampania
 )

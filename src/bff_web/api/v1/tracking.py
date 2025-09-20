@@ -36,7 +36,7 @@ async def registrar_interaccion(interaccion: RegistrarInteraccionRequest):
             response = await client.post(f"{TRACKING_SERVICE_URL}/interaccion", json=payload)
 
             if response.status_code == 202:
-                return RegistrarInteraccionResponse()
+                return RegistrarInteraccionResponse(id_correlacion=response.json()["id_correlacion"])
             else:
                 error_data = response.json() if response.headers.get("content-type") == "application/json" else {"error": "Error desconocido"}
                 raise HTTPException(status_code=response.status_code, detail=error_data.get("error", "Error en el servicio de tracking"))

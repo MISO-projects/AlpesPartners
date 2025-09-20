@@ -32,6 +32,21 @@
       ]
     },
     {
+      "name": "Atribucion Service",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5681
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/"
+        }
+      ]
+    },
+    {
       "name": "Comsiones Service",
       "type": "debugpy",
       "request": "attach",

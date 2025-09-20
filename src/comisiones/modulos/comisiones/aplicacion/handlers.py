@@ -48,7 +48,7 @@ class HandlerComisionReservada(Handler):
     def handle(evento: ComisionReservada):
         despachador = DespachadorEventosComision()
         despachador.despachar_comision_reservada(evento)
-        print(f"Comisión reservada: {evento.id_comision} para interacción {evento.id_interaccion}")
+        print(f"Comisión reservada: {evento.id_comision} para journey {evento.id_journey}")
 
 class HandlerComisionConfirmada(Handler):
 
@@ -58,9 +58,11 @@ class HandlerComisionConfirmada(Handler):
 
 class HandlerComisionRevertida(Handler):
 
-    def handle(self, evento: ComisionRevertida):
-
-        print(f"Comisión revertida: {evento.id_comision} - Motivo: {evento.motivo}")
+    @staticmethod
+    def handle(evento: ComisionRevertida):
+        despachador = DespachadorEventosComision()
+        despachador.despachar_comision_revertida(evento)
+        print(f"Comisión revertida: {evento.id_comision} - Journey ID: {evento.journey_id} - Motivo: {evento.motivo}")
 
 class HandlerComisionCancelada(Handler):
 

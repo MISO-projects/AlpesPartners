@@ -10,7 +10,7 @@ from marketing.modulos.campanias.infraestructura.schema.v1.eventos import (
     CampaniaDesactivadaPayload,
     InteraccionRecibidaPayload
 )
-from marketing.modulos.campanias.infraestructura.schema.v1.comandos import (
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.campania import (
     ComandoCrearCampania,
     ComandoActivarCampania,
     CrearCampaniaPayload,
@@ -151,3 +151,4 @@ class DespachadorMarketing:
             "crear-campania-comando",
             ComandoCrearCampania
         )
+

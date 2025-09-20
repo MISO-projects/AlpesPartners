@@ -30,6 +30,7 @@ class ContextoInteraccionSchema(Record):
 
 
 class InteraccionRegistradaPayload(Record):
+    id_correlacion = String(required=False)  # Correlation ID for tracking requests
     id_interaccion = String()  # UUID as string
     tipo = String()
     marca_temporal = Long()  # Unix timestamp in milliseconds
@@ -37,6 +38,7 @@ class InteraccionRegistradaPayload(Record):
     parametros_tracking = ParametrosTrackingSchema()
     elemento_objetivo = ElementoObjetivoSchema()
     contexto = ContextoInteraccionSchema()
+    estado = String()
 
 
 class EventoInteraccionRegistrada(EventoIntegracion):
@@ -93,3 +95,12 @@ class EventoCampaniaDesactivada(EventoIntegracion):
 
 class EventoInteraccionRecibida(EventoIntegracion):
     data = InteraccionRecibidaPayload()
+
+
+class InteraccionesDescartadasPayload(Record):
+    id_correlacion = String()
+    interacciones = Array(String())
+
+
+class EventoInteraccionesDescartadas(EventoIntegracion):
+    data = InteraccionesDescartadasPayload()

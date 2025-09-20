@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import uuid
+from comisiones.modulos.comisiones.dominio.entidades import Comision
 from comisiones.seedwork.aplicacion.comandos import Comando, ComandoHandler, ejecutar_commando as comando
 from comisiones.modulos.comisiones.dominio.repositorios import RepositorioComision
 from comisiones.modulos.comisiones.infraestructura.fabricas import FabricaRepositorio
@@ -8,6 +9,7 @@ from comisiones.modulos.comisiones.dominio.excepciones import ComisionNoEncontra
 
 @dataclass
 class RevertirComisionPorJourney(Comando):
+    id_correlacion: str
     journey_id: uuid.UUID
     motivo: str = ""
 
@@ -18,14 +20,14 @@ class RevertirComisionPorJourneyHandler(ComandoHandler):
 
     def handle(self, comando: RevertirComisionPorJourney):
         try:
-            repositorio = self._fabrica_repositorio.crear_objeto(
+            repositorio: RepositorioComision = self._fabrica_repositorio.crear_objeto(
                 RepositorioComision.__class__
             )
-            comision = repositorio.obtener_por_journey_id(comando.journey_id)
+            comision: Comision = repositorio.obtener_por_journey_id(comando.journey_id)
             if not comision:
                 raise ComisionNoEncontradaExcepcion(f"Comisión con journey_id {comando.journey_id} no encontrada")
             
-            comision.revertir_comision(motivo=comando.motivo)
+            comision.revertir_comision(id_correlacion=comando.id_correlacion, motivo=comando.motivo)
             UnidadTrabajoPuerto.registrar_batch(repositorio.actualizar, comision)
             UnidadTrabajoPuerto.savepoint()
             UnidadTrabajoPuerto.commit()

@@ -1,4 +1,3 @@
-
 from comisiones.seedwork.infraestructura.uow import UnidadTrabajoPuerto
 from comisiones.modulos.comisiones.dominio.eventos import (
     ComisionReservada,
@@ -18,7 +17,9 @@ from comisiones.modulos.comisiones.infraestructura.schema.v1.eventos import (
     EventoComisionReservada,
     EventoComisionCalculada,
     ComisionReservadaPayload,
-    ComisionCalculadaPayload
+    ComisionCalculadaPayload,
+    ComisionRevertidaPayload,
+    EventoComisionRevertidaIntegracion
 )
 from comisiones.seedwork.infraestructura import utils
 
@@ -30,7 +31,9 @@ class DespachadorEventosComision:
     def _publicar_mensaje_pulsar(self, mensaje, topico, schema_class):
         try:
             print(f"COMISIONES: Conectando al broker Pulsar para publicar en {topico}...")
-            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
             
             print(f"COMISIONES: Publicando mensaje en tópico: {topico}")
@@ -45,8 +48,9 @@ class DespachadorEventosComision:
 
         try:
             payload = ComisionReservadaPayload(
+                id_correlacion=evento.id_correlacion,
+                id_journey=str(evento.id_journey),
                 id_comision=str(evento.id_comision),
-                id_interaccion=str(evento.id_interaccion),
                 id_campania=str(evento.id_campania),
                 monto={
                     'valor': float(evento.monto.valor),
@@ -73,19 +77,6 @@ class DespachadorEventosComision:
 
             self._publicar_mensaje_pulsar(evento_pulsar, 'comision-reservada', EventoComisionReservada)
 
-            evento_dict = {
-                'tipo': 'ComisionReservada',
-                'id_comision': str(evento.id_comision),
-                'id_interaccion': str(evento.id_interaccion),
-                'id_campania': str(evento.id_campania),
-                'monto': {
-                    'valor': str(evento.monto.valor),
-                    'moneda': evento.monto.moneda
-                },
-                'timestamp': evento.timestamp.isoformat()
-            }
-            
-            self._consumidor.consumir_comision_reservada(evento_dict)
             print(f"COMISIONES: Evento ComisionReservada despachado exitosamente: {evento.id_comision}")
 
         except Exception as e:
@@ -147,22 +138,26 @@ class DespachadorEventosComision:
             print(f"Error despachando ComisionConfirmada: {e}")
 
     def despachar_comision_revertida(self, evento: ComisionRevertida):
-
         try:
-            evento_dict = {
-                'tipo': 'ComisionRevertida',
-                'id_comision': str(evento.id_comision),
-                'monto_revertido': {
-                    'valor': str(evento.monto_revertido.valor),
+            payload = ComisionRevertidaPayload(
+                id_correlacion=evento.id_correlacion,
+                id_comision=str(evento.id_comision),
+                journey_id=str(evento.journey_id),
+                monto_revertido={
+                    'valor': float(evento.monto_revertido.valor),
                     'moneda': evento.monto_revertido.moneda
                 },
-                'motivo': evento.motivo,
-                'fecha_reversion': evento.fecha_reversion.isoformat()
-            }
+                motivo=evento.motivo,
+                fecha_reversion=evento.fecha_reversion.isoformat()
+            )
+            evento = EventoComisionRevertidaIntegracion(data=payload)
+            self._publicar_mensaje_pulsar(
+                evento, 'comision-revertida', EventoComisionRevertidaIntegracion
+            )
 
-            self._publicar_evento_externo('comision.revertida', evento_dict)
-
-            print(f"Evento ComisionRevertida despachado exitosamente: {evento.id_comision}")
+            print(
+                f"Evento ComisionRevertida despachado exitosamente: {evento.id_comision}"
+            )
 
         except Exception as e:
             print(f"Error despachando ComisionRevertida: {e}")

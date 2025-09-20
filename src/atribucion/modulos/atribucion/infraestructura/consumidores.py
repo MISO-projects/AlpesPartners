@@ -39,7 +39,9 @@ class ConsumidorInteracciones:
             
         self.app = app
         try:
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             self.consumidor = self.cliente.subscribe(
                 'interaccion-registrada', 
                 consumer_type=_pulsar.ConsumerType.Shared,
@@ -73,9 +75,11 @@ class ConsumidorInteracciones:
         atribucion_dto = map_atribucion.externo_a_dto(evento_dict)
         print(f"CONSUMIDOR: DTO creado a partir del dict: {atribucion_dto}")
 
+        id_correlacion = evento_dict.get('id_correlacion')
         comando = RegistrarAtribucion(
+            id_correlacion=id_correlacion,
             atribucion_dto=atribucion_dto,
-            datos_evento_dict=evento_dict
+            datos_evento_dict=evento_dict,
         )
         print(f"CONSUMIDOR: Comando '{type(comando).__name__}' creado. Despachando...")
         ejecutar_commando(comando)
@@ -100,7 +104,9 @@ class ConsumidorInteracciones:
             while True:
                 mensaje = consumidor.receive()
                 try:
-                    self._procesar_mensaje_comando_reversion(mensaje)
+                    with self.app.app_context():
+                        with self.app.test_request_context():
+                            self._procesar_mensaje_comando_reversion(mensaje)
                     consumidor.acknowledge(mensaje)
                 except Exception as e:
                     print(f"Error procesando COMANDO de reversión: {e}")
@@ -119,6 +125,6 @@ class ConsumidorInteracciones:
         payload = mensaje.value().data
         print(f"CONSUMIDOR: Comando 'RevertirAtribucion' recibido con payload: {payload}")
         
-        comando = RevertirAtribucion(journey_id=payload.journey_id)
+        comando = RevertirAtribucion(id_correlacion=payload.id_correlacion, journey_id=payload.journey_id)
         ejecutar_commando(comando)
         

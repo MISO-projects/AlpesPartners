@@ -11,9 +11,9 @@ import uuid
 
 @dataclass
 class ComisionReservada(EventoDominio):
-
+    id_correlacion: str = None
     id_comision: uuid.UUID = None
-    id_interaccion: uuid.UUID = None
+    id_journey: uuid.UUID = None
     id_campania: uuid.UUID = None
     monto: MontoComision = None
     configuracion: ConfiguracionComision = None
@@ -43,8 +43,9 @@ class ComisionConfirmada(EventoDominio):
 
 @dataclass
 class ComisionRevertida(EventoDominio):
-
+    id_correlacion: str = None
     id_comision: uuid.UUID = None
+    journey_id: uuid.UUID = None
     monto_revertido: MontoComision = None
     motivo: str = None
     fecha_reversion: datetime = None

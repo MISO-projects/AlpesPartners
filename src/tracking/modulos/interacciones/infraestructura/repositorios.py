@@ -25,6 +25,9 @@ class RepositorioInteraccionSQLite(RepositorioInteraccion):
             interaccion_dto, MapeadorInteraccionSQLite()
         )
 
+    def obtener_por_ids(self, ids: list[UUID]) -> list[Interaccion]:
+        raise NotImplementedError
+
     def obtener_todos(self) -> list[Interaccion]:
         raise NotImplementedError
 
@@ -64,6 +67,14 @@ class RepositorioInteraccionMongoDB(RepositorioInteraccion):
         return self.fabrica_interaccion.crear_objeto(
             document, MapeadorInteraccionMongoDB()
         )
+
+    def obtener_por_ids(self, ids: list[UUID]) -> list[Interaccion]:
+        collection = self._get_collection()
+        documents = list(collection.find({"_id": {"$in": [str(id) for id in ids]}}))
+        return [
+            self.fabrica_interaccion.crear_objeto(doc, MapeadorInteraccionMongoDB())
+            for doc in documents
+        ]
 
     def obtener_todos(self) -> list[Interaccion]:
         collection = self._get_collection()
