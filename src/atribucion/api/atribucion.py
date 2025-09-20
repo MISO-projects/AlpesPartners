@@ -17,6 +17,7 @@ def atribucion_registrada_asincrona():
         atribucion_dto = map_atribucion.externo_a_dto(atribucion_dict)
 
         comando = RegistrarAtribucion(
+            id_correlacion=atribucion_dict.get('id_correlacion', ''),
             atribucion_dto=atribucion_dto,
             datos_evento_dict=atribucion_dict
         )

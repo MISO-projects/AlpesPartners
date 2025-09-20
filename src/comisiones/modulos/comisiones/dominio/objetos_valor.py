@@ -60,6 +60,7 @@ class PoliticaFraude:
 
 @dataclass(frozen=True)
 class InteraccionAtribuida:
+    id_correlacion: str
     id_interaccion: uuid.UUID
     id_campania: uuid.UUID
     tipo_interaccion: str

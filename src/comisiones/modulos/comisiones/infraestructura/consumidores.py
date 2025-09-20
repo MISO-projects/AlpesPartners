@@ -78,6 +78,7 @@ class ConsumidorEventosAtribucion:
             evento_dict = avro_to_dict(mensaje.value().data)
             print(f"COMISIONES: Conversión atribuida recibida: {evento_dict}")
             
+            id_correlacion = evento_dict['id_correlacion']
             id_interaccion_atribuida = evento_dict['id_interaccion_atribuida']
             id_campania = evento_dict['id_campania']
             id_afiliado = evento_dict['id_afiliado']
@@ -111,6 +112,7 @@ class ConsumidorEventosAtribucion:
                 return
 
             comando = ReservarComision(
+                id_correlacion=id_correlacion,
                 id_interaccion=uuid.UUID(id_interaccion_clean),
                 id_campania=uuid.UUID(id_campania_clean),
                 id_journey=uuid.UUID(id_interaccion_atribuida),

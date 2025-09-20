@@ -7,6 +7,7 @@ class MontoSchema(Record):
     moneda = String()
 
 class ConversionAtribuidaPayload(Record):
+    id_correlacion = String()
     id_interaccion_atribuida = String()
     id_campania = String()
     id_afiliado = String()
@@ -28,6 +29,7 @@ class ConfiguracionComisionSchema(Record):
     porcentaje = Float()
 
 class ComisionReservadaPayload(Record):
+    id_correlacion = String()
     id_comision = String()
     id_interaccion = String()
     id_campania = String()

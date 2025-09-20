@@ -48,6 +48,7 @@ class DespachadorEventosComision:
 
         try:
             payload = ComisionReservadaPayload(
+                id_correlacion=evento.id_correlacion,
                 id_comision=str(evento.id_comision),
                 id_interaccion=str(evento.id_interaccion),
                 id_campania=str(evento.id_campania),

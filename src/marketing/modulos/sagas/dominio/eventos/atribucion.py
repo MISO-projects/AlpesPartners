@@ -26,6 +26,7 @@ class MontoComision:
 
 @dataclass
 class ConversionAtribuida(EventoDominio):
+    id_correlacion: str = None
     id_interaccion_atribuida: uuid.UUID = None
     id_campania: uuid.UUID = None
     id_afiliado: uuid.UUID = None

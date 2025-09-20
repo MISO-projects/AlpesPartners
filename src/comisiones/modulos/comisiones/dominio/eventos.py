@@ -11,7 +11,7 @@ import uuid
 
 @dataclass
 class ComisionReservada(EventoDominio):
-
+    id_correlacion: str = None
     id_comision: uuid.UUID = None
     id_interaccion: uuid.UUID = None
     id_campania: uuid.UUID = None

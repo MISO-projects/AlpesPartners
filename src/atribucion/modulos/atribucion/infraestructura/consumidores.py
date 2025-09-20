@@ -75,9 +75,11 @@ class ConsumidorInteracciones:
         atribucion_dto = map_atribucion.externo_a_dto(evento_dict)
         print(f"CONSUMIDOR: DTO creado a partir del dict: {atribucion_dto}")
 
+        id_correlacion = evento_dict.get('id_correlacion')
         comando = RegistrarAtribucion(
+            id_correlacion=id_correlacion,
             atribucion_dto=atribucion_dto,
-            datos_evento_dict=evento_dict
+            datos_evento_dict=evento_dict,
         )
         print(f"CONSUMIDOR: Comando '{type(comando).__name__}' creado. Despachando...")
         ejecutar_commando(comando)

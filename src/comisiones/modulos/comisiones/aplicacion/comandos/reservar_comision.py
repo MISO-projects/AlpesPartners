@@ -24,7 +24,7 @@ import uuid
 
 @dataclass
 class ReservarComision(Comando):
-
+    id_correlacion: str
     id_interaccion: uuid.UUID
     id_campania: uuid.UUID
     tipo_interaccion: str
@@ -44,6 +44,7 @@ class ReservarComisionHandler(ComandoHandler):
 
         try:
             interaccion = InteraccionAtribuida(
+                id_correlacion=comando.id_correlacion,
                 id_interaccion=comando.id_interaccion,
                 id_campania=comando.id_campania,
                 tipo_interaccion=comando.tipo_interaccion,

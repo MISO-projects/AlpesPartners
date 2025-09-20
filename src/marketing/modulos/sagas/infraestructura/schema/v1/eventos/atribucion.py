@@ -8,6 +8,7 @@ class MontoSchema(Record):
 
 
 class ConversionAtribuidaPayload(Record):
+    id_correlacion = String()
     id_interaccion_atribuida = String()
     id_campania = String()
     id_afiliado = String()
