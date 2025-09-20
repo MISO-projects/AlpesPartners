@@ -31,11 +31,21 @@ class DespachadorMarketing:
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         cliente = self._obtener_cliente()
         try:
-            publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
-            publicador.send(mensaje)
-            print(f' Evento Marketing publicado en tópico: {topico}')
+            import json
+            # Usar JSON simple en lugar de AVRO para evitar problemas de schema
+            publicador = cliente.create_producer(topico)
+
+            # Convertir el mensaje a JSON
+            if hasattr(mensaje, '__dict__'):
+                mensaje_dict = mensaje.__dict__
+            else:
+                mensaje_dict = mensaje
+
+            mensaje_json = json.dumps(mensaje_dict, default=str).encode('utf-8')
+            publicador.send(mensaje_json)
+            print(f'✓ Evento Marketing publicado en tópico: {topico}')
         except Exception as e:
-            print(f' Error publicando evento Marketing: {e}')
+            print(f'✗ Error publicando evento Marketing: {e}')
             raise e
         finally:
             if cliente:
