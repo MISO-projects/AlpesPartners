@@ -99,3 +99,9 @@ class DespachadorMarketing:
         finally:
             if cliente:
                 cliente.close()
+
+    def publicar_mensaje_pulsar(self, mensaje, topico):
+        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+        publicador = cliente.create_producer(topico, schema=AvroSchema(mensaje.__class__))
+        publicador.send(mensaje)
+        cliente.close()

@@ -31,6 +31,7 @@ class RegistrarInteraccionRequest(BaseModel):
     contexto: dict
 
 class RegistrarInteraccionResponse(BaseModel):
+    id_correlacion: str
     message: str = "Interacción registrada exitosamente"
 
 class ErrorResponse(BaseModel):
