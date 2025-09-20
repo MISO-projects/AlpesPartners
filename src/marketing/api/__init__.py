@@ -15,8 +15,21 @@ def importar_modelos_alchemy():
 
 
 def comenzar_consumidor():
-    ## TODO
-    pass
+    from marketing.modulos.campanias.infraestructura.consumidores import suscribirse_a_eventos
+    import threading
+    from flask import current_app
+
+    # Obtener la instancia de la app antes de crear el hilo
+    app_instance = current_app._get_current_object()
+
+    # Pasar la app al consumer
+    def consumer_with_app():
+        suscribirse_a_eventos(app_instance)
+
+    # Ejecutar el consumer en un hilo separado para no bloquear la app
+    consumer_thread = threading.Thread(target=consumer_with_app, daemon=True)
+    consumer_thread.start()
+    print("✓ Consumer de marketing iniciado en hilo separado")
 
 
 def create_app(configuracion={}):

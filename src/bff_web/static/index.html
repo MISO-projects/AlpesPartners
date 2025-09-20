@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Campañas - AlpesPartners</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+
+        .counter {
+            text-align: center;
+            background: #3498db;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .counter-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .counter-label {
+            font-size: 1.1em;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .status.connected {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .status.disconnected {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+
+        .campaigns-list {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .campaign-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            animation: slideIn 0.3s ease;
+        }
+
+        .campaign-item:last-child {
+            border-bottom: none;
+        }
+
+        .campaign-id {
+            font-family: 'Courier New', monospace;
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .campaign-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .campaign-time {
+            color: #999;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        .instructions code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Monitor de Campañas</h1>
+
+        <div class="instructions">
+            <strong>Instrucciones:</strong>
+            Usa Postman para crear campañas via <code>POST /api/v1/marketing/campanias</code>
+            y observa cómo aparecen aquí en tiempo real.
+        </div>
+
+        <div class="counter">
+            <div class="counter-number" id="campaignCounter">0</div>
+            <div class="counter-label">Campañas Creadas</div>
+        </div>
+
+        <div class="status" id="connectionStatus">
+            🔌 Conectando...
+        </div>
+
+        <div class="campaigns-list">
+            <div class="empty-state" id="emptyState">
+                Esperando nuevas campañas...<br>
+                <small>Las campañas aparecerán aquí cuando se creen via API</small>
+            </div>
+            <div id="campaignsList" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        let campaignCount = 0;
+        let campaigns = new Map(); // Para trackear campañas por ID
+
+        // Conectar a Server-Sent Events
+        function conectarSSE() {
+            console.log('🔄 Iniciando conexión SSE...');
+            eventSource = new EventSource('/stream/campanias');
+
+            eventSource.onopen = function() {
+                console.log('✅ SSE conectado exitosamente');
+                document.getElementById('connectionStatus').className = 'status connected';
+                document.getElementById('connectionStatus').innerHTML = '✅ Conectado en tiempo real';
+            };
+
+            eventSource.onmessage = function(event) {
+                console.log('📧 Evento SSE recibido (tipo message)');
+
+                try {
+                    let data;
+                    if (typeof event.data === 'string') {
+                        data = JSON.parse(event.data);
+                    } else {
+                        data = event.data;
+                    }
+
+                    campaignCount++;
+                    const counterElement = document.getElementById('campaignCounter');
+                    counterElement.textContent = campaignCount;
+                    counterElement.style.backgroundColor = '#e74c3c';
+                    setTimeout(() => {
+                        counterElement.style.backgroundColor = '';
+                    }, 1000);
+
+                    agregarCampania(data);
+
+                } catch (e) {
+                    console.error('❌ Error procesando evento:', e);
+                    console.error('❌ Stack trace:', e.stack);
+                    // Mostrar el error en la UI también
+                    document.getElementById('connectionStatus').innerHTML = `❌ Error: ${e.message}`;
+                }
+            };
+
+            eventSource.onerror = function(error) {
+                console.error('❌ Error en SSE, reintentando...');
+
+                document.getElementById('connectionStatus').className = 'status disconnected';
+                document.getElementById('connectionStatus').innerHTML = '❌ Desconectado. Reintentando...';
+
+                setTimeout(() => {
+                    if (eventSource.readyState === EventSource.CLOSED) {
+                        conectarSSE();
+                    }
+                }, 3000);
+            };
+
+            // Listener genérico para cualquier tipo de evento
+            eventSource.addEventListener('campania_creada', function(event) {
+                console.log('✅ Campaña creada recibida:', JSON.parse(event.data).datos?.data?.nombre || 'Sin nombre');
+
+                try {
+                    let data;
+                    if (typeof event.data === 'string') {
+                        data = JSON.parse(event.data);
+                    } else {
+                        data = event.data;
+                    }
+
+                    campaignCount++;
+                    const counterElement = document.getElementById('campaignCounter');
+                    counterElement.textContent = campaignCount;
+                    counterElement.style.backgroundColor = '#e74c3c';
+                    setTimeout(() => {
+                        counterElement.style.backgroundColor = '';
+                    }, 1000);
+
+                    agregarCampania(data, 'borrador');
+
+                } catch (e) {
+                    console.error('❌ Error procesando evento campania_creada:', e);
+                    document.getElementById('connectionStatus').innerHTML = `❌ Error: ${e.message}`;
+                }
+            });
+
+            // Listener para eventos de activación
+            eventSource.addEventListener('campania_activada', function(event) {
+                console.log('🔴 Campaña activada recibida:', JSON.parse(event.data).datos?.data?.nombre || 'Sin nombre');
+
+                try {
+                    let data;
+                    if (typeof event.data === 'string') {
+                        data = JSON.parse(event.data);
+                    } else {
+                        data = event.data;
+                    }
+
+                    actualizarCampaniaActivada(data);
+
+                } catch (e) {
+                    console.error('❌ Error procesando evento campania_activada:', e);
+                    document.getElementById('connectionStatus').innerHTML = `❌ Error: ${e.message}`;
+                }
+            });
+
+        }
+
+        // Agregar campaña a la lista
+        function agregarCampania(data, estado = 'borrador') {
+            const emptyState = document.getElementById('emptyState');
+            const campaignsList = document.getElementById('campaignsList');
+
+            // Ocultar estado vacío y mostrar lista
+            if (emptyState.style.display !== 'none') {
+                emptyState.style.display = 'none';
+                campaignsList.style.display = 'block';
+            }
+
+            let campaignData = {};
+            if (data.datos && data.datos.datos && data.datos.datos.data) {
+                // Estructura anidada: datos.datos.data
+                campaignData = data.datos.datos.data;
+            } else if (data.datos && data.datos.data) {
+                // Estructura normal: datos.data
+                campaignData = data.datos.data;
+            } else if (data.datos) {
+                // Datos directos
+                campaignData = data.datos;
+            } else {
+                campaignData = data;
+            }
+
+            const id = campaignData.id_campania || 'N/A';
+            const nombre = campaignData.nombre || 'Sin nombre';
+            const tiempo = new Date().toLocaleTimeString();
+
+            // Guardar en el mapa de campañas
+            campaigns.set(id, {
+                nombre: nombre,
+                estado: estado,
+                tiempo: tiempo
+            });
+
+            // Crear elemento de campaña
+            const campaignItem = document.createElement('div');
+            campaignItem.className = 'campaign-item';
+            campaignItem.id = `campaign-${id}`;
+
+            const estadoBadge = estado === 'activa'
+                ? '<span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">ACTIVA</span>'
+                : '<span style="background: #95a5a6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">BORRADOR</span>';
+
+            campaignItem.innerHTML = `
+                <div class="campaign-name">${nombre} ${estadoBadge}</div>
+                <div class="campaign-id">ID: ${id}</div>
+                <div class="campaign-time">${tiempo}</div>
+            `;
+
+            // Insertar al principio de la lista
+            campaignsList.insertBefore(campaignItem, campaignsList.firstChild);
+
+            // Limitar a 15 campañas máximo
+            while (campaignsList.children.length > 15) {
+                campaignsList.removeChild(campaignsList.lastChild);
+            }
+        }
+
+        // Actualizar campaña cuando se activa
+        function actualizarCampaniaActivada(data) {
+            // Extraer datos de la campaña activada
+            let campaignData = {};
+            if (data.datos && data.datos.datos && data.datos.datos.data) {
+                campaignData = data.datos.datos.data;
+            } else if (data.datos && data.datos.data) {
+                campaignData = data.datos.data;
+            } else if (data.datos) {
+                campaignData = data.datos;
+            } else {
+                campaignData = data;
+            }
+
+            const id = campaignData.id_campania || 'N/A';
+            const existingElement = document.getElementById(`campaign-${id}`);
+
+            if (existingElement) {
+                // Actualizar campaña existente
+                const nombre = campaigns.get(id)?.nombre || 'Sin nombre';
+                campaigns.set(id, {
+                    ...campaigns.get(id),
+                    estado: 'activa'
+                });
+
+                existingElement.innerHTML = `
+                    <div class="campaign-name">${nombre} <span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">ACTIVA</span></div>
+                    <div class="campaign-id">ID: ${id}</div>
+                    <div class="campaign-time">${campaigns.get(id)?.tiempo || new Date().toLocaleTimeString()}</div>
+                `;
+
+                // Añadir animación de activación
+                existingElement.style.backgroundColor = '#d5f4e6';
+                setTimeout(() => {
+                    existingElement.style.backgroundColor = '';
+                }, 2000);
+            } else {
+                // Si no existe, agregarla como activada
+                agregarCampania(data, 'activa');
+            }
+        }
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            conectarSSE();
+        });
+
+        // Cleanup al cerrar
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+
+    </script>
+</body>
+</html>

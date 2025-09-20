@@ -1,0 +1,134 @@
+{
+	"info": {
+		"_postman_id": "bff-alpes-partners",
+		"name": "BFF AlpesPartners",
+		"description": "Collection para probar el BFF de AlpesPartners con endpoints de Marketing y Tracking",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/health",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Verificar que el BFF está funcionando correctamente"
+			}
+		},
+		{
+			"name": "Marketing",
+			"item": [
+				{
+					"name": "Crear Campaña",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Campaña de Prueba BFF\",\n    \"descripcion\": \"Campaña creada a través del BFF\",\n    \"fecha_inicio\": \"2024-01-01T00:00:00Z\",\n    \"fecha_fin\": \"2024-12-31T23:59:59Z\",\n    \"tipo\": \"DIGITAL\",\n    \"edad_minima\": 18,\n    \"edad_maxima\": 65,\n    \"genero\": \"TODOS\",\n    \"ubicacion\": \"Colombia\",\n    \"intereses\": [\"tecnologia\", \"viajes\"],\n    \"presupuesto\": 10000.0,\n    \"canales\": [\"WEB\", \"EMAIL\", \"SOCIAL\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketing/campanias",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"marketing",
+								"campanias"
+							]
+						},
+						"description": "Crear una nueva campaña de marketing a través del BFF"
+					}
+				},
+				{
+					"name": "Activar Campaña",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/marketing/campanias/{{campania_id}}/activar",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"marketing",
+								"campanias",
+								"{{campania_id}}",
+								"activar"
+							]
+						},
+						"description": "Activar una campaña existente usando su ID"
+					}
+				}
+			]
+		},
+		{
+			"name": "Tracking",
+			"item": [
+				{
+					"name": "Registrar Interacción",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"tipo\": \"CLICK\",\n    \"marca_temporal\": \"2024-01-15T10:30:00Z\",\n    \"identidad_usuario\": \"usuario-test-123\",\n    \"parametros_tracking\": {\n        \"utm_source\": \"bff_test\",\n        \"utm_medium\": \"postman\",\n        \"utm_campaign\": \"test_campaign\"\n    },\n    \"elemento_objetivo\": \"boton_registro\",\n    \"contexto\": {\n        \"pagina\": \"landing\",\n        \"seccion\": \"hero\",\n        \"device\": \"desktop\",\n        \"browser\": \"chrome\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tracking/interaccion",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tracking",
+								"interaccion"
+							]
+						},
+						"description": "Registrar una nueva interacción de usuario a través del BFF"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8004",
+			"description": "URL base del BFF AlpesPartners"
+		},
+		{
+			"key": "campania_id",
+			"value": "ejemplo-campania-id",
+			"description": "ID de una campaña para usar en las pruebas"
+		}
+	]
+}

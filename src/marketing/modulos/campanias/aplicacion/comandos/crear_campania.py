@@ -65,17 +65,61 @@ class CrearCampaniaHandler(ComandoHandler):
             repositorio = self._fabrica_repositorio.crear_objeto(
                 RepositorioCampania.__class__
             )
-            UnidadTrabajoPuerto.registrar_batch(repositorio.agregar, campania)
-            UnidadTrabajoPuerto.savepoint()
-            UnidadTrabajoPuerto.commit()
+
+            # Usar direct save en lugar de unidad de trabajo para background consumers
+            try:
+                from flask import has_request_context
+                if has_request_context():
+                    # En contexto HTTP, usar unidad de trabajo
+                    UnidadTrabajoPuerto.registrar_batch(repositorio.agregar, campania)
+                    UnidadTrabajoPuerto.savepoint()
+                    UnidadTrabajoPuerto.commit()
+                else:
+                    # En background, guardar directamente
+                    repositorio.agregar(campania)
+            except ImportError:
+                # Fallback si Flask no está disponible
+                repositorio.agregar(campania)
 
             print(f" Campaña '{campania.nombre}' creada exitosamente")
+
+            # Publicar evento de campaña creada
+            self._publicar_evento_campania_creada(campania)
+
             return campania
 
         except Exception as e:
-            UnidadTrabajoPuerto.rollback()
+            try:
+                from flask import has_request_context
+                if has_request_context():
+                    UnidadTrabajoPuerto.rollback()
+            except ImportError:
+                pass
             print(f" Error creando campaña: {e}")
             raise e
+
+    def _publicar_evento_campania_creada(self, campania):
+        """Publica evento de campaña creada al tópico correspondiente"""
+        try:
+            from marketing.modulos.campanias.infraestructura.despachadores import DespachadorMarketing
+
+            # Crear el evento de dominio
+            evento_dominio = type('EventoCampaniaCreada', (), {
+                'id_campania': campania.id,
+                'nombre': campania.nombre,
+                'tipo': campania.tipo,
+                'fecha_inicio': campania.fecha_inicio,
+                'fecha_fin': campania.fecha_fin,
+                'segmento': campania.segmento
+            })()
+
+            despachador = DespachadorMarketing()
+            despachador.publicar_campania_creada(evento_dominio)
+            print(f" Evento 'CampaniaCreada' publicado para campaña: {campania.nombre}")
+
+        except Exception as e:
+            print(f" Error publicando evento de campaña creada: {e}")
+            # No lanzamos excepción para no fallar la creación de la campaña
 
 
 @comando.register(CrearCampania)

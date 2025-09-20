@@ -31,36 +31,68 @@ class DespachadorMarketing:
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         cliente = self._obtener_cliente()
         try:
-            publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
-            publicador.send(mensaje)
-            print(f' Evento Marketing publicado en tópico: {topico}')
+            import json
+            # Usar JSON simple en lugar of AVRO para evitar problemas de schema
+            publicador = cliente.create_producer(topico)
+
+            # Convertir el mensaje a un diccionario JSON-serializable
+            def convertir_a_dict(obj):
+                if hasattr(obj, '__dict__'):
+                    result = {}
+                    for key, value in obj.__dict__.items():
+                        if hasattr(value, '__dict__'):
+                            # Si es un objeto complejo, convertirlo también
+                            result[key] = convertir_a_dict(value)
+                        elif isinstance(value, (list, tuple)):
+                            # Si es una lista, convertir cada elemento
+                            result[key] = [convertir_a_dict(item) if hasattr(item, '__dict__') else item for item in value]
+                        else:
+                            result[key] = value
+                    return result
+                else:
+                    return obj
+
+            mensaje_dict = convertir_a_dict(mensaje)
+            mensaje_json = json.dumps(mensaje_dict, default=str).encode('utf-8')
+
+            print(f'📤 Enviando evento JSON: {mensaje_json.decode("utf-8")[:200]}...')
+            publicador.send(mensaje_json)
+            print(f'✓ Evento Marketing publicado en tópico: {topico}')
         except Exception as e:
-            print(f' Error publicando evento Marketing: {e}')
+            print(f'✗ Error publicando evento Marketing: {e}')
             raise e
         finally:
             if cliente:
                 cliente.close()
 
     def publicar_campania_creada(self, evento):
-        payload = CampaniaCreadaPayload(
-            id_campania=str(evento.id_campania),
-            nombre=evento.nombre,
-            tipo=evento.tipo,
-            fecha_inicio=int(evento.fecha_inicio.timestamp() * 1000),
-            fecha_fin=int(evento.fecha_fin.timestamp() * 1000),
-            segmento={
+        # Crear un payload simple como diccionario
+        payload_dict = {
+            'id_campania': str(evento.id_campania),
+            'nombre': evento.nombre,
+            'tipo': evento.tipo,
+            'fecha_inicio': int(evento.fecha_inicio.timestamp() * 1000),
+            'fecha_fin': int(evento.fecha_fin.timestamp() * 1000),
+            'segmento': {
                 'edad_minima': evento.segmento.edad_minima,
                 'edad_maxima': evento.segmento.edad_maxima,
                 'genero': evento.segmento.genero,
                 'ubicacion': evento.segmento.ubicacion,
                 'intereses': evento.segmento.intereses or []
             }
-        )
-        evento_integracion = EventoCampaniaCreada(data=payload)
+        }
+
+        # Crear evento simple como diccionario
+        evento_dict = {
+            'tipo': 'campania_creada',
+            'data': payload_dict,
+            'timestamp': int(evento.fecha_inicio.timestamp() * 1000)
+        }
+
         self._publicar_mensaje(
-            evento_integracion, 
-            "campania-creada", 
-            EventoCampaniaCreada
+            evento_dict,
+            "campania-creada",
+            None  # No usar schema class
         )
 
     def publicar_campania_activada(self, evento):
