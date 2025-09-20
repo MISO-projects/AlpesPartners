@@ -8,6 +8,7 @@ from marketing.seedwork.dominio.eventos import EventoDominio
 
 @dataclass
 class AtribucionRevertida(EventoDominio):
+    id_correlacion: str = None
     journey_id_revertido: uuid.UUID = None
     interacciones: list[uuid.UUID] = field(default_factory=list)
 

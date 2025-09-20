@@ -2,7 +2,7 @@ from marketing.seedwork.aplicacion.comandos import Comando
 from dataclasses import dataclass
 import uuid
 from marketing.modulos.sagas.aplicacion.dto.atribucion import AtribucionDTO
-from marketing.modulos.campanias.infraestructura.despachadores import DespachadorMarketing
+from marketing.modulos.sagas.infraestructura.despachadores import DespachadorSagas
 from marketing.seedwork.aplicacion.comandos import ComandoHandler
 from marketing.seedwork.aplicacion.comandos import ejecutar_commando as comando
 
@@ -19,7 +19,7 @@ class RevertirAtribucion(Comando):
 
 class RevertirAtribucionHandler(ComandoHandler):
     def handle(self, comando: RevertirAtribucion):
-        despachador = DespachadorMarketing()
+        despachador = DespachadorSagas()
         despachador.publicar_comando_revertir_atribucion(comando)
 
 @comando.register(RevertirAtribucion)

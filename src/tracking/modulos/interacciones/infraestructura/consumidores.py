@@ -103,5 +103,7 @@ class ConsumidorComandosInteracciones:
 
         payload = mensaje.value().data
         print(f'Comando recibido en tracking: {payload}')
-        comando = DescartarInteracciones(interacciones=payload.interacciones)
+        comando = DescartarInteracciones(
+            id_correlacion=payload.id_correlacion, interacciones=payload.interacciones
+        )
         ejecutar_commando(comando)

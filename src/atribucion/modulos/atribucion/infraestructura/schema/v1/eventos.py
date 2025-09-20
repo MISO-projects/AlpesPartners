@@ -61,6 +61,7 @@ class EventoConversionAtribuida(EventoIntegracion):
 # --- Schema del Evento de Reversión ---
 
 class AtribucionRevertidaPayload(Record):
+    id_correlacion = String()
     journey_id_revertido = String()
     interacciones = Array(String()) 
 

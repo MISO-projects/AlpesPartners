@@ -98,6 +98,7 @@ class EventoInteraccionRecibida(EventoIntegracion):
 
 
 class InteraccionesDescartadasPayload(Record):
+    id_correlacion = String()
     interacciones = Array(String())
 
 

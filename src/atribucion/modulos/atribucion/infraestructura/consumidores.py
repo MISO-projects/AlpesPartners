@@ -125,6 +125,6 @@ class ConsumidorInteracciones:
         payload = mensaje.value().data
         print(f"CONSUMIDOR: Comando 'RevertirAtribucion' recibido con payload: {payload}")
         
-        comando = RevertirAtribucion(journey_id=payload.journey_id)
+        comando = RevertirAtribucion(id_correlacion=payload.id_correlacion, journey_id=payload.journey_id)
         ejecutar_commando(comando)
         

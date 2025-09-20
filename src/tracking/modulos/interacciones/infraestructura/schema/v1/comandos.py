@@ -16,6 +16,7 @@ class ComandoRegistrarInteraccion(ComandoIntegracion):
     data = ComandoRegistrarInteraccionPayload()
 
 class DescartarInteraccionesPayload(Record):
+    id_correlacion = String()
     interacciones = Array(String())
 
 

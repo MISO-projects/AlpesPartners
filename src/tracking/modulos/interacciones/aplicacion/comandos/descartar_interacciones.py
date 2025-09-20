@@ -15,6 +15,7 @@ from tracking.modulos.interacciones.dominio.eventos import InteraccionesDescarta
 
 @dataclass
 class DescartarInteracciones(Comando):
+    id_correlacion: str
     interacciones: list[uuid.UUID]
 
 
@@ -33,6 +34,7 @@ class DescartarInteraccionesHandler(ComandoInteraccionBaseHandler):
             UnidadTrabajoPuerto.commit()
             despachador = DespachadorTracking()
             evento = InteraccionesDescartadas(
+                id_correlacion=comando.id_correlacion,
                 interacciones=comando.interacciones
             )
             despachador.publicar_evento_interacciones_descartadas(evento, 'interacciones-descartadas')

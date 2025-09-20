@@ -8,19 +8,11 @@ from marketing.modulos.campanias.infraestructura.schema.v1.eventos import (
     CampaniaCreadaPayload,
     CampaniaActivadaPayload,
     CampaniaDesactivadaPayload,
-    InteraccionRecibidaPayload
+    InteraccionRecibidaPayload,
 )
 from marketing.modulos.campanias.infraestructura.schema.v1.comandos.campania import (
     ComandoCrearCampania,
-    CrearCampaniaPayload
-)
-from marketing.modulos.campanias.infraestructura.schema.v1.comandos.atribucion import (
-    ComandoRevertirAtribucion,
-    RevertirAtribucionPayload
-)
-from marketing.modulos.campanias.infraestructura.schema.v1.comandos.interaccion import (
-    ComandoDescartarInteracciones,
-    DescartarInteraccionesPayload
+    CrearCampaniaPayload,
 )
 from marketing.seedwork.infraestructura import utils
 
@@ -42,7 +34,9 @@ class DespachadorMarketing:
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         cliente = self._obtener_cliente()
         try:
-            publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
+            publicador = cliente.create_producer(
+                topico, schema=AvroSchema(schema_class)
+            )
             publicador.send(mensaje)
             print(f'{schema_class.__name__} publicado en tópico: {topico}')
         except Exception as e:
@@ -64,40 +58,34 @@ class DespachadorMarketing:
                 'edad_maxima': evento.segmento.edad_maxima,
                 'genero': evento.segmento.genero,
                 'ubicacion': evento.segmento.ubicacion,
-                'intereses': evento.segmento.intereses or []
-            }
+                'intereses': evento.segmento.intereses or [],
+            },
         )
         evento_integracion = EventoCampaniaCreada(data=payload)
         self._publicar_mensaje(
-            evento_integracion, 
-            "campania-creada", 
-            EventoCampaniaCreada
+            evento_integracion, "campania-creada", EventoCampaniaCreada
         )
 
     def publicar_campania_activada(self, evento):
         payload = CampaniaActivadaPayload(
             id_campania=str(evento.id_campania),
             nombre=evento.nombre,
-            fecha_activacion=int(evento.fecha_activacion.timestamp() * 1000)
+            fecha_activacion=int(evento.fecha_activacion.timestamp() * 1000),
         )
         evento_integracion = EventoCampaniaActivada(data=payload)
         self._publicar_mensaje(
-            evento_integracion,
-            "campania-activada",
-            EventoCampaniaActivada
+            evento_integracion, "campania-activada", EventoCampaniaActivada
         )
 
     def publicar_campania_desactivada(self, evento):
         payload = CampaniaDesactivadaPayload(
             id_campania=str(evento.id_campania),
             razon=evento.razon,
-            fecha_desactivacion=int(evento.fecha_evento.timestamp() * 1000)
+            fecha_desactivacion=int(evento.fecha_evento.timestamp() * 1000),
         )
         evento_integracion = EventoCampaniaDesactivada(data=payload)
         self._publicar_mensaje(
-            evento_integracion,
-            "campania-desactivada",
-            EventoCampaniaDesactivada
+            evento_integracion, "campania-desactivada", EventoCampaniaDesactivada
         )
 
     def publicar_interaccion_recibida(self, evento):
@@ -105,13 +93,13 @@ class DespachadorMarketing:
             id_campania=str(evento.id_campania),
             tipo_interaccion=evento.tipo_interaccion,
             parametros_tracking=evento.parametros_tracking or {},
-            timestamp=int(evento.timestamp.timestamp() * 1000)
+            timestamp=int(evento.timestamp.timestamp() * 1000),
         )
         evento_integracion = EventoInteraccionRecibida(data=payload)
         self._publicar_mensaje(
             evento_integracion,
             "marketing-interaccion-procesada",
-            EventoInteraccionRecibida
+            EventoInteraccionRecibida,
         )
 
     def publicar_comando_crear_campania(self, comando):
@@ -122,33 +110,9 @@ class DespachadorMarketing:
             fecha_fin=int(comando.fecha_fin.timestamp() * 1000),
             tipo=comando.tipo,
             segmento={},
-            configuracion={}
+            configuracion={},
         )
         comando_integracion = ComandoCrearCampania(data=payload)
         self._publicar_mensaje(
-            comando_integracion,
-            "crear-campania-comando",
-            ComandoCrearCampania
-        )
-
-    def publicar_comando_revertir_atribucion(self, comando):
-        payload = RevertirAtribucionPayload(
-            journey_id=comando.journey_id
-        )
-        comando_integracion = ComandoRevertirAtribucion(data=payload)
-        self._publicar_mensaje(
-            comando_integracion,
-            "revertir-atribucion",
-            ComandoRevertirAtribucion
-        )
-    
-    def publicar_comando_descartar_interacciones(self, comando):
-        payload = DescartarInteraccionesPayload(
-            interacciones=comando.interacciones
-        )
-        comando_integracion = ComandoDescartarInteracciones(data=payload)
-        self._publicar_mensaje(
-            comando_integracion,
-            "descartar-interacciones-comando",
-            ComandoDescartarInteracciones
+            comando_integracion, "crear-campania-comando", ComandoCrearCampania
         )

@@ -64,6 +64,7 @@ class DespachadorTracking:
     
     def publicar_evento_interacciones_descartadas(self, evento, topico):
         payload = InteraccionesDescartadasPayload(
+            id_correlacion=evento.id_correlacion,
             interacciones=evento.interacciones
         )
         evento_integracion = EventoInteraccionesDescartadas(data=payload)

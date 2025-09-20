@@ -37,4 +37,5 @@ class InteraccionDescartada(EventoDominio):
 
 @dataclass
 class InteraccionesDescartadas(EventoDominio):
+    id_correlacion: str = None
     interacciones: list[uuid.UUID] = None

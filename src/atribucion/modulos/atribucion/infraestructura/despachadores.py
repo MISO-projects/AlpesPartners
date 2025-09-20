@@ -57,7 +57,7 @@ def calcular_score_fraude_basico(resultado_atribucion: list) -> int:
 
 class DespachadorEventosAtribucion:
 
-    def publicar_evento_atribucion_revertida(self, journey, topico='atribucion-revertida'):
+    def publicar_evento_atribucion_revertida(self, journey, id_correlacion, topico='atribucion-revertida'):
         print(f"DESPACHADOR: Iniciando publicación de 'AtribucionRevertida' para Journey ID: {journey.id}")
 
         touchpoints_info = [
@@ -66,6 +66,7 @@ class DespachadorEventosAtribucion:
         ]
 
         payload = AtribucionRevertidaPayload(
+            id_correlacion=id_correlacion,
             journey_id_revertido=str(journey.id),
             interacciones=touchpoints_info
         )

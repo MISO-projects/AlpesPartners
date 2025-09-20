@@ -81,7 +81,8 @@ class ConsumidorInteraccionesDescartadas(BaseConsumidor):
         evento_dict = avro_to_dict(mensaje.value().data)
         print(f'📥 InteraccionesDescartadas recibida en saga: {evento_dict}')
         event_dominio = InteraccionesDescartadas(**evento_dict)
-        procesar_evento_saga(event_dominio)
+        id_correlacion = evento_dict.get('id_correlacion')
+        procesar_evento_saga(event_dominio, id_correlacion)
 
 
 class ConsumidorAtribucion(BaseConsumidor):
@@ -112,7 +113,8 @@ class ConsumidorAtribucionRevertida(BaseConsumidor):
         evento_dict = avro_to_dict(mensaje.value().data)
         print(f'📥 AtribucionRevertida recibida en saga: {evento_dict}')
         event_dominio = AtribucionRevertida(**evento_dict)
-        procesar_evento_saga(event_dominio)
+        id_correlacion = evento_dict.get('id_correlacion')
+        procesar_evento_saga(event_dominio, id_correlacion)
 
 
 class ConsumidorComisiones(BaseConsumidor):

@@ -9,8 +9,8 @@ from marketing.modulos.sagas.aplicacion.dto.interaccion import (
 )
 from datetime import datetime
 from marketing.seedwork.aplicacion.comandos import ejecutar_commando as comando
-from marketing.modulos.campanias.infraestructura.despachadores import (
-    DespachadorMarketing,
+from marketing.modulos.sagas.infraestructura.despachadores import (
+    DespachadorSagas,
 )
 
 
@@ -26,12 +26,13 @@ class RegistrarInteraccion(Comando):
 
 @dataclass
 class DescartarInteracciones(Comando):
+    id_correlacion: str
     interacciones: list[uuid.UUID]
 
 
 class DescartarInteraccionesHandler(ComandoHandler):
     def handle(self, comando: DescartarInteracciones):
-        despachador = DespachadorMarketing()
+        despachador = DespachadorSagas()
         despachador.publicar_comando_descartar_interacciones(comando)
 
 

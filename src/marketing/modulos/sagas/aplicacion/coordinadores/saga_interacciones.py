@@ -195,12 +195,16 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         elif tipo_comando == RevertirAtribucion and isinstance(
             evento, ComisionRevertida
         ):
-            return RevertirAtribucion(id_correlacion=evento.id_correlacion, journey_id=evento.journey_id)
+            return RevertirAtribucion(
+                id_correlacion=evento.id_correlacion, journey_id=evento.journey_id
+            )
 
         elif tipo_comando == DescartarInteracciones and isinstance(
             evento, AtribucionRevertida
         ):
-            return DescartarInteracciones(interacciones=evento.interacciones)
+            return DescartarInteracciones(
+                id_correlacion=evento.id_correlacion, interacciones=evento.interacciones
+            )
 
         else:
             raise NotImplementedError(
