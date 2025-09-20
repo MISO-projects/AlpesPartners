@@ -75,23 +75,52 @@ def _procesar_comando_activar_campania(mensaje_activar, consumidor_activar):
 
 
 def suscribirse_a_eventos(app=None):
+    import time
     cliente = None
+    consumidor_crear = None
+    consumidor_activar = None
+
+    def conectar_con_retry():
+        nonlocal cliente, consumidor_crear, consumidor_activar
+        max_reintentos = 5
+        for intento in range(max_reintentos):
+            try:
+                print(f"🔄 Intento {intento + 1}/{max_reintentos} conectando a Pulsar...")
+                cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+
+                # Consumidor para comandos de crear campaña (sin schema)
+                consumidor_crear = cliente.subscribe(
+                    'comando-crear-campania',
+                    consumer_type=_pulsar.ConsumerType.Shared,
+                    subscription_name='marketing-sub-crear-campania'
+                )
+
+                # Consumidor para comandos de activar campaña (sin schema)
+                consumidor_activar = cliente.subscribe(
+                    'comando-activar-campania',
+                    consumer_type=_pulsar.ConsumerType.Shared,
+                    subscription_name='marketing-sub-activar-campania'
+                )
+                print("✅ Conectado exitosamente a Pulsar")
+                return True
+            except Exception as e:
+                print(f"❌ Intento {intento + 1} falló: {e}")
+                if cliente:
+                    try:
+                        cliente.close()
+                    except:
+                        pass
+                    cliente = None
+                if intento < max_reintentos - 1:
+                    tiempo_espera = 2 ** intento  # Backoff exponencial
+                    print(f"⏳ Esperando {tiempo_espera}s antes del siguiente intento...")
+                    time.sleep(tiempo_espera)
+        return False
+
     try:
-        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
-
-        # Consumidor para comandos de crear campaña (sin schema)
-        consumidor_crear = cliente.subscribe(
-            'comando-crear-campania',
-            consumer_type=_pulsar.ConsumerType.Shared,
-            subscription_name='marketing-sub-crear-campania'
-        )
-
-        # Consumidor para comandos de activar campaña (sin schema)
-        consumidor_activar = cliente.subscribe(
-            'comando-activar-campania',
-            consumer_type=_pulsar.ConsumerType.Shared,
-            subscription_name='marketing-sub-activar-campania'
-        )
+        if not conectar_con_retry():
+            print("❌ No se pudo conectar a Pulsar después de varios intentos")
+            return
 
         while True:
             try:
@@ -107,7 +136,14 @@ def suscribirse_a_eventos(app=None):
 
             except Exception as e:
                 if "Timeout" not in str(e) and "TimeOut" not in str(e):
-                    print(f'Error procesando comando crear campaña: {e}')
+                    if "Disconnected" in str(e) or "Connection" in str(e):
+                        print(f'🔄 Conexión perdida, reintentando...')
+                        if conectar_con_retry():
+                            continue
+                        else:
+                            break
+                    else:
+                        print(f'Error procesando comando crear campaña: {e}')
                 # Los timeouts son normales cuando no hay mensajes, no los logueamos
 
             try:
@@ -123,7 +159,14 @@ def suscribirse_a_eventos(app=None):
 
             except Exception as e:
                 if "Timeout" not in str(e) and "TimeOut" not in str(e):
-                    print(f'Error procesando comando activar campaña: {e}')
+                    if "Disconnected" in str(e) or "Connection" in str(e):
+                        print(f'🔄 Conexión perdida, reintentando...')
+                        if conectar_con_retry():
+                            continue
+                        else:
+                            break
+                    else:
+                        print(f'Error procesando comando activar campaña: {e}')
                 # Los timeouts son normales cuando no hay mensajes, no los logueamos
 
         cliente.close()

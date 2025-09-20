@@ -92,7 +92,7 @@ class DespachadorMarketing:
             # Serializar mensaje a JSON bytes
             mensaje_json = json.dumps(mensaje).encode('utf-8')
             publicador.send(mensaje_json)
-            print(f"✓ Comando publicado exitosamente en tópico: {topico}")
+            print(f"✓ Comando publicado: {mensaje.get('type', 'desconocido')}")
 
         except Exception as e:
             print(f"✗ Error publicando comando: {e}")
