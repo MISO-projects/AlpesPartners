@@ -12,12 +12,24 @@ TRACKING_SERVICE_URL = "http://tracking:8000"
 async def registrar_interaccion(interaccion: RegistrarInteraccionRequest):
     async with httpx.AsyncClient() as client:
         try:
+            # Formatear fecha para tracking (formato: YYYY-MM-DDTHH:MM:SSZ)
+            fecha_formato_tracking = interaccion.marca_temporal.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+            # Adaptar formato para tracking service
             payload = {
                 "tipo": interaccion.tipo,
-                "marca_temporal": interaccion.marca_temporal.isoformat(),
-                "identidad_usuario": interaccion.identidad_usuario,
+                "marca_temporal": fecha_formato_tracking,
+                "identidad_usuario": {
+                    "id_usuario": interaccion.identidad_usuario,
+                    "id_anonimo": None,
+                    "direccion_ip": None,
+                    "agente_usuario": None
+                },
                 "parametros_tracking": interaccion.parametros_tracking,
-                "elemento_objetivo": interaccion.elemento_objetivo,
+                "elemento_objetivo": {
+                    "url": None,
+                    "id_elemento": interaccion.elemento_objetivo
+                },
                 "contexto": interaccion.contexto
             }
 
