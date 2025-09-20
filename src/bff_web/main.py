@@ -10,7 +10,7 @@ from sse_starlette.sse import EventSourceResponse
 import os
 
 from .api.v1.router import router as v1
-from .consumidores import suscribirse_a_eventos_campanias
+from .consumidores import suscribirse_a_eventos_campanias, suscribirse_a_eventos_activacion
 
 class Config(BaseSettings):
     APP_VERSION: str = "1"
@@ -20,8 +20,9 @@ class Config(BaseSettings):
 settings = Config()
 app_configs: dict[str, Any] = {"title": "BFF AlpesPartners"}
 
-# Lista global para eventos de campañas
+# Listas globales para eventos
 eventos_campanias = []
+eventos_activacion = []
 tasks = []
 
 @asynccontextmanager
@@ -29,12 +30,19 @@ async def lifespan(app: FastAPI):
     # Iniciar consumer de eventos de campañas en hilo separado
     import threading
 
-    def consumer_thread():
+    def consumer_campanias_thread():
         suscribirse_a_eventos_campanias(eventos_campanias)
 
-    thread = threading.Thread(target=consumer_thread, daemon=True)
-    thread.start()
-    tasks.append(thread)
+    def consumer_activacion_thread():
+        suscribirse_a_eventos_activacion(eventos_activacion)
+
+    thread1 = threading.Thread(target=consumer_campanias_thread, daemon=True)
+    thread2 = threading.Thread(target=consumer_activacion_thread, daemon=True)
+
+    thread1.start()
+    thread2.start()
+
+    tasks.extend([thread1, thread2])
 
     yield
 
@@ -84,18 +92,29 @@ async def stream_eventos_campanias(request: Request):
     };
     """
     def nuevo_evento():
-        global eventos_campanias
+        global eventos_campanias, eventos_activacion
+        import json
+
+        # Priorizar eventos de creación
         if len(eventos_campanias) > 0:
             evento = eventos_campanias.pop(0)  # FIFO
-            import json
             return {
-                'data': json.dumps(evento),  # Serializar a JSON string
+                'data': json.dumps(evento),
                 'event': 'campania_creada'
             }
+
+        # Luego eventos de activación
+        if len(eventos_activacion) > 0:
+            evento = eventos_activacion.pop(0)  # FIFO
+            return {
+                'data': json.dumps(evento),
+                'event': 'campania_activada'
+            }
+
         return None
 
     async def generar_eventos():
-        global eventos_campanias
+        global eventos_campanias, eventos_activacion
         print(f"🔄 Cliente SSE conectado")
 
         while True:
@@ -105,7 +124,7 @@ async def stream_eventos_campanias(request: Request):
                 break
 
             # Si hay eventos, enviarlos
-            if len(eventos_campanias) > 0:
+            if len(eventos_campanias) > 0 or len(eventos_activacion) > 0:
                 evento = nuevo_evento()
                 if evento:
                     yield evento

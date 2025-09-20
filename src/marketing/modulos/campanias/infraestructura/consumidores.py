@@ -66,8 +66,7 @@ def _procesar_comando_activar_campania(mensaje_activar, consumidor_activar):
     print(f'Comando activar campaña recibido: {datos_activar}')
 
     comando = ActivarCampania(
-        id_campania=datos_activar['id_campania'],
-        fecha_activacion=datos_activar['fecha_activacion']
+        id_campania=datos_activar['id_campania']
     )
 
     ejecutar_commando(comando)
@@ -125,49 +124,42 @@ def suscribirse_a_eventos(app=None):
         while True:
             try:
                 # Verificar mensajes de crear campaña
-                mensaje_crear = consumidor_crear.receive(timeout_millis=100)
-                if mensaje_crear:
-                    # Procesar dentro del contexto de la app
-                    if app:
-                        with app.app_context():
+                try:
+                    mensaje_crear = consumidor_crear.receive(timeout_millis=100)
+                    if mensaje_crear:
+                        # Procesar dentro del contexto de la app
+                        if app:
+                            with app.app_context():
+                                _procesar_comando_crear_campania(mensaje_crear, consumidor_crear)
+                        else:
                             _procesar_comando_crear_campania(mensaje_crear, consumidor_crear)
-                    else:
-                        _procesar_comando_crear_campania(mensaje_crear, consumidor_crear)
-
-            except Exception as e:
-                if "Timeout" not in str(e) and "TimeOut" not in str(e):
-                    if "Disconnected" in str(e) or "Connection" in str(e):
-                        print(f'🔄 Conexión perdida, reintentando...')
-                        if conectar_con_retry():
-                            continue
-                        else:
-                            break
-                    else:
+                except Exception as e:
+                    if "Timeout" not in str(e) and "TimeOut" not in str(e):
                         print(f'Error procesando comando crear campaña: {e}')
-                # Los timeouts son normales cuando no hay mensajes, no los logueamos
 
-            try:
                 # Verificar mensajes de activar campaña
-                mensaje_activar = consumidor_activar.receive(timeout_millis=100)
-                if mensaje_activar:
-                    # Procesar dentro del contexto de la app
-                    if app:
-                        with app.app_context():
+                try:
+                    mensaje_activar = consumidor_activar.receive(timeout_millis=100)
+                    if mensaje_activar:
+                        # Procesar dentro del contexto de la app
+                        if app:
+                            with app.app_context():
+                                _procesar_comando_activar_campania(mensaje_activar, consumidor_activar)
+                        else:
                             _procesar_comando_activar_campania(mensaje_activar, consumidor_activar)
-                    else:
-                        _procesar_comando_activar_campania(mensaje_activar, consumidor_activar)
+                except Exception as e:
+                    if "Timeout" not in str(e) and "TimeOut" not in str(e):
+                        print(f'Error procesando comando activar campaña: {e}')
 
             except Exception as e:
-                if "Timeout" not in str(e) and "TimeOut" not in str(e):
-                    if "Disconnected" in str(e) or "Connection" in str(e):
-                        print(f'🔄 Conexión perdida, reintentando...')
-                        if conectar_con_retry():
-                            continue
-                        else:
-                            break
+                if "Disconnected" in str(e) or "Connection" in str(e):
+                    print(f'🔄 Conexión perdida, reintentando...')
+                    if conectar_con_retry():
+                        continue
                     else:
-                        print(f'Error procesando comando activar campaña: {e}')
-                # Los timeouts son normales cuando no hay mensajes, no los logueamos
+                        break
+                else:
+                    print(f'Error general en consumer: {e}')
 
         cliente.close()
     except Exception as e:

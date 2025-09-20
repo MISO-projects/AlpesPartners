@@ -63,8 +63,7 @@ class DespachadorMarketing:
         Publica un comando para activar una campaña de forma asíncrona
         """
         payload = dict(
-            id_campania=id_campania,
-            fecha_activacion=utils.time_millis()
+            id_campania=id_campania
         )
 
         comando = dict(

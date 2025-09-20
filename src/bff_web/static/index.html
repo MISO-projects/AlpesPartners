@@ -173,6 +173,7 @@
     <script>
         let eventSource = null;
         let campaignCount = 0;
+        let campaigns = new Map(); // Para trackear campañas por ID
 
         // Conectar a Server-Sent Events
         function conectarSSE() {
@@ -247,7 +248,7 @@
                         counterElement.style.backgroundColor = '';
                     }, 1000);
 
-                    agregarCampania(data);
+                    agregarCampania(data, 'borrador');
 
                 } catch (e) {
                     console.error('❌ Error procesando evento campania_creada:', e);
@@ -255,10 +256,30 @@
                 }
             });
 
+            // Listener para eventos de activación
+            eventSource.addEventListener('campania_activada', function(event) {
+                console.log('🔴 Campaña activada recibida:', JSON.parse(event.data).datos?.data?.nombre || 'Sin nombre');
+
+                try {
+                    let data;
+                    if (typeof event.data === 'string') {
+                        data = JSON.parse(event.data);
+                    } else {
+                        data = event.data;
+                    }
+
+                    actualizarCampaniaActivada(data);
+
+                } catch (e) {
+                    console.error('❌ Error procesando evento campania_activada:', e);
+                    document.getElementById('connectionStatus').innerHTML = `❌ Error: ${e.message}`;
+                }
+            });
+
         }
 
         // Agregar campaña a la lista
-        function agregarCampania(data) {
+        function agregarCampania(data, estado = 'borrador') {
             const emptyState = document.getElementById('emptyState');
             const campaignsList = document.getElementById('campaignsList');
 
@@ -286,11 +307,24 @@
             const nombre = campaignData.nombre || 'Sin nombre';
             const tiempo = new Date().toLocaleTimeString();
 
+            // Guardar en el mapa de campañas
+            campaigns.set(id, {
+                nombre: nombre,
+                estado: estado,
+                tiempo: tiempo
+            });
+
             // Crear elemento de campaña
             const campaignItem = document.createElement('div');
             campaignItem.className = 'campaign-item';
+            campaignItem.id = `campaign-${id}`;
+
+            const estadoBadge = estado === 'activa'
+                ? '<span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">ACTIVA</span>'
+                : '<span style="background: #95a5a6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">BORRADOR</span>';
+
             campaignItem.innerHTML = `
-                <div class="campaign-name">${nombre}</div>
+                <div class="campaign-name">${nombre} ${estadoBadge}</div>
                 <div class="campaign-id">ID: ${id}</div>
                 <div class="campaign-time">${tiempo}</div>
             `;
@@ -301,6 +335,48 @@
             // Limitar a 15 campañas máximo
             while (campaignsList.children.length > 15) {
                 campaignsList.removeChild(campaignsList.lastChild);
+            }
+        }
+
+        // Actualizar campaña cuando se activa
+        function actualizarCampaniaActivada(data) {
+            // Extraer datos de la campaña activada
+            let campaignData = {};
+            if (data.datos && data.datos.datos && data.datos.datos.data) {
+                campaignData = data.datos.datos.data;
+            } else if (data.datos && data.datos.data) {
+                campaignData = data.datos.data;
+            } else if (data.datos) {
+                campaignData = data.datos;
+            } else {
+                campaignData = data;
+            }
+
+            const id = campaignData.id_campania || 'N/A';
+            const existingElement = document.getElementById(`campaign-${id}`);
+
+            if (existingElement) {
+                // Actualizar campaña existente
+                const nombre = campaigns.get(id)?.nombre || 'Sin nombre';
+                campaigns.set(id, {
+                    ...campaigns.get(id),
+                    estado: 'activa'
+                });
+
+                existingElement.innerHTML = `
+                    <div class="campaign-name">${nombre} <span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;">ACTIVA</span></div>
+                    <div class="campaign-id">ID: ${id}</div>
+                    <div class="campaign-time">${campaigns.get(id)?.tiempo || new Date().toLocaleTimeString()}</div>
+                `;
+
+                // Añadir animación de activación
+                existingElement.style.backgroundColor = '#d5f4e6';
+                setTimeout(() => {
+                    existingElement.style.backgroundColor = '';
+                }, 2000);
+            } else {
+                // Si no existe, agregarla como activada
+                agregarCampania(data, 'activa');
             }
         }
 

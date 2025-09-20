@@ -59,3 +59,50 @@ def suscribirse_a_eventos_campanias(eventos_campanias=[]):
     finally:
         if cliente:
             cliente.close()
+
+
+def suscribirse_a_eventos_activacion(eventos_activacion=[]):
+    """
+    Consumer que escucha eventos de campañas activadas desde marketing
+    """
+    cliente = None
+    try:
+        print(f"🔄 BFF suscribiéndose a eventos de activación")
+
+        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+
+        consumidor = cliente.subscribe(
+            'campania-activada',
+            consumer_type=pulsar.ConsumerType.Shared,
+            subscription_name='bff-activaciones-sub'
+        )
+
+        print("✓ BFF suscrito a eventos de activación")
+
+        while True:
+            try:
+                mensaje = consumidor.receive(timeout_millis=100)
+
+                datos_evento = json.loads(mensaje.value().decode('utf-8'))
+                nombre_campania = datos_evento.get('data', {}).get('nombre', 'Sin nombre')
+                print(f"🟢 Campaña activada: {nombre_campania}")
+
+                evento_sse = {
+                    'tipo': 'campania_activada',
+                    'datos': datos_evento,
+                    'timestamp': utils.time_millis()
+                }
+                eventos_activacion.append(evento_sse)
+
+                consumidor.acknowledge(mensaje)
+
+            except Exception as e:
+                if "Timeout" not in str(e) and "TimeOut" not in str(e):
+                    print(f"❌ Error procesando evento activación: {e}")
+
+    except Exception as e:
+        print(f'❌ ERROR: BFF suscribiéndose a eventos de activación: {e}')
+        traceback.print_exc()
+    finally:
+        if cliente:
+            cliente.close()
