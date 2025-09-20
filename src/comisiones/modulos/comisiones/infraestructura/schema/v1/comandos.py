@@ -2,6 +2,7 @@ from pulsar.schema import *
 from comisiones.seedwork.infraestructura.schema.v1.comandos import ComandoIntegracion
 
 class RevertirComisionPayload(Record):
+    id_correlacion = String()
     journey_id = String()
     motivo = String()
 

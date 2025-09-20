@@ -14,6 +14,7 @@ class RegistrarAtribucion(Comando):
 
 @dataclass
 class RevertirAtribucion(Comando):
+    id_correlacion: str
     journey_id: uuid.UUID
 
 class RevertirAtribucionHandler(ComandoHandler):

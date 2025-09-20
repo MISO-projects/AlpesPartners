@@ -9,6 +9,7 @@ from comisiones.modulos.comisiones.dominio.excepciones import ComisionNoEncontra
 
 @dataclass
 class RevertirComisionPorJourney(Comando):
+    id_correlacion: str
     journey_id: uuid.UUID
     motivo: str = ""
 
@@ -26,7 +27,7 @@ class RevertirComisionPorJourneyHandler(ComandoHandler):
             if not comision:
                 raise ComisionNoEncontradaExcepcion(f"Comisión con journey_id {comando.journey_id} no encontrada")
             
-            comision.revertir_comision(motivo=comando.motivo)
+            comision.revertir_comision(id_correlacion=comando.id_correlacion, motivo=comando.motivo)
             UnidadTrabajoPuerto.registrar_batch(repositorio.actualizar, comision)
             UnidadTrabajoPuerto.savepoint()
             UnidadTrabajoPuerto.commit()

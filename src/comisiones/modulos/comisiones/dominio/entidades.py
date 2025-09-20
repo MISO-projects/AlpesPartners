@@ -105,7 +105,7 @@ class Comision(AgregacionRaiz):
             )
         )
     
-    def revertir_comision(self, motivo: str = ""):
+    def revertir_comision(self, id_correlacion: str, motivo: str = ""):
 
         if self.estado == EstadoComision.REVERTIDA:
             raise ComisionYaRevertidaExcepcion("La comisión ya está revertida")
@@ -117,6 +117,7 @@ class Comision(AgregacionRaiz):
         
         self.agregar_evento(
             ComisionRevertida(
+                id_correlacion=id_correlacion,
                 id_comision=self.id,
                 journey_id=self.id_journey,
                 monto_revertido=self.monto,

@@ -186,12 +186,16 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
         Mapea los atributos del evento a los parámetros del comando.
         """
         if tipo_comando == RevertirComision and isinstance(evento, FraudeDetectado):
-            return RevertirComision(journey_id=evento.journey_id)
+            return RevertirComision(
+                id_correlacion=evento.id_correlacion,
+                journey_id=evento.journey_id,
+                motivo="FRAUDE_DETECTADO",
+            )
 
         elif tipo_comando == RevertirAtribucion and isinstance(
             evento, ComisionRevertida
         ):
-            return RevertirAtribucion(journey_id=evento.journey_id)
+            return RevertirAtribucion(id_correlacion=evento.id_correlacion, journey_id=evento.journey_id)
 
         elif tipo_comando == DescartarInteracciones and isinstance(
             evento, AtribucionRevertida

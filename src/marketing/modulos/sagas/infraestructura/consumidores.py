@@ -143,7 +143,8 @@ class ConsumidorComisionesRevertidas(BaseConsumidor):
         evento_dict = avro_to_dict(mensaje.value().data)
         print(f'📥 ComisionRevertida recibida en saga: {evento_dict}')
         event_dominio = ComisionRevertida(**evento_dict)
-        procesar_evento_saga(event_dominio)
+        id_correlacion = evento_dict.get('id_correlacion')
+        procesar_evento_saga(event_dominio, id_correlacion)
 
 
 class ConsumidorFraude(BaseConsumidor):
@@ -158,4 +159,5 @@ class ConsumidorFraude(BaseConsumidor):
         evento_dict = avro_to_dict(mensaje.value().data)
         print(f'📥 FraudeDetectado recibido en saga: {evento_dict}')
         event_dominio = FraudeDetectado(**evento_dict)
-        procesar_evento_saga(event_dominio)
+        id_correlacion = evento_dict.get('id_correlacion')
+        procesar_evento_saga(event_dominio, id_correlacion)

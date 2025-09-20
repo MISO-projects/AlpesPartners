@@ -3,8 +3,8 @@ from dataclasses import dataclass
 import uuid
 from decimal import Decimal
 from marketing.seedwork.aplicacion.comandos import ejecutar_commando as comando
-from marketing.modulos.campanias.infraestructura.despachadores import (
-    DespachadorMarketing,
+from marketing.modulos.sagas.infraestructura.despachadores import (
+    DespachadorSagas,
 )
 
 
@@ -23,12 +23,14 @@ class ReservarComision(Comando):
 
 @dataclass
 class RevertirComision(Comando):
+    id_correlacion: str
     journey_id: uuid.UUID
+    motivo: str
 
 
 class RevertirComisionHandler(ComandoHandler):
     def handle(self, comando: RevertirComision):
-        despachador = DespachadorMarketing()
+        despachador = DespachadorSagas()
         despachador.publicar_comando_revertir_comision(comando)
 
 

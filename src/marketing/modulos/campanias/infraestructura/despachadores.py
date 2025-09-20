@@ -14,10 +14,6 @@ from marketing.modulos.campanias.infraestructura.schema.v1.comandos.campania imp
     ComandoCrearCampania,
     CrearCampaniaPayload
 )
-from marketing.modulos.campanias.infraestructura.schema.v1.comandos.comision import (
-    ComandoRevertirComision,
-    RevertirComisionPayload
-)
 from marketing.modulos.campanias.infraestructura.schema.v1.comandos.atribucion import (
     ComandoRevertirAtribucion,
     RevertirAtribucionPayload
@@ -133,17 +129,6 @@ class DespachadorMarketing:
             comando_integracion,
             "crear-campania-comando",
             ComandoCrearCampania
-        )
-
-    def publicar_comando_revertir_comision(self, comando):
-        payload = RevertirComisionPayload(
-            journey_id=comando.journey_id
-        )
-        comando_integracion = ComandoRevertirComision(data=payload)
-        self._publicar_mensaje(
-            comando_integracion,
-            "revertir-comision-comando",
-            ComandoRevertirComision
         )
 
     def publicar_comando_revertir_atribucion(self, comando):

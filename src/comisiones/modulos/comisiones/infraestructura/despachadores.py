@@ -140,6 +140,7 @@ class DespachadorEventosComision:
     def despachar_comision_revertida(self, evento: ComisionRevertida):
         try:
             payload = ComisionRevertidaPayload(
+                id_correlacion=evento.id_correlacion,
                 id_comision=str(evento.id_comision),
                 journey_id=str(evento.journey_id),
                 monto_revertido={

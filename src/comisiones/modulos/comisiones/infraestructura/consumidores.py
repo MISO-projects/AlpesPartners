@@ -190,6 +190,7 @@ class ConsumidorComandosReversion:
             evento_dict = avro_to_dict(mensaje.value().data)
             print(f"COMISIONES: Evento de reversión recibido: {evento_dict}")
             
+            id_correlacion = evento_dict['id_correlacion']
             journey_id = evento_dict['journey_id']
             motivo = evento_dict['motivo']
             
@@ -208,6 +209,7 @@ class ConsumidorComandosReversion:
                 return
 
             comando = RevertirComisionPorJourney(
+                id_correlacion=id_correlacion,
                 journey_id=uuid.UUID(journey_id_clean),
                 motivo=motivo
             )

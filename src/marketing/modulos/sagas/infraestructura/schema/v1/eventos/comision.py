@@ -43,12 +43,14 @@ class EventoComisionReservadaConsumoSaga(EventoIntegracion):
     data = ComisionReservadaPayload()
 
 class FraudeDetectadoPayload(Record):
+    id_correlacion = String()
     journey_id = String()
 
 class EventoFraudeDetectadoConsumoSaga(EventoIntegracion):
     data = FraudeDetectadoPayload()
 
 class ComisionRevertidaPayload(Record):
+    id_correlacion = String()
     id_comision = String()
     journey_id = String()
     monto_revertido = MontoComisionSchema()
