@@ -79,7 +79,9 @@ class DespachadorEventosAtribucion:
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         try:
             print("DESPACHADOR: Conectando al broker Pulsar...")
-            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             print("DESPACHADOR: Conexión establecida.")
             publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
             

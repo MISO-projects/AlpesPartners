@@ -50,9 +50,13 @@ class ComisionCalculadaPayload(Record):
 class EventoComisionCalculada(EventoIntegracion):
     data = ComisionCalculadaPayload()
 
-class RevertirComisionPayload(Record):
+class ComisionRevertidaPayload(Record):
+    id_comision = String()
     journey_id = String()
+    monto_revertido = MontoComisionSchema()
     motivo = String()
+    fecha_reversion = String()
 
-class EventoRevertirComision(EventoIntegracion):
-    data = RevertirComisionPayload()
+
+class EventoComisionRevertidaIntegracion(EventoIntegracion):
+    data = ComisionRevertidaPayload()

@@ -51,3 +51,4 @@ class InteraccionDTO(DTO):
     parametros_tracking: ParametrosTrackingDTO
     elemento_objetivo: ElementoObjetivoDTO
     contexto: ContextoInteraccionDTO
+    estado: str

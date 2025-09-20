@@ -7,7 +7,8 @@ import traceback
 import uuid
 from decimal import Decimal
 
-from comisiones.modulos.comisiones.infraestructura.schema.v1.eventos import EventoConversionAtribuida, EventoRevertirComision
+from comisiones.modulos.comisiones.infraestructura.schema.v1.eventos import EventoConversionAtribuida
+from comisiones.modulos.comisiones.infraestructura.schema.v1.comandos import ComandoRevertirComision
 from comisiones.seedwork.infraestructura import utils
 from comisiones.modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
 from comisiones.modulos.comisiones.aplicacion.comandos.revertir_comision_por_journey import RevertirComisionPorJourney
@@ -42,7 +43,9 @@ class ConsumidorEventosAtribucion:
         self.app = app
         try:
             print("COMISIONES: Conectando a Pulsar para consumir eventos de atribución...")
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             self.consumidor = self.cliente.subscribe(
                 'eventos-atribucion',  # Tópico que publica el servicio de atribución
                 consumer_type=_pulsar.ConsumerType.Shared,
@@ -141,26 +144,26 @@ class ConsumidorEventosComision:
     def consumir_lote_confirmado(self, evento: dict):
         print(f"COMISIONES: Procesando lote confirmado: {evento.get('id_lote')} - {evento.get('cantidad_comisiones')} comisiones")
 
-class ConsumidorEventosReversion:
+class ConsumidorComandosReversion:
     def __init__(self):
         self.cliente = None
         self.consumidor = None
 
-    def suscribirse_a_eventos_reversion(self, app=None):
+    def suscribirse_a_comandos_reversion(self, app=None):
         if not app:
             return
             
         self.app = app
         try:
-            print("COMISIONES: Conectando a Pulsar para consumir eventos de reversión...")
+            print("COMISIONES: Conectando a Pulsar para consumir comandos de reversión...")
             self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
             self.consumidor = self.cliente.subscribe(
-                'eventos-reversion-comision',  
+                'revertir-comision-comando',  
                 consumer_type=_pulsar.ConsumerType.Shared,
                 subscription_name='comisiones-sub-reversion',
-                schema=AvroSchema(EventoRevertirComision)
+                schema=AvroSchema(ComandoRevertirComision)
             )
-            print("COMISIONES: Suscripción a eventos-reversion-comision exitosa")
+            print("COMISIONES: Suscripción a revertir-comision-comando exitosa")
 
             while True:
                 mensaje = self.consumidor.receive()

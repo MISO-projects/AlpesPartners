@@ -117,6 +117,7 @@ class Comision(AgregacionRaiz):
         self.agregar_evento(
             ComisionRevertida(
                 id_comision=self.id,
+                journey_id=self.id_journey,
                 monto_revertido=self.monto,
                 motivo=motivo,
                 fecha_reversion=datetime.now()

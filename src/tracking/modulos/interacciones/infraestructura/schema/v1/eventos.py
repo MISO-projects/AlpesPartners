@@ -37,6 +37,7 @@ class InteraccionRegistradaPayload(Record):
     parametros_tracking = ParametrosTrackingSchema()
     elemento_objetivo = ElementoObjetivoSchema()
     contexto = ContextoInteraccionSchema()
+    estado = String()
 
 
 class EventoInteraccionRegistrada(EventoIntegracion):
@@ -93,3 +94,11 @@ class EventoCampaniaDesactivada(EventoIntegracion):
 
 class EventoInteraccionRecibida(EventoIntegracion):
     data = InteraccionRecibidaPayload()
+
+
+class InteraccionesDescartadasPayload(Record):
+    interacciones = Array(String())
+
+
+class EventoInteraccionesDescartadas(EventoIntegracion):
+    data = InteraccionesDescartadasPayload()

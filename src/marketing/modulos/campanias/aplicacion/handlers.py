@@ -1,8 +1,5 @@
 from marketing.seedwork.aplicacion.handlers import Handler
 from marketing.modulos.campanias.infraestructura.despachadores import DespachadorMarketing
-from marketing.modulos.campanias.dominio.repositorios import RepositorioCampania
-from marketing.modulos.campanias.infraestructura.fabricas import FabricaRepositorio
-from marketing.seedwork.infraestructura.uow import UnidadTrabajoPuerto
 
 
 class HandlerCampaniaIntegracion(Handler):

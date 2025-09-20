@@ -10,11 +10,21 @@ from marketing.modulos.campanias.infraestructura.schema.v1.eventos import (
     CampaniaDesactivadaPayload,
     InteraccionRecibidaPayload
 )
-from marketing.modulos.campanias.infraestructura.schema.v1.comandos import (
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.campania import (
     ComandoCrearCampania,
-    ComandoActivarCampania,
-    CrearCampaniaPayload,
-    ActivarCampaniaPayload
+    CrearCampaniaPayload
+)
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.comision import (
+    ComandoRevertirComision,
+    RevertirComisionPayload
+)
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.atribucion import (
+    ComandoRevertirAtribucion,
+    RevertirAtribucionPayload
+)
+from marketing.modulos.campanias.infraestructura.schema.v1.comandos.interaccion import (
+    ComandoDescartarInteracciones,
+    DescartarInteraccionesPayload
 )
 from marketing.seedwork.infraestructura import utils
 
@@ -22,18 +32,23 @@ from marketing.seedwork.infraestructura import utils
 class DespachadorMarketing:
     def __init__(self):
         self.cliente = None
-        
+
     def _obtener_cliente(self):
         if not self.cliente:
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(
+                f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(
+                    pulsar.LoggerLevel.Error
+                ),  # Only show errors
+            )
         return self.cliente
-    
+
     def _publicar_mensaje(self, mensaje, topico, schema_class):
         cliente = self._obtener_cliente()
         try:
             publicador = cliente.create_producer(topico, schema=AvroSchema(schema_class))
             publicador.send(mensaje)
-            print(f' Evento Marketing publicado en tópico: {topico}')
+            print(f'{schema_class.__name__} publicado en tópico: {topico}')
         except Exception as e:
             print(f' Error publicando evento Marketing: {e}')
             raise e
@@ -118,4 +133,37 @@ class DespachadorMarketing:
             comando_integracion,
             "crear-campania-comando",
             ComandoCrearCampania
+        )
+
+    def publicar_comando_revertir_comision(self, comando):
+        payload = RevertirComisionPayload(
+            journey_id=comando.journey_id
+        )
+        comando_integracion = ComandoRevertirComision(data=payload)
+        self._publicar_mensaje(
+            comando_integracion,
+            "revertir-comision-comando",
+            ComandoRevertirComision
+        )
+
+    def publicar_comando_revertir_atribucion(self, comando):
+        payload = RevertirAtribucionPayload(
+            journey_id=comando.journey_id
+        )
+        comando_integracion = ComandoRevertirAtribucion(data=payload)
+        self._publicar_mensaje(
+            comando_integracion,
+            "revertir-atribucion",
+            ComandoRevertirAtribucion
+        )
+    
+    def publicar_comando_descartar_interacciones(self, comando):
+        payload = DescartarInteraccionesPayload(
+            interacciones=comando.interacciones
+        )
+        comando_integracion = ComandoDescartarInteracciones(data=payload)
+        self._publicar_mensaje(
+            comando_integracion,
+            "descartar-interacciones-comando",
+            ComandoDescartarInteracciones
         )

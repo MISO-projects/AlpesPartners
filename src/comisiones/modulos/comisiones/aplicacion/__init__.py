@@ -23,7 +23,7 @@ from comisiones.modulos.comisiones.dominio.eventos import (
 dispatcher.connect(HandlerComisionReservada.handle, signal=f'{ComisionReservada.__name__}Integracion')
 dispatcher.connect(HandlerComisionCalculada().handle, signal=f'{ComisionCalculada.__name__}Integracion')
 dispatcher.connect(HandlerComisionConfirmada().handle, signal=f'{ComisionConfirmada.__name__}Integracion')
-dispatcher.connect(HandlerComisionRevertida().handle, signal=f'{ComisionRevertida.__name__}Integracion')
+dispatcher.connect(HandlerComisionRevertida.handle, signal=f'{ComisionRevertida.__name__}Integracion')
 dispatcher.connect(HandlerComisionCancelada().handle, signal=f'{ComisionCancelada.__name__}Integracion')
 dispatcher.connect(HandlerLoteComisionesConfirmadas().handle, signal=f'{LoteComisionesConfirmadas.__name__}Integracion')
 dispatcher.connect(HandlerInteraccionAtribuidaRecibida().handle, signal=f'{InteraccionAtribuidaRecibida.__name__}Integracion')
