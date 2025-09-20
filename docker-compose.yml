@@ -61,7 +61,6 @@ services:
       dockerfile: marketing.Dockerfile
     profiles: ["alpespartners", "marketing"]
     container_name: marketing
-    restart: unless-stopped
     command: 
       - sh
       - -c
@@ -100,7 +99,6 @@ services:
       dockerfile: tracking.Dockerfile
     profiles: ["alpespartners", "tracking"]
     container_name: tracking
-    restart: unless-stopped
     command: 
       - sh
       - -c
@@ -133,7 +131,6 @@ services:
       dockerfile: comisiones.Dockerfile
     profiles: ["alpespartners", "comisiones"]
     container_name: comisiones
-    restart: unless-stopped
     command: 
       - sh
       - -c
@@ -164,7 +161,6 @@ services:
       dockerfile: atribucion.Dockerfile
     profiles: ["alpespartners", "atribucion"]
     container_name: atribucion
-    restart: unless-stopped
     command:
       - sh
       - -c

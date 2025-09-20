@@ -6,7 +6,7 @@ from marketing.seedwork.aplicacion.sagas import (
 )
 from marketing.seedwork.aplicacion.comandos import Comando, ejecutar_commando
 from marketing.seedwork.dominio.eventos import EventoDominio
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import uuid
 from datetime import datetime
 from marketing.modulos.sagas.aplicacion.comandos.comisiones import RevertirComision
@@ -26,6 +26,7 @@ from marketing.modulos.sagas.dominio.entidades import SagaLog
 from marketing.config.db import db
 from marketing.modulos.sagas.infraestructura.fabricas import FabricaRepositorio
 from marketing.modulos.sagas.dominio.repositorios import RepositorioSagaLog
+from decimal import Decimal
 
 
 @dataclass
@@ -36,7 +37,7 @@ class SagaLogEntry:
     tipo_paso: str  # 'INICIO', 'EVENTO_NORMAL', 'COMPENSACION', 'FIN', 'ERROR'
     evento: str = None
     comando: str = None
-    estado: str = None  # 'EXITOSO', 'FALLIDO', 'PROCESANDO'
+    estado: str = None  # 'EXITOSO', 'FALLIDO', 'DESPACHADO'
     timestamp: datetime = None
     datos_adicionales: dict = None
 
@@ -280,6 +281,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
             tipo_paso=tipo_paso,
             evento=type(evento).__name__,
             estado="EXITOSO",
+            datos_adicionales=self._serializar_objeto(evento),
         )
         self.persistir_en_saga_log(entrada_log)
 
@@ -290,17 +292,21 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
             tipo_paso="COMPENSACION",
             evento=type(evento).__name__,
             estado="EXITOSO",
+            datos_adicionales=self._serializar_objeto(evento),
         )
         self.persistir_en_saga_log(entrada_log)
 
     def _registrar_error(self, evento: EventoDominio, error: str):
         """Registra un error"""
+        datos_evento = self._serializar_objeto(evento)
+        datos_evento["error"] = error  # Add error info to the event data
+
         entrada_log = SagaLogEntry(
             id_correlacion=self.id_correlacion,
             tipo_paso="ERROR",
             evento=type(evento).__name__,
             estado="FALLIDO",
-            datos_adicionales={"error": error},
+            datos_adicionales=datos_evento,
         )
         self.persistir_en_saga_log(entrada_log)
 
@@ -341,6 +347,7 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
                     tipo_paso="COMPENSACION",
                     comando=type(comando).__name__,
                     estado="DESPACHADO",
+                    datos_adicionales=self._serializar_objeto(comando),
                 )
                 self.persistir_en_saga_log(entrada_log)
 
@@ -367,6 +374,37 @@ class CoordinadorInteracciones(CoordinadorCoreografia):
             "ultima_actividad": self.saga_log[-1].timestamp if self.saga_log else None,
         }
 
+    def _serializar_objeto(self, obj) -> dict:
+        """
+        Serializa un objeto (comando o evento) a un diccionario JSON-serializable.
+        """
+        if hasattr(obj, '__dataclass_fields__'):
+            data = asdict(obj)
+        elif hasattr(obj, '__dict__'):
+            data = obj.__dict__.copy()
+        else:
+            return {}
+
+        def convert_value(value):
+            if isinstance(value, uuid.UUID):
+                return str(value)
+            elif isinstance(value, Decimal):
+                return float(value)
+            elif isinstance(value, datetime):
+                return value.isoformat()
+            elif isinstance(value, dict):
+                return {k: convert_value(v) for k, v in value.items()}
+            elif isinstance(value, list):
+                return [convert_value(item) for item in value]
+            elif hasattr(value, '__dataclass_fields__'):
+                return convert_value(asdict(value))
+            elif hasattr(value, '__dict__'):
+                return convert_value(value.__dict__)
+            else:
+                return value
+
+        return convert_value(data)
+
 
 # Handler principal para eventos de dominio
 def procesar_evento_saga(evento: EventoDominio, id_correlacion: uuid.UUID = None):
@@ -387,8 +425,8 @@ def procesar_evento_saga(evento: EventoDominio, id_correlacion: uuid.UUID = None
 
 
 # Función de utilidad para iniciar una nueva saga
-def iniciar_saga_interacciones() -> uuid.UUID:
+def iniciar_saga_interacciones(id_correlacion: uuid.UUID = None) -> uuid.UUID:
     """Inicia una nueva saga de interacciones y retorna su ID de correlación"""
-    coordinador = CoordinadorInteracciones()
+    coordinador = CoordinadorInteracciones(id_correlacion)
     coordinador.iniciar()
     return coordinador.id_correlacion

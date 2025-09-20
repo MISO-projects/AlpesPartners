@@ -19,6 +19,7 @@ from marketing.seedwork.infraestructura import utils
 import traceback
 from marketing.modulos.sagas.aplicacion.coordinadores.saga_interacciones import (
     procesar_evento_saga,
+    iniciar_saga_interacciones,
 )
 from marketing.modulos.sagas.dominio.eventos.tracking import (
     InteraccionRegistrada,
@@ -65,7 +66,10 @@ class ConsumidorInteracciones(BaseConsumidor):
         evento_dict = avro_to_dict(mensaje.value().data)
         print(f'📥 InteraccionRegistrada recibida en saga: {evento_dict}')
         event_dominio = InteraccionRegistrada(**evento_dict)
+        if event_dominio.tipo != 'PURCHASE':
+            return
         id_correlacion = evento_dict.get('id_correlacion')
+        iniciar_saga_interacciones(id_correlacion)
         procesar_evento_saga(event_dominio, id_correlacion)
 
 
