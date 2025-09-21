@@ -48,31 +48,37 @@ class MapeadorInteraccion(RepMap):
 
     def dto_a_entidad(self, dto: InteraccionDTO) -> Interaccion:
         identidad_usuario = IdentidadUsuario(
-            id_usuario=dto.identidad_usuario.get("id_usuario"),
-            id_anonimo=dto.identidad_usuario.get("id_anonimo"),
-            direccion_ip=dto.identidad_usuario.get("direccion_ip"),
-            agente_usuario=dto.identidad_usuario.get("agente_usuario"),
+            id_usuario=dto.identidad_usuario.id_usuario,
+            id_anonimo=dto.identidad_usuario.id_anonimo,
+            direccion_ip=dto.identidad_usuario.direccion_ip,
+            agente_usuario=dto.identidad_usuario.agente_usuario,
         )
         parametros_tracking = ParametrosTracking(
-            fuente=dto.parametros_tracking.get("fuente"),
-            medio=dto.parametros_tracking.get("medio"),
-            campania=dto.parametros_tracking.get("campania"),
-            contenido=dto.parametros_tracking.get("contenido"),
-            termino=dto.parametros_tracking.get("termino"),
-            id_afiliado=dto.parametros_tracking.get("id_afiliado"),
+            fuente=dto.parametros_tracking.fuente,
+            medio=dto.parametros_tracking.medio,
+            campania=dto.parametros_tracking.campania,
+            contenido=dto.parametros_tracking.contenido,
+            termino=dto.parametros_tracking.termino,
+            id_afiliado=dto.parametros_tracking.id_afiliado,
         )
         elemento_objetivo = ElementoObjetivo(
-            url=dto.elemento_objetivo.get("url"),
-            id_elemento=dto.elemento_objetivo.get("id_elemento"),
+            url=dto.elemento_objetivo.url_elemento,
+            id_elemento=dto.elemento_objetivo.id_elemento,
         )
         contexto = ContextoInteraccion(
-            url_pagina=dto.contexto.get("url_pagina"),
-            url_referente=dto.contexto.get("url_referente"),
-            informacion_dispositivo=dto.contexto.get("informacion_dispositivo"),
+            url_pagina=dto.contexto.url_pagina,
+            url_referente=dto.contexto.url_referente,
+            informacion_dispositivo=dto.contexto.informacion_dispositivo,
         )
+        # Manejar marca_temporal que puede ser str o datetime
+        if isinstance(dto.marca_temporal, str):
+            marca_temporal = datetime.strptime(dto.marca_temporal, self._FORMATO_FECHA)
+        else:
+            marca_temporal = dto.marca_temporal
+
         return Interaccion(
             tipo=dto.tipo,
-            marca_temporal=datetime.strptime(dto.marca_temporal, self._FORMATO_FECHA),
+            marca_temporal=marca_temporal,
             identidad_usuario=identidad_usuario,
             parametros_tracking=parametros_tracking,
             elemento_objetivo=elemento_objetivo,
