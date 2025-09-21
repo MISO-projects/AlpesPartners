@@ -19,12 +19,17 @@ def comenzar_consumidor(app):
     from tracking.modulos.interacciones.infraestructura.consumidores import (
         ConsumidorEventosInteracciones,
         ConsumidorComandosInteracciones,
+        ConsumidorComandosRegistrarInteraccion,
     )
     consumidor_eventos = ConsumidorEventosInteracciones()
     consumidor_comandos = ConsumidorComandosInteracciones()
+    consumidor_registrar = ConsumidorComandosRegistrarInteraccion()
 
     threading.Thread(
         target=consumidor_comandos.suscribirse_a_comandos, args=[app]
+    ).start()
+    threading.Thread(
+        target=consumidor_registrar.suscribirse_a_comandos_registrar, args=[app]
     ).start()
 
 

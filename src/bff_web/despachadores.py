@@ -10,6 +10,61 @@ class DespachadorMarketing:
     def __init__(self):
         ...
 
+
+class DespachadorTracking:
+    def __init__(self):
+        ...
+
+    async def publicar_comando_registrar_interaccion(self, datos_interaccion):
+        """
+        Publica un comando para registrar una interacción de forma asíncrona
+        """
+        payload = dict(
+            tipo=datos_interaccion["tipo"],
+            marca_temporal=datos_interaccion["marca_temporal"],
+            identidad_usuario=datos_interaccion["identidad_usuario"],
+            parametros_tracking=datos_interaccion["parametros_tracking"],
+            elemento_objetivo=datos_interaccion["elemento_objetivo"],
+            contexto=datos_interaccion["contexto"]
+        )
+
+        comando = dict(
+            id=str(uuid.uuid4()),
+            time=utils.time_millis(),
+            specversion="v1",
+            type="ComandoRegistrarInteraccion",
+            ingestion=utils.time_millis(),
+            datacontenttype="AVRO",
+            service_name="BFF Web",
+            data=payload
+        )
+
+        await self.publicar_mensaje(comando, "comando-registrar-interaccion", "public/default/comando-registrar-interaccion")
+
+    async def publicar_mensaje(self, mensaje, topico, _schema_path):
+        cliente = None
+        try:
+            import json
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+
+            publicador = cliente.create_producer(topico)
+
+            mensaje_json = json.dumps(mensaje).encode('utf-8')
+            publicador.send(mensaje_json)
+            print(f"✓ Comando publicado: {mensaje.get('type', 'desconocido')}")
+
+        except Exception as e:
+            print(f"✗ Error publicando comando: {e}")
+            raise e
+        finally:
+            if cliente:
+                cliente.close()
+
+
+class DespachadorMarketing:
+    def __init__(self):
+        ...
+
     async def publicar_comando_crear_campania(self, datos_campania):
         """
         Publica un comando para crear una campaña de forma asíncrona
@@ -79,7 +134,7 @@ class DespachadorMarketing:
 
         await self.publicar_mensaje(comando, "comando-activar-campania", "public/default/comando-activar-campania")
 
-    async def publicar_mensaje(self, mensaje, topico, schema_path):
+    async def publicar_mensaje(self, mensaje, topico, _schema_path):
         cliente = None
         try:
             import json

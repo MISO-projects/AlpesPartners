@@ -14,8 +14,8 @@ from .consumidores import suscribirse_a_eventos_campanias, suscribirse_a_eventos
 
 class Config(BaseSettings):
     APP_VERSION: str = "1"
-    MARKETING_SERVICE_URL: str = "http://marketing:8000"
-    TRACKING_SERVICE_URL: str = "http://tracking:8000"
+    MARKETING_SERVICE_URL: str = os.getenv("MARKETING_SERVICE_URL", "http://marketing:8000")
+    TRACKING_SERVICE_URL: str = os.getenv("TRACKING_SERVICE_URL", "http://tracking:8000")
 
 settings = Config()
 app_configs: dict[str, Any] = {"title": "BFF AlpesPartners"}

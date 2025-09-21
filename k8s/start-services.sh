@@ -55,11 +55,11 @@ echo "  - Starting Pulsar Manager..."
 kubectl scale statefulset pulsar-mini-pulsar-manager -n pulsar --replicas=1
 
 echo "  - Starting monitoring components..."
-kubectl scale deployment pulsar-mini-grafana -n pulsar --replicas=1
-kubectl scale deployment pulsar-mini-victoria-metrics-operator -n pulsar --replicas=1
-kubectl scale deployment vmagent-pulsar-mini-victoria-metrics-k8s-stack -n pulsar --replicas=1
-kubectl scale deployment vmsingle-pulsar-mini-victoria-metrics-k8s-stack -n pulsar --replicas=1
-kubectl scale deployment pulsar-mini-kube-state-metrics -n pulsar --replicas=1
+# kubectl scale deployment pulsar-mini-grafana -n pulsar --replicas=1
+# kubectl scale deployment pulsar-mini-victoria-metrics-operator -n pulsar --replicas=1
+# kubectl scale deployment vmagent-pulsar-mini-victoria-metrics-k8s-stack -n pulsar --replicas=1
+# kubectl scale deployment vmsingle-pulsar-mini-victoria-metrics-k8s-stack -n pulsar --replicas=1
+# kubectl scale deployment pulsar-mini-kube-state-metrics -n pulsar --replicas=1
 
 echo ""
 echo "🔼 Starting MongoDB..."
@@ -74,37 +74,37 @@ kubectl wait --for=condition=available --timeout=300s deployment/mongodb
 echo ""
 echo "🔼 Starting microservices..."
 
-# Scale up marketing service
-echo "  - Scaling up marketing-service..."
-kubectl scale deployment marketing-service --replicas=1
+# # Scale up marketing service
+# echo "  - Scaling up marketing-service..."
+# kubectl scale deployment marketing-service --replicas=1
 
-# Scale up tracking service
-echo "  - Scaling up tracking-service..."
-kubectl scale deployment tracking-service --replicas=1
+# # Scale up tracking service
+# echo "  - Scaling up tracking-service..."
+# kubectl scale deployment tracking-service --replicas=1
 
-# Scale up atribucion service
-echo "  - Scaling up atribucion-service..."
-kubectl scale deployment atribucion-service --replicas=1
+# # Scale up atribucion service
+# echo "  - Scaling up atribucion-service..."
+# kubectl scale deployment atribucion-service --replicas=1
 
-# Scale up comisiones service
-echo "  - Scaling up comisiones-service..."
-kubectl scale deployment comisiones-service --replicas=1
+# # Scale up comisiones service
+# echo "  - Scaling up comisiones-service..."
+# kubectl scale deployment comisiones-service --replicas=1
 
-echo ""
-echo "⏳ Waiting for all microservices to be ready..."
-kubectl wait --for=condition=available --timeout=300s deployment/marketing-service
-kubectl wait --for=condition=available --timeout=300s deployment/tracking-service
-kubectl wait --for=condition=available --timeout=300s deployment/atribucion-service
-kubectl wait --for=condition=available --timeout=300s deployment/comisiones-service
+# echo ""
+# echo "⏳ Waiting for all microservices to be ready..."
+# kubectl wait --for=condition=available --timeout=300s deployment/marketing-service
+# kubectl wait --for=condition=available --timeout=300s deployment/tracking-service
+# kubectl wait --for=condition=available --timeout=300s deployment/atribucion-service
+# kubectl wait --for=condition=available --timeout=300s deployment/comisiones-service
 
-echo ""
-echo "📊 Final status:"
-echo "Microservices:"
-kubectl get deployments -o wide
-echo ""
-echo "Pulsar cluster:"
-kubectl get pods -n pulsar
+# echo ""
+# echo "📊 Final status:"
+# echo "Microservices:"
+# kubectl get deployments -o wide
+# echo ""
+# echo "Pulsar cluster:"
+# kubectl get pods -n pulsar
 
-echo ""
-echo "✅ All services and Pulsar cluster are now running!"
-echo "🌐 Your microservices should be accessible again."
+# echo ""
+# echo "✅ All services and Pulsar cluster are now running!"
+# echo "🌐 Your microservices should be accessible again."
