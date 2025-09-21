@@ -5,12 +5,16 @@ from tracking.modulos.interacciones.infraestructura.schema.v1.eventos import (
 )
 from tracking.modulos.interacciones.infraestructura.schema.v1.comandos import (
     ComandoDescartarInteracciones,
+    ComandoRegistrarInteraccion,
 )
 from tracking.seedwork.infraestructura import utils
 import traceback
 from tracking.seedwork.aplicacion.comandos import ejecutar_commando
 from tracking.modulos.interacciones.aplicacion.comandos.descartar_interacciones import (
     DescartarInteracciones,
+)
+from tracking.modulos.interacciones.aplicacion.comandos.registrar_interaccion import (
+    RegistrarInteraccion,
 )
 
 
@@ -105,5 +109,62 @@ class ConsumidorComandosInteracciones:
         print(f'Comando recibido en tracking: {payload}')
         comando = DescartarInteracciones(
             id_correlacion=payload.id_correlacion, interacciones=payload.interacciones
+        )
+        ejecutar_commando(comando)
+
+
+class ConsumidorComandosRegistrarInteraccion:
+    def __init__(self):
+        self.cliente = None
+        self.consumidor = None
+
+    def suscribirse_a_comandos_registrar(self, app=None):
+        if not app:
+            return
+
+        self.app = app
+
+        try:
+            self.cliente = pulsar.Client(
+                f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
+            self.consumidor = self.cliente.subscribe(
+                'comando-registrar-interaccion',
+                consumer_type=_pulsar.ConsumerType.Shared,
+                subscription_name='tracking-sub-registrar-comandos',
+                schema=AvroSchema(ComandoRegistrarInteraccion),
+            )
+
+            while True:
+                mensaje = self.consumidor.receive()
+                try:
+                    with self.app.app_context():
+                        with self.app.test_request_context():
+                            self._procesar_comando_registrar_interaccion(mensaje)
+                    self.consumidor.acknowledge(mensaje)
+                except Exception as e:
+                    print(f"Error procesando ComandoRegistrarInteraccion: {e}")
+                    traceback.print_exc()
+                    self.consumidor.acknowledge(mensaje)
+        except Exception as e:
+            print(f"Error configurando consumidor de COMANDOS REGISTRAR: {e}")
+            traceback.print_exc()
+        finally:
+            if self.cliente:
+                self.cliente.close()
+
+    def _procesar_comando_registrar_interaccion(self, mensaje):
+        payload = mensaje.value().data
+        print(f'Comando RegistrarInteraccion recibido en tracking: {payload}')
+
+        from datetime import datetime
+        comando = RegistrarInteraccion(
+            tipo=payload.tipo,
+            marca_temporal=payload.marca_temporal,
+            identidad_usuario=payload.identidad_usuario,
+            parametros_tracking=payload.parametros_tracking,
+            elemento_objetivo=payload.elemento_objetivo,
+            contexto=payload.contexto
         )
         ejecutar_commando(comando)
