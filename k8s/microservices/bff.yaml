@@ -7,7 +7,7 @@ metadata:
   name: bff-service
   namespace: default
 spec:
-  replicas: 1
+  replicas: 3  # Increased replicas for load distribution
   selector:
     matchLabels:
       app: bff-service
@@ -21,11 +21,11 @@ spec:
           image: us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/bff:latest
           resources:
             requests:
-              memory: "64Mi"
-              cpu: "250m"
+              memory: "512Mi"  # Increased from 64Mi
+              cpu: "1000m"     # Increased from 250m (1 CPU core)
             limits:
-              memory: "128Mi"
-              cpu: "500m"
+              memory: "1Gi"    # Increased from 128Mi
+              cpu: "2000m"     # Increased from 500m (2 CPU cores)
           ports:
             - containerPort: 8000
           env:
@@ -37,6 +37,23 @@ spec:
               value: "http://marketing-service"
             - name: TRACKING_SERVICE_URL
               value: "http://tracking-service"
+          # Add readiness and liveness probes for better reliability
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
 ---
 apiVersion: cloud.google.com/v1
 kind: BackendConfig
@@ -44,11 +61,14 @@ metadata:
   name: bff-backend-config
 spec:
   healthCheck:
-    checkIntervalSec: 30
-    timeoutSec: 5
+    checkIntervalSec: 15  # More frequent health checks
+    timeoutSec: 3         # Reduced timeout
     requestPath: "/health"
     type: HTTP
     port: 8000
+  # Add connection draining for graceful shutdowns
+  connectionDraining:
+    drainingTimeoutSec: 60
 ---
 apiVersion: v1
 kind: Service
@@ -58,11 +78,12 @@ metadata:
   annotations:
     cloud.google.com/backend-config: '{"default": "bff-backend-config"}'
 spec:
-  type: NodePort
+  # type: NodePort
+  type: LoadBalancer
   selector:
     app: bff-service
   ports:
     - protocol: TCP
       port: 80
       targetPort: 8000
-      nodePort: 30004
+      # nodePort: 30004
