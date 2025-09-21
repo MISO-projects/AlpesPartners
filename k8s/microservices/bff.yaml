@@ -58,11 +58,12 @@ metadata:
   annotations:
     cloud.google.com/backend-config: '{"default": "bff-backend-config"}'
 spec:
-  type: NodePort
+  # type: NodePort
+  type: LoadBalancer
   selector:
     app: bff-service
   ports:
     - protocol: TCP
       port: 80
       targetPort: 8000
-      nodePort: 30004
+      # nodePort: 30004
