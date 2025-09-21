@@ -21,6 +21,10 @@ elif [ "$1" == "comisiones" ]; then
     echo "Building and pushing comisiones image"
     docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest . -f comisiones.Dockerfile
     docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest
+elif [ "$1" == "bff" ]; then
+    echo "Building and pushing bff image"
+    docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/bff:latest . -f bff.Dockerfile
+    docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/bff:latest
 else
     echo "Building and pushing all images"
     docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/marketing:latest . -f marketing.Dockerfile
@@ -31,6 +35,8 @@ else
     docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/atribucion:latest
     docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest . -f comisiones.Dockerfile
     docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/comisiones:latest
+    docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/bff:latest . -f bff.Dockerfile
+    docker push us-central1-docker.pkg.dev/tutoriales-miso/alpespartners/bff:latest
 fi
 
          

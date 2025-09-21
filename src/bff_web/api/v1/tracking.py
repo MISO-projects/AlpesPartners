@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException
 import httpx
 from typing import Any
+import os
 
 from .schemas import RegistrarInteraccionRequest, RegistrarInteraccionResponse, ErrorResponse
 
 router = APIRouter()
 
-TRACKING_SERVICE_URL = "http://tracking:8000"
+TRACKING_SERVICE_URL = os.getenv("TRACKING_SERVICE_URL", "http://tracking:8000")
 
 @router.post("/interaccion", response_model=RegistrarInteraccionResponse, responses={400: {"model": ErrorResponse}})
 async def registrar_interaccion(interaccion: RegistrarInteraccionRequest):

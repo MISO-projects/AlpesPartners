@@ -43,7 +43,7 @@ services:
   saga_log_db:
     container_name: saga_log_db
     image: postgres:17.6
-    profiles: ["alpespartners"]
+    profiles: ["alpespartners", "postgres"]
     environment:
       POSTGRES_DB: "saga_log_db"
       POSTGRES_USER: "root"
