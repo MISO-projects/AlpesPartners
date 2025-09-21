@@ -133,7 +133,6 @@ class ConsumidorComandosRegistrarInteraccion:
                 'comando-registrar-interaccion',
                 consumer_type=_pulsar.ConsumerType.Shared,
                 subscription_name='tracking-sub-registrar-comandos',
-                schema=AvroSchema(ComandoRegistrarInteraccion),
             )
 
             while True:
@@ -155,16 +154,73 @@ class ConsumidorComandosRegistrarInteraccion:
                 self.cliente.close()
 
     def _procesar_comando_registrar_interaccion(self, mensaje):
-        payload = mensaje.value().data
+        import json
+        from datetime import datetime
+        from tracking.modulos.interacciones.aplicacion.dto import (
+            IdentidadUsuarioDTO,
+            ParametrosTrackingDTO,
+            ElementoObjetivoDTO,
+            ContextoInteraccionDTO
+        )
+
+        # Deserializar JSON
+        mensaje_json = json.loads(mensaje.value().decode('utf-8'))
+        payload = mensaje_json['data']
         print(f'Comando RegistrarInteraccion recibido en tracking: {payload}')
 
-        from datetime import datetime
+        # Convertir marca_temporal de string a datetime si es necesario
+        marca_temporal = payload['marca_temporal']
+        if isinstance(marca_temporal, str):
+            marca_temporal = datetime.fromisoformat(marca_temporal.replace('Z', '+00:00'))
+
+        # Crear DTOs mapeando campos correctamente
+        identidad_usuario = IdentidadUsuarioDTO(
+            id_usuario=payload['identidad_usuario'],
+            id_anonimo="",
+            direccion_ip="",
+            agente_usuario=""
+        )
+
+        # Mapear parametros_tracking a los campos del DTO
+        params = payload['parametros_tracking']
+        parametros_tracking = ParametrosTrackingDTO(
+            fuente=params.get('utm_source', ''),
+            medio=params.get('utm_medium', ''),
+            campania=params.get('utm_campaign', ''),
+            contenido=params.get('utm_content', ''),
+            termino=params.get('utm_term', ''),
+            id_afiliado=params.get('affiliate_id', '')
+        )
+
+        elemento_objetivo = ElementoObjetivoDTO(
+            id_elemento=payload['elemento_objetivo'],
+            tipo_elemento="",
+            nombre_elemento="",
+            url_elemento="",
+            texto_elemento="",
+            imagen_elemento="",
+            video_elemento="",
+            audio_elemento="",
+            link_elemento="",
+            texto_alternativo_elemento="",
+            titulo_elemento=""
+        )
+
+        # Mapear contexto a los campos del DTO
+        ctx = payload['contexto']
+        contexto = ContextoInteraccionDTO(
+            url_pagina=ctx.get('pagina', ''),
+            url_referente="",
+            informacion_dispositivo=f"device:{ctx.get('device', '')},browser:{ctx.get('browser', '')},seccion:{ctx.get('seccion', '')}"
+        )
+
         comando = RegistrarInteraccion(
-            tipo=payload.tipo,
-            marca_temporal=payload.marca_temporal,
-            identidad_usuario=payload.identidad_usuario,
-            parametros_tracking=payload.parametros_tracking,
-            elemento_objetivo=payload.elemento_objetivo,
-            contexto=payload.contexto
+            id_correlacion=mensaje_json['id'],  # Usar el ID del mensaje como correlación
+            tipo=payload['tipo'],
+            marca_temporal=marca_temporal,
+            identidad_usuario=identidad_usuario,
+            parametros_tracking=parametros_tracking,
+            elemento_objetivo=elemento_objetivo,
+            contexto=contexto
         )
         ejecutar_commando(comando)
