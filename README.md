@@ -49,9 +49,16 @@ Los detalles de las responsabilidades de cada microservicio y escenarios de cali
 
 ![Context-Esc 3 drawio](https://github.com/user-attachments/assets/5ed9957d-0242-4e0a-8bf1-bf5d1ba39a80)
 
+## Saga
+Los servicios construidos se comunican de forma asíncrona utilizando coreografía, llevando a cabo una transacción larga que inicia en el momento que se realiza una interacción de tipo compra, se atribuye la conversión y se reserva la comisión. Mediante la simulación de un evento de fraude se inicia el proceso de compensación de la saga que consiste en revertir la comisión reservada, revertir la atribución y finalmente descartar las interacciones asociadas al journey. En el siguiente diagrama se observan el flujo completo, ubicando el coordinador de saga en el servicio de marketing:
+
+![saga drawio](https://github.com/user-attachments/assets/e7038371-b171-49f1-bbbc-215191a6f0e7)
+
+
 # Persistencia
 
 Se utiliza MongoDB como base de datos. Se agregan los repositorios esta base de datos y se actualiza la unidad de trabajo para soportar la persistencia en MongoDB.
+Para el sagalog se utilizó una base de datos postgres.
 
 # Despliegue en GKE
 
