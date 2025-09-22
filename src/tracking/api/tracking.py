@@ -10,6 +10,7 @@ from tracking.modulos.interacciones.aplicacion.comandos.registrar_interaccion im
     RegistrarInteraccion,
 )
 from tracking.seedwork.aplicacion.comandos import ejecutar_commando
+import uuid
 
 bp = api.crear_blueprint("tracking", "/")
 
@@ -20,7 +21,9 @@ def registrar_interaccion():
         interaccion_dict = request.json
         map_interaccion = MapeadorInteraccionDTOJson()
         interaccion_dto = map_interaccion.externo_a_dto(interaccion_dict)
+        id_correlacion = uuid.uuid4()
         comando = RegistrarInteraccion(
+            id_correlacion=str(id_correlacion),
             tipo=interaccion_dto.tipo,
             marca_temporal=interaccion_dto.marca_temporal,
             identidad_usuario=interaccion_dto.identidad_usuario,
@@ -29,7 +32,11 @@ def registrar_interaccion():
             contexto=interaccion_dto.contexto,
         )
         ejecutar_commando(comando)
-        return Response('{}', status=202, mimetype="application/json")
+        return Response(
+            json.dumps({"id_correlacion": str(id_correlacion)}),
+            status=202,
+            mimetype="application/json",
+        )
     except ExcepcionDominio as e:
         return Response(
             json.dumps(dict(error=str(e))), status=400, mimetype="application/json"

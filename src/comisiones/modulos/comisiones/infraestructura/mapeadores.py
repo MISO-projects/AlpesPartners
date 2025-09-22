@@ -187,7 +187,7 @@ class MapeadorComisionSQLite(Mapeador):
 class MapeadorComisionMongoDB(Mapeador):
 
     def obtener_tipo(self) -> type:
-        return dict
+        return Comision.__class__
 
     def entidad_a_dto(self, entidad: Comision) -> dict:
 
@@ -195,6 +195,7 @@ class MapeadorComisionMongoDB(Mapeador):
             "_id": str(entidad.id),
             "id_interaccion": entidad.id_interaccion,
             "id_campania": entidad.id_campania,
+            "id_journey": entidad.id_journey,
             "monto": {
                 "valor": str(entidad.monto.valor),
                 "moneda": entidad.monto.moneda
@@ -221,13 +222,6 @@ class MapeadorComisionMongoDB(Mapeador):
                     "valor": str(entidad.configuracion.maximo.valor),
                     "moneda": entidad.configuracion.maximo.moneda
                 } if entidad.configuracion.maximo else None
-            }
-        if entidad.politica_fraude_aplicada:
-            documento["politica_fraude"] = {
-                "tipo": entidad.politica_fraude_aplicada.tipo.value,
-                "threshold_score": entidad.politica_fraude_aplicada.threshold_score,
-                "requiere_revision_manual": entidad.politica_fraude_aplicada.requiere_revision_manual,
-                "tiempo_espera_minutos": entidad.politica_fraude_aplicada.tiempo_espera_minutos
             }
 
         return documento
@@ -264,6 +258,7 @@ class MapeadorComisionMongoDB(Mapeador):
             id=uuid.UUID(documento["_id"]),
             id_interaccion=documento["id_interaccion"],
             id_campania=documento["id_campania"],
+            id_journey=documento.get("id_journey"),
             monto=MontoComision(
                 valor=Decimal(documento["monto"]["valor"]),
                 moneda=documento["monto"]["moneda"]

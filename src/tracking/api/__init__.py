@@ -16,13 +16,20 @@ def importar_modelos_alchemy():
 
 def comenzar_consumidor(app):
     import threading
-    import tracking.modulos.interacciones.infraestructura.consumidores as consumidores_tracking
+    from tracking.modulos.interacciones.infraestructura.consumidores import (
+        ConsumidorEventosInteracciones,
+        ConsumidorComandosInteracciones,
+        ConsumidorComandosRegistrarInteraccion,
+    )
+    consumidor_eventos = ConsumidorEventosInteracciones()
+    consumidor_comandos = ConsumidorComandosInteracciones()
+    consumidor_registrar = ConsumidorComandosRegistrarInteraccion()
 
     threading.Thread(
-        target=consumidores_tracking.suscribirse_a_eventos, args=[app]
+        target=consumidor_comandos.suscribirse_a_comandos, args=[app]
     ).start()
     threading.Thread(
-        target=consumidores_tracking.suscribirse_a_comandos, args=[app]
+        target=consumidor_registrar.suscribirse_a_comandos_registrar, args=[app]
     ).start()
 
 

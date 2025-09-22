@@ -1,3 +1,4 @@
+# pyright: reportUnreachable=false
 import pulsar
 import _pulsar
 from pulsar.schema import AvroSchema, Record
@@ -7,8 +8,12 @@ import uuid
 from decimal import Decimal
 
 from comisiones.modulos.comisiones.infraestructura.schema.v1.eventos import EventoConversionAtribuida
+from comisiones.modulos.comisiones.infraestructura.schema.v1.comandos import ComandoRevertirComision
 from comisiones.seedwork.infraestructura import utils
 from comisiones.modulos.comisiones.aplicacion.comandos.reservar_comision import ReservarComision
+from comisiones.modulos.comisiones.aplicacion.comandos.revertir_comision_por_journey import RevertirComisionPorJourney
+
+from comisiones.seedwork.aplicacion.comandos import ejecutar_commando
 
 def avro_to_dict(record: Record) -> dict:
     if not isinstance(record, Record):
@@ -38,7 +43,9 @@ class ConsumidorEventosAtribucion:
         self.app = app
         try:
             print("COMISIONES: Conectando a Pulsar para consumir eventos de atribución...")
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             self.consumidor = self.cliente.subscribe(
                 'eventos-atribucion',  # Tópico que publica el servicio de atribución
                 consumer_type=_pulsar.ConsumerType.Shared,
@@ -71,7 +78,7 @@ class ConsumidorEventosAtribucion:
             evento_dict = avro_to_dict(mensaje.value().data)
             print(f"COMISIONES: Conversión atribuida recibida: {evento_dict}")
             
-            # Extraer datos del evento de atribución
+            id_correlacion = evento_dict['id_correlacion']
             id_interaccion_atribuida = evento_dict['id_interaccion_atribuida']
             id_campania = evento_dict['id_campania']
             id_afiliado = evento_dict['id_afiliado']
@@ -103,10 +110,12 @@ class ConsumidorEventosAtribucion:
             except Exception as e:
                 print(f"COMISIONES: Error validando UUIDs: {e}")
                 return
-            
+
             comando = ReservarComision(
+                id_correlacion=id_correlacion,
                 id_interaccion=uuid.UUID(id_interaccion_clean),
                 id_campania=uuid.UUID(id_campania_clean),
+                id_journey=uuid.UUID(id_interaccion_atribuida),
                 tipo_interaccion=tipo_conversion,
                 valor_interaccion=Decimal(str(monto_atribuido['valor'])),
                 moneda_interaccion=monto_atribuido['moneda'],
@@ -118,68 +127,8 @@ class ConsumidorEventosAtribucion:
                     'id_interaccion_original': evento_dict.get('id_interaccion_original', '')
                 }
             )
-            
-            from comisiones.modulos.comisiones.dominio.entidades import Comision
-            from comisiones.modulos.comisiones.dominio.objetos_valor import MontoComision, ConfiguracionComision, TipoComision
-            from comisiones.config.mongo import mongo_config
-            from datetime import datetime
-            
-            comision_id = uuid.uuid4()
-            monto = MontoComision(
-                valor=comando.valor_interaccion * Decimal('0.05'),  # 5% de comisión
-                moneda=comando.moneda_interaccion
-            )
-            
-            configuracion = ConfiguracionComision(
-                tipo=TipoComision.PORCENTAJE,
-                porcentaje=Decimal('5.0')
-            )
-            
-            comision = Comision(
-                id=comision_id,
-                id_interaccion=str(comando.id_interaccion),
-                id_campania=str(comando.id_campania),
-                monto=monto,
-                configuracion=configuracion
-            )
-            
-            comisiones_collection = mongo_config.get_collection("comisiones")
-            
-            comision_data = {
-                "_id": str(comision.id),
-                "id_interaccion": str(comision.id_interaccion),
-                "id_campania": str(comision.id_campania),
-                "id_afiliado": id_afiliado,
-                "monto": {
-                    "valor": float(comision.monto.valor),
-                    "moneda": comision.monto.moneda
-                },
-                "monto_atribuido": {
-                    "valor": float(comando.valor_interaccion),
-                    "moneda": comando.moneda_interaccion
-                },
-                "configuracion": {
-                    "tipo": comision.configuracion.tipo.value,
-                    "porcentaje": float(comision.configuracion.porcentaje) if comision.configuracion.porcentaje else None
-                },
-                "estado": "RESERVADA",
-                "timestamp": datetime.now().isoformat(),
-                "tipo_interaccion": comando.tipo_interaccion,
-                "fraud_ok": comando.fraud_ok,
-                "score_fraude": comando.score_fraude,
-                "origen": "atribucion",
-                "id_interaccion_original": evento_dict.get('id_interaccion_original', '')
-            }
-            
-            comisiones_collection.insert_one(comision_data)
-            resultado = comision
-            
-            if resultado:
-                print(f"COMISIONES: Comisión {resultado.id} creada exitosamente desde atribución")
-                print(f"COMISIONES: Monto atribuido: {comando.valor_interaccion} {comando.moneda_interaccion}")
-                print(f"COMISIONES: Comisión calculada: {monto.valor} {monto.moneda}")
-            else:
-                print(f"COMISIONES: No se generó comisión para la conversión atribuida")
+            ejecutar_commando(comando)
+
                 
         except Exception as e:
             print(f"COMISIONES: Error procesando conversión atribuida: {e}")
@@ -196,3 +145,77 @@ class ConsumidorEventosComision:
 
     def consumir_lote_confirmado(self, evento: dict):
         print(f"COMISIONES: Procesando lote confirmado: {evento.get('id_lote')} - {evento.get('cantidad_comisiones')} comisiones")
+
+class ConsumidorComandosReversion:
+    def __init__(self):
+        self.cliente = None
+        self.consumidor = None
+
+    def suscribirse_a_comandos_reversion(self, app=None):
+        if not app:
+            return
+            
+        self.app = app
+        try:
+            print("COMISIONES: Conectando a Pulsar para consumir comandos de reversión...")
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.consumidor = self.cliente.subscribe(
+                'revertir-comision-comando',  
+                consumer_type=_pulsar.ConsumerType.Shared,
+                subscription_name='comisiones-sub-reversion',
+                schema=AvroSchema(ComandoRevertirComision)
+            )
+            print("COMISIONES: Suscripción a revertir-comision-comando exitosa")
+
+            while True:
+                mensaje = self.consumidor.receive()
+                try:
+                    with self.app.app_context():
+                        with self.app.test_request_context():
+                            self._procesar_reversion_comision(mensaje)
+                    self.consumidor.acknowledge(mensaje)
+                except Exception as e:
+                    print(f"COMISIONES: Error procesando reversión de comisión: {e}")
+                    traceback.print_exc()
+                    self.consumidor.acknowledge(mensaje)
+        except Exception as e:
+            print(f"COMISIONES: Error configurando consumidor de reversión: {e}")
+            traceback.print_exc()
+        finally:
+            if self.cliente:
+                self.cliente.close()
+
+    def _procesar_reversion_comision(self, mensaje):
+        try:
+            evento_dict = avro_to_dict(mensaje.value().data)
+            print(f"COMISIONES: Evento de reversión recibido: {evento_dict}")
+            
+            id_correlacion = evento_dict['id_correlacion']
+            journey_id = evento_dict['journey_id']
+            motivo = evento_dict['motivo']
+            
+            print(f"COMISIONES: Procesando reversión para journey_id: {journey_id} - Motivo: {motivo}")
+            
+            try:
+                journey_id_clean = str(journey_id).strip()
+                if not journey_id_clean or journey_id_clean == 'None':
+                    print(f"COMISIONES: journey_id inválido o vacío: '{journey_id}'")
+                    return
+                
+                print(f"COMISIONES: Journey ID limpio: '{journey_id_clean}'")
+                
+            except Exception as e:
+                print(f"COMISIONES: Error validando journey_id: {e}")
+                return
+
+            comando = RevertirComisionPorJourney(
+                id_correlacion=id_correlacion,
+                journey_id=uuid.UUID(journey_id_clean),
+                motivo=motivo
+            )
+            ejecutar_commando(comando)
+
+        except Exception as e:
+            print(f"COMISIONES: Error procesando reversión de comisión: {e}")
+            traceback.print_exc()
+            raise e

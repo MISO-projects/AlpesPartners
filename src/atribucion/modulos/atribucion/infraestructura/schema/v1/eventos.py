@@ -1,6 +1,7 @@
 from pulsar.schema import *
 from atribucion.seedwork.infraestructura.schema.v1.eventos import EventoIntegracion
 
+# evento recibido en atribucion desde tracking
 class IdentidadUsuarioSchema(Record):
     id_usuario = String()
     id_anonimo = String()
@@ -25,6 +26,7 @@ class ContextoInteraccionSchema(Record):
     informacion_dispositivo = String()
 
 class InteraccionRegistradaPayload(Record):
+    id_correlacion = String(required=False)
     id_interaccion = String()
     tipo = String()
     marca_temporal = Long()
@@ -32,15 +34,19 @@ class InteraccionRegistradaPayload(Record):
     parametros_tracking = ParametrosTrackingSchema()
     elemento_objetivo = ElementoObjetivoSchema()
     contexto = ContextoInteraccionSchema()
+    estado = String()
 
 class EventoInteraccionRegistradaConsumo(EventoIntegracion):
     data = InteraccionRegistradaPayload()
 
+
+# schema para consumir eventos de atribución a comisiones
 class MontoSchema(Record):
     valor = Float()
     moneda = String()
 
 class ConversionAtribuidaPayload(Record):
+    id_correlacion = String()
     id_interaccion_atribuida = String()
     id_campania = String()
     id_afiliado = String()
@@ -48,6 +54,16 @@ class ConversionAtribuidaPayload(Record):
     monto_atribuido = MontoSchema()
     id_interaccion_original = String()
     score_fraude = Integer()
-
 class EventoConversionAtribuida(EventoIntegracion):
     data = ConversionAtribuidaPayload()
+
+
+# --- Schema del Evento de Reversión ---
+
+class AtribucionRevertidaPayload(Record):
+    id_correlacion = String()
+    journey_id_revertido = String()
+    interacciones = Array(String()) 
+
+class EventoAtribucionRevertida(EventoIntegracion):
+    data = AtribucionRevertidaPayload()

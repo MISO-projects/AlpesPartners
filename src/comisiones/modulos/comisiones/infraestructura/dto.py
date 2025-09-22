@@ -1,8 +1,10 @@
 
 from sqlalchemy import Column, String, DateTime, Text, Integer, Numeric, Boolean
 from sqlalchemy.dialects.sqlite import JSON
-from comisiones.config.db import Base
 from datetime import datetime
+from comisiones.config.db import db
+
+Base = db.declarative_base()
 
 class ComisionDbDto(Base):
 

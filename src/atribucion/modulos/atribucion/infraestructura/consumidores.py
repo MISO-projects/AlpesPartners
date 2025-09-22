@@ -39,7 +39,9 @@ class ConsumidorInteracciones:
             
         self.app = app
         try:
-            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            self.cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650',
+                logger=pulsar.ConsoleLogger(pulsar.LoggerLevel.Error),
+            )
             self.consumidor = self.cliente.subscribe(
                 'interaccion-registrada', 
                 consumer_type=_pulsar.ConsumerType.Shared,
@@ -73,8 +75,56 @@ class ConsumidorInteracciones:
         atribucion_dto = map_atribucion.externo_a_dto(evento_dict)
         print(f"CONSUMIDOR: DTO creado a partir del dict: {atribucion_dto}")
 
-        comando = RegistrarAtribucion(atribucion=atribucion_dto)
+        id_correlacion = evento_dict.get('id_correlacion')
+        comando = RegistrarAtribucion(
+            id_correlacion=id_correlacion,
+            atribucion_dto=atribucion_dto,
+            datos_evento_dict=evento_dict,
+        )
         print(f"CONSUMIDOR: Comando '{type(comando).__name__}' creado. Despachando...")
+        ejecutar_commando(comando)
 
+
+
+    def suscribirse_a_comandos_reversion(self, app=None):
+        cliente = None
+        try:
+            from atribucion.modulos.atribucion.infraestructura.schema.v1.comandos import ComandoRevertirAtribucion
+            
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            
+            consumidor = cliente.subscribe(
+                'revertir-atribucion',
+                consumer_type=_pulsar.ConsumerType.Shared,
+                subscription_name='atribucion-sub-comandos-reversion',
+                schema=AvroSchema(ComandoRevertirAtribucion)
+            )
+            print("Consumidor Atribucion: Esperando comandos RevertirAtribucion...")
+
+            while True:
+                mensaje = consumidor.receive()
+                try:
+                    with self.app.app_context():
+                        with self.app.test_request_context():
+                            self._procesar_mensaje_comando_reversion(mensaje)
+                    consumidor.acknowledge(mensaje)
+                except Exception as e:
+                    print(f"Error procesando COMANDO de reversión: {e}")
+                    traceback.print_exc()
+                    consumidor.acknowledge(mensaje)
+
+        except Exception as e:
+            print(f"Error configurando consumidor de COMANDOS de reversión: {e}")
+        finally:
+            if cliente:
+                cliente.close()
+
+    def _procesar_mensaje_comando_reversion(self, mensaje):
+        from atribucion.modulos.atribucion.aplicacion.comandos.revertir_atribucion import RevertirAtribucion
+        
+        payload = mensaje.value().data
+        print(f"CONSUMIDOR: Comando 'RevertirAtribucion' recibido con payload: {payload}")
+        
+        comando = RevertirAtribucion(id_correlacion=payload.id_correlacion, journey_id=payload.journey_id)
         ejecutar_commando(comando)
         

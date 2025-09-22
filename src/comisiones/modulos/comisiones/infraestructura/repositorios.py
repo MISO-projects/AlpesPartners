@@ -119,10 +119,18 @@ class RepositorioComisionSQLite(RepositorioComision):
         if comision_dto:
             db.session.delete(comision_dto)
 
+    def obtener_por_journey_id(self, journey_id: UUID) -> Comision:
+
+        comision_dto = db.session.query(ComisionDbDto).filter_by(id_journey=str(journey_id)).first()
+        if comision_dto:
+            return self.fabrica_comision.crear_objeto(comision_dto, MapeadorComisionSQLite())
+        return None
+
 class RepositorioComisionMongoDB(RepositorioComision):
 
     def __init__(self):
         self._fabrica_comision = FabricaComision()
+        self._fabrica_configuracion = FabricaConfiguracionComision()
 
     @property
     def fabrica_comision(self) -> FabricaComision:
@@ -220,6 +228,22 @@ class RepositorioComisionMongoDB(RepositorioComision):
         result = collection.delete_one({"_id": str(comision_id)})
         if result.deleted_count == 0:
             raise ValueError(f"Comisión con ID {comision_id} no encontrada")
+
+    def obtener_default(self) -> ConfiguracionComision:
+        return self._fabrica_configuracion.crear_configuracion_porcentaje(
+            porcentaje=Decimal('5.0'),
+            minimo=MontoComision(valor=Decimal('1.0'), moneda='USD'),
+            maximo=MontoComision(valor=Decimal('1000.0'), moneda='USD')
+        )
+
+    def obtener_por_journey_id(self, journey_id: UUID) -> Comision:
+
+        collection = self._get_collection()
+        document = collection.find_one({"id_journey": str(journey_id)})
+        if not document:
+            return None
+        
+        return self.fabrica_comision.crear_objeto(document, MapeadorComisionMongoDB())
 
 class RepositorioConfiguracionComisionSQLite(RepositorioConfiguracionComision):
 

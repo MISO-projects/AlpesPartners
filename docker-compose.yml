@@ -31,7 +31,7 @@ services:
     container_name: alpespartners-mongodb
     ports:
       - "27017:27017"
-    command: mongod --quiet
+    command: mongod --quiet --logpath /tmp/mongo.log --setParameter logLevel=0 > /dev/null 2>&1
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
@@ -40,13 +40,27 @@ services:
       - ./mongo_data:/data/db
     networks:
       - alpespartners-network
+  saga_log_db:
+    container_name: saga_log_db
+    image: postgres:17.6
+    profiles: ["alpespartners", "postgres"]
+    environment:
+      POSTGRES_DB: "saga_log_db"
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "saga_log_pass"
+      POSTGRES_ROOT_PASSWORD: "saga_log_pass"
+    networks:
+      - alpespartners-network
+    volumes:
+      - ./data/postgresql/saga_log_db:/var/lib/postgresql/data
+    ports:
+      - "5481:5432"
   marketing:
     build:
       context: .
       dockerfile: marketing.Dockerfile
-    profiles: ["alpespartners"]
+    profiles: ["alpespartners", "marketing"]
     container_name: marketing
-    restart: unless-stopped
     command: 
       - sh
       - -c
@@ -58,7 +72,14 @@ services:
     volumes:
       - ./src/marketing/:/src/marketing/
     environment:
-      - DATABASE_TYPE=mongodb
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_TYPE=postgresql
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=saga_log_pass
+      - POSTGRES_HOST=saga_log_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=saga_log_db
       - MONGODB_USER=admin
       - MONGODB_PASSWORD=admin123
       - MONGODB_HOST=mongodb
@@ -69,15 +90,15 @@ services:
     depends_on:
       - mongodb
       - broker
+      - saga_log_db
     networks:
       - alpespartners-network
   tracking:
     build:
       context: .
       dockerfile: tracking.Dockerfile
-    profiles: ["alpespartners"]
+    profiles: ["alpespartners", "tracking"]
     container_name: tracking
-    restart: unless-stopped
     command: 
       - sh
       - -c
@@ -89,6 +110,8 @@ services:
     volumes:
       - ./src/tracking/:/src/tracking/
     environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
       - DATABASE_TYPE=mongodb
       - MONGODB_USER=admin
       - MONGODB_PASSWORD=admin123
@@ -106,9 +129,8 @@ services:
     build:
       context: .
       dockerfile: comisiones.Dockerfile
-    profiles: ["alpespartners"]
+    profiles: ["alpespartners", "comisiones"]
     container_name: comisiones
-    restart: unless-stopped
     command: 
       - sh
       - -c
@@ -137,9 +159,8 @@ services:
     build:
       context: .
       dockerfile: atribucion.Dockerfile
-    profiles: ["alpespartners"]
+    profiles: ["alpespartners", "atribucion"]
     container_name: atribucion
-    restart: unless-stopped
     command:
       - sh
       - -c
@@ -161,6 +182,28 @@ services:
       - PYTHONUNBUFFERED=1
     depends_on:
       - mongodb
+      - broker
+    networks:
+      - alpespartners-network
+  bff:
+    build:
+      context: .
+      dockerfile: bff.Dockerfile
+    profiles: ["alpespartners"]
+    container_name: bff
+    restart: unless-stopped
+    ports:
+      - "8004:8000"
+    volumes:
+      - ./src/bff_web/:/src/bff_web/
+    environment:
+      - MARKETING_SERVICE_URL=http://marketing:8000
+      - TRACKING_SERVICE_URL=http://tracking:8000
+      - BROKER_HOST=broker
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - marketing
+      - tracking
       - broker
     networks:
       - alpespartners-network

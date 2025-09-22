@@ -18,9 +18,16 @@ def comenzar_consumidor(app):
     import threading
     import comisiones.modulos.comisiones.infraestructura.consumidores as consumidores_comisiones
     
-    consumidor = consumidores_comisiones.ConsumidorEventosAtribucion()
+    # Consumidor de eventos de atribución
+    consumidor_atribucion = consumidores_comisiones.ConsumidorEventosAtribucion()
     threading.Thread(
-        target=consumidor.suscribirse_a_eventos_atribucion, args=[app]
+        target=consumidor_atribucion.suscribirse_a_eventos_atribucion, args=[app]
+    ).start()
+    
+    # Consumidor de eventos de reversión
+    consumidor_reversion = consumidores_comisiones.ConsumidorComandosReversion()
+    threading.Thread(
+        target=consumidor_reversion.suscribirse_a_comandos_reversion, args=[app]
     ).start()
 
 
